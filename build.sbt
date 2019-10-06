@@ -1,0 +1,124 @@
+libraryDependencies in ThisBuild += compilerPlugin(kindProjectorPlugin)
+
+name := "cats-playground-scala"
+
+lazy val compilerOptions = Seq(
+  "-Xfatal-warnings",
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-language:_"
+)
+
+lazy val commonSettings = Seq(
+  organization := "com.eztier",
+  version := "0.1.0-SNAPSHOT",
+  scalaVersion := "2.12.8",  
+  scalacOptions ++= compilerOptions,
+  resolvers ++= Seq(
+    Resolver.sonatypeRepo("public"),
+    Resolver.sonatypeRepo("releases"),
+    Resolver.sonatypeRepo("snapshots")
+  )
+)
+
+lazy val settings = commonSettings
+
+lazy val common = project
+  .settings(
+    name := "common",
+    settings,
+    libraryDependencies ++= Seq(
+      cats,
+      circe,
+      circeGeneric,
+      circeGenericExtras,
+      circeLiteral,
+      circeParser,
+      circeConfig,
+      specs2,
+      logback
+    )
+  )
+  
+lazy val testhttp4sdoobie = project.
+  settings(
+    name := "test-http4s-doobie",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      http4sBlazeServer,
+      http4sBlazeClient,
+      http4sCirce,
+      http4sDsl,
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway
+    )
+  ).dependsOn(
+    common
+  )
+
+val Http4sVersion = "0.21.0-M5"
+val CirceVersion = "0.12.1"
+val CirceGenericExVersion = "0.12.2"
+val CirceConfigVersion = "0.7.0"
+val Specs2Version = "4.7.0"
+val LogbackVersion = "1.2.3"
+val CatsVersion = "2.0.0"
+val DoobieVersion = "0.8.4"
+val H2Version = "1.4.199"
+val KindProjectorVersion = "0.10.3"
+val FlywayVersion = "6.0.4"
+
+val cats = "org.typelevel" %% "cats-core" % CatsVersion
+
+val circe = "io.circe" %% "circe-core" % CirceVersion
+val circeGeneric = "io.circe" %% "circe-generic" % CirceVersion
+val circeGenericExtras = "io.circe" %% "circe-generic-extras" % CirceGenericExVersion
+val circeLiteral = "io.circe" %% "circe-literal" % CirceVersion
+val circeParser = "io.circe" %% "circe-parser" % CirceVersion
+val circeConfig = "io.circe" %% "circe-config" % CirceConfigVersion
+
+val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % Http4sVersion
+val http4sBlazeClient = "org.http4s" %% "http4s-blaze-client" % Http4sVersion
+val http4sCirce = "org.http4s" %% "http4s-circe" % Http4sVersion
+val http4sDsl = "org.http4s" %% "http4s-dsl" % Http4sVersion
+
+val doobie = "org.tpolecat" %% "doobie-core" % DoobieVersion
+val doobieH2 ="org.tpolecat" %% "doobie-h2" % DoobieVersion
+val doobieScalatest ="org.tpolecat" %% "doobie-scalatest" % DoobieVersion
+val doobieHikari ="org.tpolecat" %% "doobie-hikari" % DoobieVersion
+
+val h2 = "com.h2database" % "h2" % H2Version
+
+val flyway = "org.flywaydb" % "flyway-core" % FlywayVersion
+
+val specs2 = "org.specs2"      %% "specs2-core"         % Specs2Version % "test"
+val logback = "ch.qos.logback" % "logback-classic" % LogbackVersion
+
+val kindProjectorPlugin = ("org.typelevel" %% "kind-projector" % KindProjectorVersion).cross(CrossVersion.binary)
+
+// Filter out compiler flags to make the repl experience functional...
+val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
+scalacOptions in (Compile, console) ~= (_.filterNot(badConsoleFlags.contains(_)))
+
+// Skip tests for assembly  
+lazy val assemblySettings = Seq(
+  assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
+  
+  assemblyMergeStrategy in assembly := {
+    case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
+    case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+    case x if x.endsWith("io.netty.versions.properties") => MergeStrategy.first
+    case "application.conf"                            => MergeStrategy.concat
+    case "logback.xml"                            => MergeStrategy.first
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
+  },
+  test in assembly := {}
+)
