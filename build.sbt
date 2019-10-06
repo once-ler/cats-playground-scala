@@ -62,6 +62,19 @@ lazy val testhttp4sdoobie = project.
     common
   )
 
+lazy val testfs2pubsub = project.
+  settings(
+    name := "test-fs2-pubsub",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      fs2,
+      fs2Io
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
@@ -73,6 +86,7 @@ val DoobieVersion = "0.8.4"
 val H2Version = "1.4.199"
 val KindProjectorVersion = "0.10.3"
 val FlywayVersion = "6.0.4"
+val FS2Version = "2.0.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -101,6 +115,9 @@ val specs2 = "org.specs2"      %% "specs2-core"         % Specs2Version % "test"
 val logback = "ch.qos.logback" % "logback-classic" % LogbackVersion
 
 val kindProjectorPlugin = ("org.typelevel" %% "kind-projector" % KindProjectorVersion).cross(CrossVersion.binary)
+
+val fs2 = "co.fs2" %% "fs2-core" % FS2Version
+val fs2Io = "co.fs2" %% "fs2-io" % FS2Version
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
