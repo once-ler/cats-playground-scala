@@ -56,7 +56,8 @@ lazy val testhttp4sdoobie = project.
       doobieScalatest,
       doobieHikari,
       h2,
-      flyway
+      flyway,
+      specs2
     )
   ).dependsOn(
     common
