@@ -12,7 +12,7 @@ lazy val compilerOptions = Seq(
 
 lazy val commonSettings = Seq(
   organization := "com.eztier",
-  version := "0.1.0-SNAPSHOT",
+  version := "0.1.1-SNAPSHOT",
   scalaVersion := "2.12.8",  
   scalacOptions ++= compilerOptions,
   resolvers ++= Seq(

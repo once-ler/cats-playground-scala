@@ -10,6 +10,7 @@ import com.eztier.testhttp4sdoobie.domain.authors.AuthorService
 import org.http4s.circe._
 import org.http4s.{HttpRoutes, Request, Response}
 import org.http4s.dsl.Http4sDsl
+import cats.syntax.semigroupk._
 
 class AuthorEndpoints[F[_]: Sync] extends Http4sDsl[F] {
 
@@ -21,11 +22,17 @@ class AuthorEndpoints[F[_]: Sync] extends Http4sDsl[F] {
       }
   }
 
+  private def getAuthorListEndpoint(authorService: AuthorService[F]) : PartialFunction[Request[F], F[Response[F]]] = {
+    case GET -> Root / "all" =>
+      Ok(authorService.listAuthors.map(_.asJson))
+  }
+
   def endpoints(
     authorService: AuthorService[F]
   ): HttpRoutes[F] = {
     HttpRoutes.of[F] {
       getAuthorEndpoint(authorService)
+        .orElse(getAuthorListEndpoint(authorService))
     }
   }
 

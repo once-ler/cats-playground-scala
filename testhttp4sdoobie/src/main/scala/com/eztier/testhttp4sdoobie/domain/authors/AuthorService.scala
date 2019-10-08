@@ -3,6 +3,7 @@ package authors
 
 import cats.Functor
 import cats.data.EitherT
+import fs2.Stream
 
 /**
   * The entry point to our domain, works with repositories and validations to implement behavior
@@ -17,6 +18,8 @@ class AuthorService[F[_]](authorRepo: AuthorRepositoryAlgebra[F], validation: Au
 
   def getAuthorByEmail(email: String)(implicit F: Functor[F]): EitherT[F, AuthorNotFoundError.type, Author] =
     authorRepo.findByEmail(email).toRight(AuthorNotFoundError)
+
+  def listAuthors: Stream[F, Author] = authorRepo.list
 }
 
 object AuthorService {

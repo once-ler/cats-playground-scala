@@ -1,13 +1,13 @@
 package com.eztier.testhttp4sdoobie
 package infrastructure.repository.doobie
 
-import cats.Monad
 import doobie._
 import doobie.implicits._
 import cats.data.OptionT
 import cats.effect.{Bracket, IO}
-import cats.data._
-import cats.implicits._
+// import cats.data._
+// import cats.implicits._
+import fs2.Stream
 import domain.authors.{Author, AuthorRepositoryAlgebra}
 
 private object AuthorSQL {
@@ -22,6 +22,11 @@ private object AuthorSQL {
     SELECT first_name, last_name, email, phone, id
     FROM author
     WHERE email = $email
+  """.query
+
+  def listSql: Query0[Author] = sql"""
+    SELECT first_name, last_name, email, phone, id
+    FROM author
   """.query
 }
 
@@ -38,6 +43,8 @@ class DoobieAuthorRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: 
 
   def findByEmail(email: String): OptionT[F, Author] =
     OptionT(findByEmailSql(email).option.transact(xa))
+
+  def list: Stream[F, Author] = listSql.stream.transact(xa)
 }
 
 object DoobieAuthorRepositoryInterpreter {
