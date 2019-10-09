@@ -76,6 +76,21 @@ lazy val testfs2pubsub = project.
   common
 )
 
+lazy val testhttp4sclient = project.
+  settings(
+    name := "test-http4s-client",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      http4sBlazeClient,
+      http4sCirce,
+      fs2,
+      fs2Io
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
