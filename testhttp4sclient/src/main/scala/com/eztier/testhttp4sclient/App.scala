@@ -37,5 +37,5 @@ object Fetcher {
 object App extends IOApp {
   val ec = scala.concurrent.ExecutionContext.global
 
-  def run(args: List[String]): IO[ExitCode] = BlazeClientBuilder[IO](ec).resource.use(Fetcher.apply.getSite).as[ExitCode]
+  def run(args: List[String]): IO[ExitCode] = BlazeClientBuilder[IO](ec).resource.use(Fetcher[IO].getSite).as(ExitCode.Success)
 }
