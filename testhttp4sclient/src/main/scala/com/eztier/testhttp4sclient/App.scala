@@ -43,22 +43,20 @@ class FakeSoap[F[_]: Sync] {
 
   def strBody(body: String): EntityBody[F] = fs2.Stream(body).through(utf8Encode)
 
-  val headers = Headers.of(Header("Content-Type", "text/xml"))
+  val headers = Headers.of(Header("Content-Type", "text/xml"), Header("SOAPAction", "https://www.w3schools.com/xml/FahrenheitToCelsius"))
 
   def createRequest: Request[F] = Request[F](
     method = Method.POST,
     uri = Uri.unsafeFromString("https://www.w3schools.com/xml/tempconvert.asmx"),
     headers = headers,
     body = strBody(
-      """
-        |<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-        |  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        |  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-        |<soap:Body>
-        |<FahrenheitToCelsius xmlns="http://www.w3schools.com/webservices/">
-        |  <Fahrenheit>75</Fahrenheit>
-        |</FahrenheitToCelsius>
-        |</soap:Body>
+      """<?xml version="1.0" encoding="utf-8"?>
+        |<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        |  <soap:Body>
+        |    <FahrenheitToCelsius xmlns="https://www.w3schools.com/xml/">
+        |      <Fahrenheit>75</Fahrenheit>
+        |    </FahrenheitToCelsius>
+        |  </soap:Body>
         |</soap:Envelope>
       """.stripMargin)
   )
@@ -80,8 +78,10 @@ object FakeSoap {
 object App extends IOApp {
   val ec = scala.concurrent.ExecutionContext.global
 
-  def run(args: List[String]): IO[ExitCode] = BlazeClientBuilder[IO](ec).resource.use(FakeSoap[IO].getSite).as(ExitCode.Success)
+  val client = BlazeClientBuilder[IO](ec)
+
+  def run(args: List[String]): IO[ExitCode] = client.resource.use(FakeSoap[IO].getSite).as(ExitCode.Success)
 
 
-  def run2(args: List[String]): IO[ExitCode] = BlazeClientBuilder[IO](ec).resource.use(Fetcher[IO].getSite).as(ExitCode.Success)
+  def run2(args: List[String]): IO[ExitCode] = client.resource.use(Fetcher[IO].getSite).as(ExitCode.Success)
 }
