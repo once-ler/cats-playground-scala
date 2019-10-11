@@ -91,6 +91,25 @@ lazy val testhttp4sclient = project.
   common
 )
 
+lazy val testdoobiefs2 = project.
+  settings(
+    name := "test-doobie-fs2",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway,
+      fs2,
+      fs2Io
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
