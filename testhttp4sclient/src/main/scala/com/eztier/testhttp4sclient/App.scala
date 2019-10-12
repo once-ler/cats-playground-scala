@@ -1,13 +1,20 @@
 package com.eztier.testhttp4sclient
 
+import java.util.concurrent.Executors
+
+import cats.{Applicative, Show}
 import io.circe.generic.auto._
-import cats.effect.{Bracket, Effect, ExitCode, IO, IOApp, Sync}
+import cats.effect.{Bracket, Concurrent, ConcurrentEffect, ContextShift, Effect, ExitCode, IO, IOApp, Sync}
 import fs2.Pipe
+import io.circe.Printer
 import org.http4s.{EntityBody, Header}
+
+import scala.concurrent.ExecutionContext
 // import cats.effect._
 import cats.implicits._
 import io.chrisdavenport.vault.Vault
 import io.circe.Json
+
 import org.http4s.{EmptyBody, Headers, HttpVersion, Method, Request, Uri}
 import org.http4s.client.Client
 import org.http4s.circe._
@@ -78,45 +85,86 @@ object FakeSoap {
 // -----------------------------------------------------------------------------------------------
 // Inifinite stream
 
-object InfiniteClient {
-  val ec = scala.concurrent.ExecutionContext.global
-  implicit val cs = IO.contextShift(ec)
-  
-  val client = BlazeClientBuilder[IO](ec)
+object Util {
+  def filterLeft[F[_], A, B]: Pipe[F, Either[A, B], B] = _.flatMap {
+    case Right(r) => Stream.emit(r)
+    case Left(_) => Stream.empty
+  }
+
+  def filterRight[F[_], A, B]: Pipe[F, Either[A, B], A] = _.flatMap {
+    case Left(e) => Stream.emit(e)
+    case Right(_) => Stream.empty
+  }
+}
+
+class InfiniteClient[F[_]: ConcurrentEffect: ContextShift] {
+  import Util._
+
+  // import io.circe.generic.auto._
+
+  // jawn-fs2 needs to know what JSON AST you want
+  import jawnfs2._
+
+  // For .parseJsonStream()
+  implicit val f = io.circe.jawn.CirceSupportParser.facade
+
+  // For showLinesStdOut
+  implicit val showTodo: Show[Todo] = Show.show(t => s"${t.id} ${t.title} ${t.userId}")
+
+  // Don't block the main thread
+  def blockingEcStream: Stream[F, ExecutionContext] =
+    Stream.bracket(Sync[F].delay(Executors.newFixedThreadPool(4)))(pool =>
+      Sync[F].delay(pool.shutdown()))
+      .map(ExecutionContext.fromExecutorService)
 
   case class Todo(userId: String, id: Int, title: String, completed: Boolean)
 
-  def createRequest[F[_]: Effect]: Request[F] = Request[F](
+  // Uri.unsafeFromString("https://jsonplaceholder.typicode.com/todos"),
+
+  def createRequest(dumbVar: Int = 0): Request[F] = Request[F](
     Method.GET,
-    Uri.unsafeFromString("https://jsonplaceholder.typicode.com/todos"),
+    Uri.unsafeFromString("https://jsonplaceholder.typicode.com/users/10"),
     HttpVersion.`HTTP/1.1`, Headers.empty, EmptyBody, Vault.empty // The params on this line are optional.
   )
 
-  def clientStream[F[_]](dumbVar: Int = 0)(implicit F: Effect[F]): Pipe[F, Todo] =
-    clientBodyStream(dumbVar) andThen byteStreamParserS andThen tweetPipeS andThen filterLeft
+  def clientStream(dumbVar: Int = 0, ec: ExecutionContext): Stream[F, Unit] =
+    clientBodyStream(dumbVar, ec)
+      .through(todoPipeS)
+      .through(filterLeft) // Removes all errors
+      .covary[F].showLinesStdOut
 
-  def clientBodyStream[F[_]: Effect](dumbVar: Int): Pipe[F, TwitterUserAuthentication, Segment[Byte, Unit]] =
-    taS =>
-      for {
-        ta <- taS
-        client <- Http1Client.stream[F]()
-        signedRequest <- Stream.repeatEval(F.pure(twitterStreamRequest[F](track))) // Endlessly Generate Requests
-          .through(userSign(ta)) // Sign Them
-        infiniteEntityBody <- client.streaming(signedRequest)(_.body.segments) // Transform to Efficient Segments
-      } yield infiniteEntityBody
+
+  def clientBodyStream(dumbVar: Int, ec: ExecutionContext): Stream[F, Json] =
+    for {
+      client <- BlazeClientBuilder[F](ec).stream
+      plainRequest <- Stream.repeatEval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest(dumbVar))) // Endlessly Generate Requests.  Will get a F[Request[F]].
+      infiniteEntityBody <- client.stream(plainRequest).flatMap(_.body.chunks.parseJsonStream)
+    } yield infiniteEntityBody
+
 
   def todoPipeS[F[_]]: Pipe[F, Json, Either[String, Todo]] = _.map{ json =>
     json.as[Todo].leftMap(pE => s"ParseError: ${pE.message} - ${json.printWith(Printer.noSpaces)}")
   }
+
+  def run: F[Unit] =
+    blockingEcStream.flatMap { blockingEc =>
+      clientStream(23, blockingEc)
+    }.compile.drain
 }
 
 object App extends IOApp {
+  // Note: .as() is Functor
+  // def as[B](b : B) : F[B]
+
   val ec = scala.concurrent.ExecutionContext.global
 
   val client = BlazeClientBuilder[IO](ec)
 
-  def run(args: List[String]): IO[ExitCode] = client.resource.use(FakeSoap[IO].getSite).as(ExitCode.Success)
+  def run3(args: List[String]): IO[ExitCode] = client.resource.use(FakeSoap[IO].getSite).as(ExitCode.Success)
 
 
   def run2(args: List[String]): IO[ExitCode] = client.resource.use(Fetcher[IO].getSite).as(ExitCode.Success)
+
+  def run(args: List[String]): IO[ExitCode] = (new InfiniteClient[IO]).run.as(ExitCode.Success)
+
 }
