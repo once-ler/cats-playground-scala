@@ -1,7 +1,8 @@
 package com.eztier.testhttp4sclient
 
 import io.circe.generic.auto._
-import cats.effect.{Bracket, ExitCode, IO, IOApp, Sync}
+import cats.effect.{Bracket, Effect, ExitCode, IO, IOApp, Sync}
+import fs2.Pipe
 import org.http4s.{EntityBody, Header}
 // import cats.effect._
 import cats.implicits._
@@ -74,6 +75,40 @@ object FakeSoap {
   def apply[F[_]: Sync] = new FakeSoap()
 }
 
+// -----------------------------------------------------------------------------------------------
+// Inifinite stream
+
+object InfiniteClient {
+  val ec = scala.concurrent.ExecutionContext.global
+  implicit val cs = IO.contextShift(ec)
+  
+  val client = BlazeClientBuilder[IO](ec)
+
+  case class Todo(userId: String, id: Int, title: String, completed: Boolean)
+
+  def createRequest[F[_]: Effect]: Request[F] = Request[F](
+    Method.GET,
+    Uri.unsafeFromString("https://jsonplaceholder.typicode.com/todos"),
+    HttpVersion.`HTTP/1.1`, Headers.empty, EmptyBody, Vault.empty // The params on this line are optional.
+  )
+
+  def clientStream[F[_]](dumbVar: Int = 0)(implicit F: Effect[F]): Pipe[F, Todo] =
+    clientBodyStream(dumbVar) andThen byteStreamParserS andThen tweetPipeS andThen filterLeft
+
+  def clientBodyStream[F[_]: Effect](dumbVar: Int): Pipe[F, TwitterUserAuthentication, Segment[Byte, Unit]] =
+    taS =>
+      for {
+        ta <- taS
+        client <- Http1Client.stream[F]()
+        signedRequest <- Stream.repeatEval(F.pure(twitterStreamRequest[F](track))) // Endlessly Generate Requests
+          .through(userSign(ta)) // Sign Them
+        infiniteEntityBody <- client.streaming(signedRequest)(_.body.segments) // Transform to Efficient Segments
+      } yield infiniteEntityBody
+
+  def todoPipeS[F[_]]: Pipe[F, Json, Either[String, Todo]] = _.map{ json =>
+    json.as[Todo].leftMap(pE => s"ParseError: ${pE.message} - ${json.printWith(Printer.noSpaces)}")
+  }
+}
 
 object App extends IOApp {
   val ec = scala.concurrent.ExecutionContext.global
