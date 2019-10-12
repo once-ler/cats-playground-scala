@@ -9,7 +9,7 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 
 import doobie.util.ExecutionContexts
-import doobie.hikari._
+// import doobie.hikari._
 // App
 import domain.authors._
 import infrastructure.endpoint.AuthorEndpoints
@@ -17,7 +17,6 @@ import infrastructure.repository.doobie.DoobieAuthorRepositoryInterpreter
 import config.{DatabaseConfig, TestHttp4sDoobieConfig}
 
 object Server extends IOApp {
-
   def createServer[F[_]: ContextShift: ConcurrentEffect: Timer]: Resource[F, H4Server[F]] =
     for {
       conf <- Resource.liftF(parser.decodePathF[F, TestHttp4sDoobieConfig]("testhttp4sdoobie"))
