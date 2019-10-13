@@ -8,6 +8,7 @@ import cats.effect.{Bracket, Concurrent, ConcurrentEffect, ContextShift, Effect,
 import fs2.Pipe
 import io.circe.Printer
 import org.http4s.{EntityBody, Header}
+import org.typelevel.jawn.AsyncParser
 
 import scala.concurrent.ExecutionContext
 // import cats.effect._
@@ -117,13 +118,11 @@ class InfiniteClient[F[_]: ConcurrentEffect: ContextShift] {
       Sync[F].delay(pool.shutdown()))
       .map(ExecutionContext.fromExecutorService)
 
-  case class Todo(userId: String, id: Int, title: String, completed: Boolean)
-
-  // Uri.unsafeFromString("https://jsonplaceholder.typicode.com/todos"),
+  case class Todo(userId: Int, id: Int, title: String, completed: Boolean)
 
   def createRequest(dumbVar: Int = 0): Request[F] = Request[F](
     Method.GET,
-    Uri.unsafeFromString("https://jsonplaceholder.typicode.com/users/10"),
+    Uri.unsafeFromString("https://jsonplaceholder.typicode.com/todos"),
     HttpVersion.`HTTP/1.1`, Headers.empty, EmptyBody, Vault.empty // The params on this line are optional.
   )
 
@@ -142,8 +141,8 @@ class InfiniteClient[F[_]: ConcurrentEffect: ContextShift] {
     } yield infiniteEntityBody
 
 
-  def todoPipeS[F[_]]: Pipe[F, Json, Either[String, Todo]] = _.map{ json =>
-    json.as[Todo].leftMap(pE => s"ParseError: ${pE.message} - ${json.printWith(Printer.noSpaces)}")
+  def todoPipeS[F[_]]: Pipe[F, Json, Either[String, List[Todo]]] = _.map{ json =>
+    json.as[List[Todo]].leftMap(pE => s"ParseError: ${pE.message} - ${json.printWith(Printer.noSpaces)}")
   }
 
   def run: F[Unit] =
