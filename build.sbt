@@ -110,6 +110,23 @@ lazy val testdoobiefs2 = project.
   common
 )
 
+lazy val testxmlfs2 = project.
+  settings(
+    name := "test-xml-fs2",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      http4sBlazeClient,
+      http4sCirce,
+      fs2,
+      fs2Io,
+      kantanXpath,
+      kantanXpathCats
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
@@ -122,6 +139,7 @@ val H2Version = "1.4.199"
 val KindProjectorVersion = "0.10.3"
 val FlywayVersion = "6.0.4"
 val FS2Version = "2.0.0"
+val kantanXPathVersion = "0.5.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -153,6 +171,9 @@ val kindProjectorPlugin = ("org.typelevel" %% "kind-projector" % KindProjectorVe
 
 val fs2 = "co.fs2" %% "fs2-core" % FS2Version
 val fs2Io = "co.fs2" %% "fs2-io" % FS2Version
+
+val kantanXpath = "com.nrinaudo" %% "kantan.xpath" % kantanXPathVersion
+val kantanXpathCats = "com.nrinaudo" %% "kantan.xpath-cats" % kantanXPathVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

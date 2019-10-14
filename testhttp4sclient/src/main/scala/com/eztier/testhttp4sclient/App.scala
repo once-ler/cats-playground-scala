@@ -7,7 +7,6 @@ import io.circe.generic.auto._
 import cats.effect.{Bracket, Concurrent, ConcurrentEffect, ContextShift, Effect, ExitCode, IO, IOApp, Sync}
 import fs2.Pipe
 import io.circe.Printer
-import org.http4s.{EntityBody, Header}
 import org.typelevel.jawn.AsyncParser
 
 import scala.concurrent.ExecutionContext
@@ -16,7 +15,7 @@ import cats.implicits._
 import io.chrisdavenport.vault.Vault
 import io.circe.Json
 
-import org.http4s.{EmptyBody, Headers, HttpVersion, Method, Request, Uri}
+import org.http4s.{EntityBody, Header, EmptyBody, Headers, HttpVersion, Method, Request, Uri}
 import org.http4s.client.Client
 import org.http4s.circe._
 import org.http4s.client.blaze.BlazeClientBuilder
