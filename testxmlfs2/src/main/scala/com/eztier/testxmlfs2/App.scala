@@ -26,17 +26,31 @@ case class OpenStreetPlace
   CountryCode: String
 )
 
+case class OpenStreetNeighborhood
+(
+  PlaceId: String,
+  PlaceRank: String,
+  Boundingbox: String,
+  Lat: String,
+  Lon: String,
+  DisplayName: String,
+  Class: String,
+  Type: String,
+  importance: String
+)
+
 case class DomainPlace
 (
   AddressLine1: String,
   City: String,
   State: String,
-  ZipCode: String
+  ZipCode: String,
+  Neighborhood: String = ""
 )
 
 object Codecs {
   implicit val openMapPlaceToDomainPlace: OpenStreetPlace => DomainPlace =
-    o => DomainPlace(s"${o.HouseNumber}  ${o.Road}", o.City, o.State, o.Postcode)
+    o => DomainPlace(s"${o.HouseNumber} ${o.Road}", o.City, o.State, o.Postcode)
 
   implicit val domainPlaceToOpenMapPlace: DomainPlace => OpenStreetPlace =
     d => OpenStreetPlace(
@@ -99,13 +113,21 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
     clientBodyStream(ec)
       .through(placePipeS)
       .through(filterLeft) // Removes all errors
+      .through(domainPlacePipeS)
+      .through(toXmlPipeS)
       .covary[F].showLinesStdOut
 
   val headers = Headers.of(Header("Accept", "*/*"))
 
   def createRequest: Request[F] = Request[F](
-    method = Method.POST,
+    method = Method.GET,
     uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?q=550+1st+Avenue,+new+york&format=xml&point=1&addressdetails=1"),
+    headers = headers
+  )
+
+  def createAnotherRequest: Request[F] = Request[F](
+    method = Method.GET,
+    uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?postalcode=10016&country=us&format=xml&point=1&addressdetails=0"),
     headers = headers
   )
 
@@ -113,6 +135,13 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
     for {
       client <- BlazeClientBuilder[F](ec).stream
       plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest))
+      entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
+    } yield entityBody
+
+  def clientAnotherBodyStream(ec: ExecutionContext): Stream[F, String] =
+    for {
+      client <- BlazeClientBuilder[F](ec).stream
+      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createAnotherRequest))
       entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
     } yield entityBody
 
@@ -130,6 +159,18 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
     xp"./country_code/text()"
   )(OpenStreetPlace.apply)
 
+  implicit val neighborhoodDecoder: NodeDecoder[OpenStreetNeighborhood] = NodeDecoder.decoder(
+    xp"./@place_id",
+    xp"./@place_rank",
+    xp"./@boundingbox",
+    xp"./@lat",
+    xp"./@lon",
+    xp"./@display_name",
+    xp"./@class",
+    xp"./@type",
+    xp"./@importance"
+  )(OpenStreetNeighborhood.apply)
+
   def placePipeS[F[_]]: Pipe[F, String, Either[XPathError, List[OpenStreetPlace]]] = _.map {
     str =>
       val result: kantan.xpath.XPathResult[List[OpenStreetPlace]] = str.evalXPath[List[OpenStreetPlace]](xp"//place")
@@ -144,6 +185,32 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
           d
       }
       result
+  }
+
+  def enhanceDomainPlacePipeS[F[_]: ContextShift]: Pipe[F, List[DomainPlace], List[DomainPlace]] = _.map {
+    places =>
+
+      places.map {
+        place =>
+          blockingEcStream.flatMap {
+            ec =>
+              clientAnotherBodyStream(ec)
+                .map{
+                  str =>
+                    str.evalXPath[List[OpenStreetNeighborhood]](xp"//place")
+                }.map{
+                  maybehoods =>
+                    maybehoods.map{
+                      hood =>
+                        hood.headOption match {
+                          case Some(h) => place.copy(Neighborhood = h.DisplayName)
+                          case _ => place
+                        }
+                    }
+              }
+          }
+      }
+
   }
 
   def toXmlPipeS[F[_]]: Pipe[F, List[DomainPlace], List[String]] = _.map {
