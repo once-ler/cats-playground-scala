@@ -66,6 +66,10 @@ object Codecs {
       "us"
     )
 
+  implicit val openMapNeighborhoodToDomainPlace: OpenStreetNeighborhood => DomainPlace =
+    o => DomainPlace("", "", "", "", o.DisplayName)
+
+
   /*
   implicit val openStreetPlaceSemigroup: Semigroup[OpenStreetPlace] = new Semigroup[OpenStreetPlace] {
     def combine(a: OpenStreetPlace, b: OpenStreetPlace): OpenStreetPlace = ???
@@ -88,7 +92,75 @@ object Util {
   }
 }
 
-class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
+abstract class WithBlockingEcStream[F[_]: ConcurrentEffect: ContextShift] {
+  val headers = Headers.of(Header("Accept", "*/*"))
+
+  // Don't block the main thread
+  def blockingEcStream: Stream[F, ExecutionContext] =
+    Stream.bracket(Sync[F].delay(Executors.newFixedThreadPool(4)))(pool =>
+      Sync[F].delay(pool.shutdown()))
+      .map(ExecutionContext.fromExecutorService)
+
+  def createRequest: Request[F]
+
+  def clientBodyStream(ec: ExecutionContext): Stream[F, String] =
+    for {
+      client <- BlazeClientBuilder[F](ec).stream
+      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest))
+      entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
+    } yield entityBody
+
+}
+
+class OpenStreetMapNeighborhood[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEcStream[F] {
+  import Util._
+  import Codecs._
+
+  import kantan.xpath._
+  import kantan.xpath.implicits._
+
+  implicit val neighborhoodDecoder: NodeDecoder[OpenStreetNeighborhood] = NodeDecoder.decoder(
+    xp"./@place_id",
+    xp"./@place_rank",
+    xp"./@boundingbox",
+    xp"./@lat",
+    xp"./@lon",
+    xp"./@display_name",
+    xp"./@class",
+    xp"./@type",
+    xp"./@importance"
+  )(OpenStreetNeighborhood.apply)
+
+  def clientStream(ec: ExecutionContext): Stream[F, List[DomainPlace]] =
+    clientBodyStream(ec)
+      .through(neighborhoodPipeS)
+      .through(filterLeft) // Removes all errors
+      .through(domainPlacePipeS)
+
+  def createRequest: Request[F] = Request[F](
+    method = Method.GET,
+    uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?postalcode=10016&country=us&format=xml&point=1&addressdetails=0"),
+    headers = headers
+  )
+
+  def neighborhoodPipeS[F[_]]: Pipe[F, String, Either[XPathError, List[OpenStreetNeighborhood]]] = _.map {
+    str =>
+      val result: kantan.xpath.XPathResult[List[OpenStreetNeighborhood]] = str.evalXPath[List[OpenStreetNeighborhood]](xp"//place")
+      result
+  }
+
+  def domainPlacePipeS[F[_]]: Pipe[F, List[OpenStreetNeighborhood], List[DomainPlace]] = _.map {
+    places =>
+      val result = places.map {
+        p =>
+          val d: DomainPlace = p
+          d
+      }
+      result
+  }
+}
+
+class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEcStream[F] {
   import Util._
   import Codecs._
 
@@ -103,11 +175,6 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
   // For showLinesStdOut
   implicit val showOpenStreetPlace: Show[OpenStreetPlace] = Show.show(t => s"${t.Building}\n${t.HouseNumber}\n${t.Road}\n${t.City}\n${t.State}\n${t.Postcode}\n${t.Country}")
 
-  // Don't block the main thread
-  def blockingEcStream: Stream[F, ExecutionContext] =
-    Stream.bracket(Sync[F].delay(Executors.newFixedThreadPool(4)))(pool =>
-      Sync[F].delay(pool.shutdown()))
-      .map(ExecutionContext.fromExecutorService)
 
   def clientStream(ec: ExecutionContext): Stream[F, Unit] =
     clientBodyStream(ec)
@@ -117,34 +184,11 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
       .through(toXmlPipeS)
       .covary[F].showLinesStdOut
 
-  val headers = Headers.of(Header("Accept", "*/*"))
-
   def createRequest: Request[F] = Request[F](
     method = Method.GET,
     uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?q=550+1st+Avenue,+new+york&format=xml&point=1&addressdetails=1"),
     headers = headers
   )
-
-  def createAnotherRequest: Request[F] = Request[F](
-    method = Method.GET,
-    uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?postalcode=10016&country=us&format=xml&point=1&addressdetails=0"),
-    headers = headers
-  )
-
-  def clientBodyStream(ec: ExecutionContext): Stream[F, String] =
-    for {
-      client <- BlazeClientBuilder[F](ec).stream
-      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest))
-      entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
-    } yield entityBody
-
-  def clientAnotherBodyStream(ec: ExecutionContext): Stream[F, String] =
-    for {
-      client <- BlazeClientBuilder[F](ec).stream
-      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createAnotherRequest))
-      entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
-    } yield entityBody
-
 
   implicit val placeDecoder: NodeDecoder[OpenStreetPlace] = NodeDecoder.decoder(
     xp"./building/text()",
@@ -158,18 +202,6 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
     xp"./country/text()",
     xp"./country_code/text()"
   )(OpenStreetPlace.apply)
-
-  implicit val neighborhoodDecoder: NodeDecoder[OpenStreetNeighborhood] = NodeDecoder.decoder(
-    xp"./@place_id",
-    xp"./@place_rank",
-    xp"./@boundingbox",
-    xp"./@lat",
-    xp"./@lon",
-    xp"./@display_name",
-    xp"./@class",
-    xp"./@type",
-    xp"./@importance"
-  )(OpenStreetNeighborhood.apply)
 
   def placePipeS[F[_]]: Pipe[F, String, Either[XPathError, List[OpenStreetPlace]]] = _.map {
     str =>
@@ -190,25 +222,9 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] {
   def enhanceDomainPlacePipeS[F[_]: ContextShift]: Pipe[F, List[DomainPlace], List[DomainPlace]] = _.map {
     places =>
 
-      places.map {
-        place =>
-          blockingEcStream.flatMap {
-            ec =>
-              clientAnotherBodyStream(ec)
-                .map{
-                  str =>
-                    str.evalXPath[List[OpenStreetNeighborhood]](xp"//place")
-                }.map{
-                  maybehoods =>
-                    maybehoods.map{
-                      hood =>
-                        hood.headOption match {
-                          case Some(h) => place.copy(Neighborhood = h.DisplayName)
-                          case _ => place
-                        }
-                    }
-              }
-          }
+      blockingEcStream.flatMap {
+        ec =>
+          (new OpenStreetMapNeighborhood).clientStream(ec)
       }
 
   }
