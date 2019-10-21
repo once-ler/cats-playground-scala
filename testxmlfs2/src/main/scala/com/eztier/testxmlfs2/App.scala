@@ -4,9 +4,12 @@ import java.util.concurrent.Executors
 
 import cats.{Applicative, Invariant, Semigroup, Show}
 import cats.implicits._
-import cats.effect.{ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Sync}
+import cats.effect.{ConcurrentEffect, ContextShift, Effect, ExitCode, IO, IOApp, Sync}
 import fs2.{Pipe, Stream}
 import fs2.text.utf8DecodeC
+import cats.implicits._
+import com.thoughtworks.xstream.annotations.XStreamAlias
+import com.thoughtworks.xstream.annotations._
 import org.http4s.{Header, Headers, Method, Request, Uri}
 import org.http4s.client.blaze.BlazeClientBuilder
 
@@ -41,10 +44,10 @@ case class OpenStreetNeighborhood
 
 case class DomainPlace
 (
-  AddressLine1: String,
-  City: String,
-  State: String,
-  ZipCode: String,
+  AddressLine1: String = "",
+  City: String = "",
+  State: String = "",
+  ZipCode: String = "",
   Neighborhood: String = ""
 )
 
@@ -101,12 +104,12 @@ abstract class WithBlockingEcStream[F[_]: ConcurrentEffect: ContextShift] {
       Sync[F].delay(pool.shutdown()))
       .map(ExecutionContext.fromExecutorService)
 
-  def createRequest: Request[F]
+  def createRequest(zipCode: String = ""): Request[F]
 
-  def clientBodyStream(ec: ExecutionContext): Stream[F, String] =
+  def clientBodyStream(ec: ExecutionContext, zipCode: String = ""): Stream[F, String] =
     for {
       client <- BlazeClientBuilder[F](ec).stream
-      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest))
+      plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest(zipCode)))
       entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
     } yield entityBody
 
@@ -131,15 +134,15 @@ class OpenStreetMapNeighborhood[F[_]: ConcurrentEffect: ContextShift] extends Wi
     xp"./@importance"
   )(OpenStreetNeighborhood.apply)
 
-  def clientStream(ec: ExecutionContext): Stream[F, List[DomainPlace]] =
-    clientBodyStream(ec)
+  def clientStream(ec: ExecutionContext, place: DomainPlace = DomainPlace()): Stream[F, List[DomainPlace]] =
+    clientBodyStream(ec, place.ZipCode)
       .through(neighborhoodPipeS)
       .through(filterLeft) // Removes all errors
-      .through(domainPlacePipeS)
+      .through(domainPlacePipeS(place))
 
-  def createRequest: Request[F] = Request[F](
+  def createRequest(zipCode: String): Request[F] = Request[F](
     method = Method.GET,
-    uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?postalcode=10016&country=us&format=xml&point=1&addressdetails=0"),
+    uri = Uri.unsafeFromString(s"https://nominatim.openstreetmap.org/search?postalcode=$zipCode&country=us&format=xml&point=1&addressdetails=0"),
     headers = headers
   )
 
@@ -149,12 +152,13 @@ class OpenStreetMapNeighborhood[F[_]: ConcurrentEffect: ContextShift] extends Wi
       result
   }
 
-  def domainPlacePipeS[F[_]]: Pipe[F, List[OpenStreetNeighborhood], List[DomainPlace]] = _.map {
+  def domainPlacePipeS[F[_]](place: DomainPlace = DomainPlace()): Pipe[F, List[OpenStreetNeighborhood], List[DomainPlace]] = _.map {
     places =>
       val result = places.map {
         p =>
           val d: DomainPlace = p
-          d
+
+          place.copy(Neighborhood = d.Neighborhood)
       }
       result
   }
@@ -181,10 +185,13 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
       .through(placePipeS)
       .through(filterLeft) // Removes all errors
       .through(domainPlacePipeS)
+      .flatMap(Stream.emits)
+      .evalMap(enhanceDomainPlace)
+      .flatMap(Stream.emits) // F[List[List[DomainPlace]]] to F[List[DomainPlace]]
       .through(toXmlPipeS)
       .covary[F].showLinesStdOut
 
-  def createRequest: Request[F] = Request[F](
+  def createRequest(zipCode: String = ""): Request[F] = Request[F](
     method = Method.GET,
     uri = Uri.unsafeFromString("https://nominatim.openstreetmap.org/search?q=550+1st+Avenue,+new+york&format=xml&point=1&addressdetails=1"),
     headers = headers
@@ -219,22 +226,26 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
       result
   }
 
-  def enhanceDomainPlacePipeS[F[_]: ContextShift]: Pipe[F, List[DomainPlace], List[DomainPlace]] = _.map {
-    places =>
+  def enhanceDomainPlace(place: DomainPlace) = {
+    val f = for {
+      ec <- blockingEcStream
+      s <- (new OpenStreetMapNeighborhood[F]).clientStream(ec, place)
+    } yield s
 
-      blockingEcStream.flatMap {
-        ec =>
-          (new OpenStreetMapNeighborhood).clientStream(ec)
-      }
-
+    f.compile.toList
   }
 
   def toXmlPipeS[F[_]]: Pipe[F, List[DomainPlace], List[String]] = _.map {
     places =>
       val result = places.map {
         p =>
+          // For nested types.
+          // val placeClazz = classOf[DomainPlace]
+          // xstream.useAttributeFor(placeClazz, "DomainPlace")
+
+          xstream.aliasPackage("", "com.eztier.testxmlfs2")
           val xml = xstream.toXML(p)
-          // println(xml)
+          
           xml
       }
       result

@@ -42,7 +42,9 @@ object App extends IOApp {
   def sharedTopicStream[F[_]: Concurrent[?[_]]](topicId: String)(implicit ec: ExecutionContext): Stream[F, Topic[F, String]] =
     Stream.eval(Topic[F, String](s"Topic $topicId start"))
 
-  /** covary[F[_]] lifts this stream to the specified effect type. */
+  /** covary[F[_]] lifts this stream to the specified effect type.
+    Stream(1, 2, 3).covary[IO] == Stream[IO,Int]
+  **/
   // def covary[F[_]]: Stream[F, O] = self
   def addPublisher[F[_]](topic: Topic[F, String], value: String): Stream[F, Unit] =
     Stream.emit(value).covary[F].repeat.through(topic.publish)
