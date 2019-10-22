@@ -122,7 +122,14 @@ lazy val testxmlfs2 = project.
       fs2Io,
       kantanXpath,
       kantanXpathCats,
-      xstream
+      xstream,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway
     )
   ).dependsOn(
   common
