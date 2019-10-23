@@ -4,12 +4,13 @@ import java.util.concurrent.Executors
 
 import cats.{Applicative, Invariant, Semigroup, Show}
 import cats.implicits._
-import cats.effect.{ConcurrentEffect, ContextShift, Effect, ExitCode, IO, IOApp, Sync}
+import cats.effect.{Async, Blocker, Bracket, ConcurrentEffect, ContextShift, Effect, ExitCode, IO, IOApp, Resource, Sync}
 import fs2.{Pipe, Stream}
 import fs2.text.utf8DecodeC
 import cats.implicits._
 import com.thoughtworks.xstream.annotations.XStreamAlias
 import com.thoughtworks.xstream.annotations._
+import doobie.util.ExecutionContexts
 import org.http4s.{Header, Headers, Method, Request, Uri}
 import org.http4s.client.blaze.BlazeClientBuilder
 
@@ -164,7 +165,7 @@ class OpenStreetMapNeighborhood[F[_]: ConcurrentEffect: ContextShift] extends Wi
   }
 }
 
-class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEcStream[F] {
+class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift[?[_]]](val miner: Resource[F, Miner[F]]) extends WithBlockingEcStream[F] {
   import Util._
   import Codecs._
 
@@ -179,7 +180,6 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
   // For showLinesStdOut
   implicit val showOpenStreetPlace: Show[OpenStreetPlace] = Show.show(t => s"${t.Building}\n${t.HouseNumber}\n${t.Road}\n${t.City}\n${t.State}\n${t.Postcode}\n${t.Country}")
 
-
   def clientStream(ec: ExecutionContext): Stream[F, Unit] =
     clientBodyStream(ec)
       .through(placePipeS)
@@ -188,6 +188,8 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
       .flatMap(Stream.emits)
       .evalMap(enhanceDomainPlace)
       .flatMap(Stream.emits) // F[List[List[DomainPlace]]] to F[List[DomainPlace]]
+      .flatMap(Stream.emits) // Is there a more elegant way?
+      .evalMap(enhanceDomainPlaceWithSql)
       .through(toXmlPipeS)
       .covary[F].showLinesStdOut
 
@@ -235,6 +237,14 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
     f.compile.toList
   }
 
+  def enhanceDomainPlaceWithSql(place: DomainPlace) = {
+    val result = miner.use {
+      db =>
+        db.getOnePlace(place.City).map(a => place.copy(City = a.display)).compile.toList
+    }
+    result
+  }
+
   def toXmlPipeS[F[_]]: Pipe[F, List[DomainPlace], List[String]] = _.map {
     places =>
       val result = places.map {
@@ -259,12 +269,14 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift] extends WithBlockingEc
 }
 
 object OpenStreetMap {
-  def apply[F[_]: ConcurrentEffect: ContextShift] = new OpenStreetMap()
+  def apply[F[_]: ConcurrentEffect: ContextShift](miner: Resource[F, Miner[F]]) = new OpenStreetMap(miner)
 }
 
 
 object App extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = (OpenStreetMap[IO]).run.as(ExitCode.Success)
+  val miner = Database.getMiner[IO]
+
+  def run(args: List[String]): IO[ExitCode] = (OpenStreetMap[IO](miner)).run.as(ExitCode.Success)
 }
 
 /*

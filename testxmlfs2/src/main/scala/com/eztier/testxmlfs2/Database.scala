@@ -2,6 +2,11 @@ package com.eztier.testxmlfs2
 
 import cats.implicits._
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
+import doobie.implicits._
+import doobie.hikari.HikariTransactor
+import doobie.util.ExecutionContexts
+import doobie.util.query.Query0
+import doobie.util.transactor.Transactor
 import fs2.Stream
 import org.flywaydb.core.Flyway
 
@@ -62,4 +67,18 @@ class Miner[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F]) {
 
 object Miner {
   def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): Miner[F] = new Miner(xa)
+}
+
+object Database {
+  val conf = DatabaseConfig(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "sa", password = "", connections = DatabaseConnectionsConfig(10))
+
+  def getMiner[F[_]: Async: ContextShift] = {
+    for {
+      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
+      connEc <- ExecutionContexts.fixedThreadPool[F](conf.connections.poolSize)
+      txnEc <- ExecutionContexts.cachedThreadPool[F]
+      xa <- DatabaseConfig.dbTransactor[F](conf, connEc, Blocker.liftExecutionContext(txnEc)) // Creates a blocker that delegates to the supplied execution context.
+      miner = Miner(xa)
+    } yield miner
+  }
 }
