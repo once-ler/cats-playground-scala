@@ -1,12 +1,16 @@
 package com.eztier.testxmlfs2
 
 import cats.implicits._
-import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
-import doobie.implicits._
+import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import doobie.util.query.Query0
 import doobie.util.transactor.Transactor
+
+import doobie._
+import doobie.hikari._
+import doobie.implicits._
+
 import fs2.Stream
 import org.flywaydb.core.Flyway
 
@@ -56,7 +60,7 @@ class Miner[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F]) {
 
   def oneSql(p: String): Query0[Place] = sql"""
     SELECT code, display
-    FROM place where code = '$p'
+    FROM place where code = $p
   """.query
 
   def getOnePlace(p: String): Stream[F, Place] = {
@@ -70,6 +74,7 @@ object Miner {
 }
 
 object Database {
+
   val conf = DatabaseConfig(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "sa", password = "", connections = DatabaseConnectionsConfig(10))
 
   def getMiner[F[_]: Async: ContextShift] = {

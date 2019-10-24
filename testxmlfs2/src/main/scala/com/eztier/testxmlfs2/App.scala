@@ -20,7 +20,7 @@ case class OpenStreetPlace
 (
   Building: String,
   HouseNumber: String,
-  Road: String,
+  Cycleway: String,
   Suburb: String,
   City: String,
   County: String,
@@ -54,7 +54,7 @@ case class DomainPlace
 
 object Codecs {
   implicit val openMapPlaceToDomainPlace: OpenStreetPlace => DomainPlace =
-    o => DomainPlace(s"${o.HouseNumber} ${o.Road}", o.City, o.State, o.Postcode)
+    o => DomainPlace(s"${o.HouseNumber} ${o.Cycleway}", o.City, o.State, o.Postcode)
 
   implicit val domainPlaceToOpenMapPlace: DomainPlace => OpenStreetPlace =
     d => OpenStreetPlace(
@@ -178,7 +178,7 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift[?[_]]](val miner: Resou
   val xstream = new XStream(new DomDriver)
 
   // For showLinesStdOut
-  implicit val showOpenStreetPlace: Show[OpenStreetPlace] = Show.show(t => s"${t.Building}\n${t.HouseNumber}\n${t.Road}\n${t.City}\n${t.State}\n${t.Postcode}\n${t.Country}")
+  implicit val showOpenStreetPlace: Show[OpenStreetPlace] = Show.show(t => s"${t.Building}\n${t.HouseNumber}\n${t.Cycleway}\n${t.City}\n${t.State}\n${t.Postcode}\n${t.Country}")
 
   def clientStream(ec: ExecutionContext): Stream[F, Unit] =
     clientBodyStream(ec)
@@ -202,7 +202,7 @@ class OpenStreetMap[F[_]: ConcurrentEffect: ContextShift[?[_]]](val miner: Resou
   implicit val placeDecoder: NodeDecoder[OpenStreetPlace] = NodeDecoder.decoder(
     xp"./building/text()",
     xp"./house_number/text()",
-    xp"./road/text()",
+    xp"./cycleway/text()",
     xp"./suburb/text()",
     xp"./city/text()",
     xp"./county/text()",
@@ -284,13 +284,13 @@ Result:
 
 List(<DomainPlace>
   <AddressLine1>550 1st Avenue</AddressLine1>
-  <City>NYC</City>
+  <City>New York</City>
   <State>New York</State>
   <ZipCode>10016</ZipCode>
   <Neighborhood>Kips Bay, Manhattan Community Board 6, Manhattan, New York County, NYC, New York, 10016, USA</Neighborhood>
 </DomainPlace>, <DomainPlace>
   <AddressLine1>550 1st Avenue</AddressLine1>
-  <City>NYC</City>
+  <City>New York</City>
   <State>New York</State>
   <ZipCode>10016</ZipCode>
   <Neighborhood>Midtown South, Manhattan Community Board 5, Manhattan, New York County, NYC, New York, 10016, United States of America</Neighborhood>
