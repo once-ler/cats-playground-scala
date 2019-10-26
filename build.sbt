@@ -135,6 +135,29 @@ lazy val testxmlfs2 = project.
   common
 )
 
+lazy val testbadsqlmodel = project.
+  settings(
+    name := "test-bad-sql-model",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      fs2,
+      fs2Io,
+      kantanXpath,
+      kantanXpathCats,
+      xstream,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
