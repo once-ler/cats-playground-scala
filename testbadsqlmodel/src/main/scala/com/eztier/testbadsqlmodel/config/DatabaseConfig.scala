@@ -1,5 +1,4 @@
-package src.com.eztier.testbadsqlmodel.config
-package h2
+package com.eztier.testbadsqlmodel.config
 
 import cats.effect.{Async, Blocker, ContextShift, Resource, Sync}
 import cats.implicits._

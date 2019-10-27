@@ -1,4 +1,4 @@
-package src.com.eztier.testbadsqlmodel
+package com.eztier.testbadsqlmodel
 package infrastructure.repository.doobie
 
 import cats.data.OptionT
@@ -46,10 +46,20 @@ class DoobieTrialRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: T
   override def get(id: Long): OptionT[F, Trial] = OptionT(TrialSql.get(id).option.transact(xa))
 }
 
+object DoobieTrialRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieTrialRepositoryInterpreter[F] =
+    new DoobieTrialRepositoryInterpreter(xa)
+}
+
 class DoobieTrialArmRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends TrialArmRepositoryAlgebra[F] {
 
   override def get(id: Long): OptionT[F, TrialArm] = OptionT(TrialArmSql.get(id).option.transact(xa))
+}
+
+object DoobieTrialArmRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieTrialArmRepositoryInterpreter[F] =
+    new DoobieTrialArmRepositoryInterpreter(xa)
 }
 
 class DoobieTrialContractRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
@@ -58,8 +68,18 @@ class DoobieTrialContractRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](v
   override def get(id: Long): OptionT[F, TrialContract] = OptionT(TrialContractSql.get(id).option.transact(xa))
 }
 
+object DoobieTrialContractRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieTrialContractRepositoryInterpreter[F] =
+    new DoobieTrialContractRepositoryInterpreter(xa)
+}
+
 class DoobieJunctionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends JunctionRepositoryAlgebra[F] {
 
   override def list(id: Long): F[List[Junction]] = JunctionSql.list(id).to[List].transact(xa)
+}
+
+object DoobieJunctionRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieJunctionRepositoryInterpreter[F] =
+    new DoobieJunctionRepositoryInterpreter(xa)
 }

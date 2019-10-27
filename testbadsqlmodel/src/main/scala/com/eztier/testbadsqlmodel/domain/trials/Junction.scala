@@ -1,4 +1,4 @@
-package src.com.eztier.testbadsqlmodel
+package com.eztier.testbadsqlmodel
 package domain.trials
 
 case class Junction

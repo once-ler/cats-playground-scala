@@ -1,9 +1,9 @@
-package src.com.eztier.testbadsqlmodel
+package com.eztier.testbadsqlmodel
 package domain.trials
 
-import cats.Applicative
+import cats.{Applicative, Functor}
 import cats.data.{EitherT, OptionT}
-import src.com.eztier.testbadsqlmodel.domain.TrialArmNotFoundError
+import com.eztier.testbadsqlmodel.domain.TrialArmNotFoundError
 
 case class TrialArm
 (
@@ -24,8 +24,8 @@ trait TrialArmValidationAlgebra[F[_]] {
 
 class TrialArmValidationInterpreter[F[_]: Applicative](trialArmRepo: TrialArmRepositoryAlgebra[F])
   extends TrialArmValidationAlgebra[F] {
-  def exists(authorId: Option[Long]): EitherT[F, TrialArmNotFoundError.type, Unit] =
-    authorId match {
+  def exists(id: Option[Long]): EitherT[F, TrialArmNotFoundError.type, Unit] =
+    id match {
       case Some(id) =>
         trialArmRepo.get(id)
           .toRight(TrialArmNotFoundError)
@@ -35,7 +35,23 @@ class TrialArmValidationInterpreter[F[_]: Applicative](trialArmRepo: TrialArmRep
     }
 }
 
-object TrialValidationInterpreter {
+object TrialArmValidationInterpreter {
   def apply[F[_]: Applicative](trialArmRepo: TrialArmRepositoryAlgebra[F]): TrialArmValidationAlgebra[F] =
     new TrialArmValidationInterpreter[F](trialArmRepo)
+}
+
+class TrialArmService[F[_]](
+  repository: TrialArmRepositoryAlgebra[F],
+  validation: TrialArmValidationAlgebra[F]
+) {
+  def get(id: Long)(implicit F: Functor[F]): EitherT[F, TrialArmNotFoundError.type, TrialArm] =
+    repository.get(id).toRight(TrialArmNotFoundError)
+}
+
+object TrialArmService {
+  def apply[F[_]](
+    repository: TrialArmRepositoryAlgebra[F],
+    validation: TrialArmValidationAlgebra[F]
+  ): TrialArmService[F] =
+  new TrialArmService[F](repository, validation)
 }

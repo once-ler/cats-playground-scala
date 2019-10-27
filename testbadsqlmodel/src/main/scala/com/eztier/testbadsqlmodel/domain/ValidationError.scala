@@ -1,4 +1,4 @@
-package src.com.eztier.testbadsqlmodel.domain
+package com.eztier.testbadsqlmodel.domain
 
 sealed trait ValidationError extends Product with Serializable
 
