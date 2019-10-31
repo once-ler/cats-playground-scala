@@ -1,17 +1,18 @@
 package com.eztier.testbadsqlmodel
 
+import cats.implicits._
 import cats.effect._
 import cats.effect.{Async, ContextShift, IOApp, Resource}
-import com.eztier.testbadsqlmodel.domain.trials.{TrialAggregator, TrialArmService, TrialArmValidationInterpreter, TrialContractService, TrialContractValidationInterpreter, TrialService, TrialValidationInterpreter}
+import com.eztier.testbadsqlmodel.domain.trials.{JunctionService, TrialAggregator, TrialArmService, TrialArmValidationInterpreter, TrialContractService, TrialContractValidationInterpreter, TrialService, TrialValidationInterpreter}
 import io.circe.config.{parser => ConfigParser}
 import doobie.util.ExecutionContexts
 import config._
-import infrastructure.repository.doobie.{DoobieTrialArmRepositoryInterpreter, DoobieTrialContractRepositoryInterpreter, DoobieTrialRepositoryInterpreter}
+import infrastructure.repository.doobie.{DoobieJunctionRepositoryInterpreter, DoobieTrialArmRepositoryInterpreter, DoobieTrialContractRepositoryInterpreter, DoobieTrialRepositoryInterpreter}
 
 object App extends IOApp {
 
   // ConfigParser.decodePathF[F, DatabaseConfig]("testbadsqlmodel") // Decode an instance supporting [[cats.ApplicativeError]]
-  def createTrialAggregator[F[_]: Async: ContextShift] =
+  def createTrialAggregator[F[_]: Async: ContextShift: ConcurrentEffect] =
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testbadsqlmodel")) // Lifts an applicative into a resource.
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.connections.poolSize)
@@ -26,10 +27,14 @@ object App extends IOApp {
       trialContractRepo = DoobieTrialContractRepositoryInterpreter[F](xa)
       trialContractValidation = TrialContractValidationInterpreter[F](trialContractRepo)
       trialContractService = TrialContractService(trialContractRepo, trialContractValidation)
-      trialAggregator = TrialAggregator(trialService, trialArmService, trialContractService)
+      junctionRepo = DoobieJunctionRepositoryInterpreter[F](xa)
+      junctionService = JunctionService(junctionRepo)
+      trialAggregator = TrialAggregator(trialService, trialArmService, trialContractService, junctionService)
     } yield trialAggregator
 
 
-  override def run(args: List[String]): IO[ExitCode] = ???
+  val agg = createTrialAggregator.use(_.run.compile.drain)
+
+  override def run(args: List[String]): IO[ExitCode] = agg.as(ExitCode.Success)
 
 }

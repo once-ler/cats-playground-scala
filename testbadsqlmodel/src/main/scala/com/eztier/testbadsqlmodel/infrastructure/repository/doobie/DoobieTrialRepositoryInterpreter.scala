@@ -37,6 +37,21 @@ private object JunctionSql {
     FROM junction
     WHERE set_id = $id
   """.query
+
+  def list(id: Option[Long]): Query0[Junction] =
+    id match {
+      case Some(a) =>
+        sql"""
+          SELECT set_id, item_id
+          FROM junction
+          WHERE set_id = $a
+        """.query
+      case None =>
+        sql"""
+          SELECT top 0 set_id, item_id
+          FROM junction
+        """.query
+    }
 }
 
 class DoobieTrialRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
@@ -77,6 +92,8 @@ class DoobieJunctionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa
   extends JunctionRepositoryAlgebra[F] {
 
   override def list(id: Long): F[List[Junction]] = JunctionSql.list(id).to[List].transact(xa)
+
+  override def list(id: Option[Long]): F[List[Junction]] = JunctionSql.list(id).to[List].transact(xa)
 }
 
 object DoobieJunctionRepositoryInterpreter {
