@@ -9,6 +9,7 @@ import cats.data.EitherT
 import cats.effect.{IO, Sync}
 import cats.implicits._
 import cats.effect._
+import com.eztier.testbadsqlmodel.domain.{TrialNotFoundError, ValidationError}
 import fs2.{Pipe, Stream}
 
 class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], junctionService: JunctionService[F]) {
@@ -22,14 +23,10 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
   def run  = {
     // https://medium.com/@scalaisfun/optiont-and-eithert-in-scala-90241aba1bb7
 
-    val a = trialContractService.get(1)
-    val b = trialService.exists(Some(20))
-
     val action = for {
       a <- trialContractService.get(1)
-      b <- trialService.get(a.trialId.get)
-      c <- EitherT.rightT(b.trialArmSet)
-      d <- EitherT.liftF(junctionService.list(c))
+      b <- trialService.exists(a.trialId)
+      d <- EitherT.liftF(junctionService.list(b.trialArmSet))
     } yield d
 
     val maybeItems = action.value.map {
