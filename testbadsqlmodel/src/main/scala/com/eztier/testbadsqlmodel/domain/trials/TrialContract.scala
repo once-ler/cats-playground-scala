@@ -21,19 +21,19 @@ trait TrialContractRepositoryAlgebra[F[_]] {
 }
 
 trait TrialContractValidationAlgebra[F[_]] {
-  def exists(id: Option[Long]): EitherT[F, TrialContractNotFoundError.type, Unit]
+  def exists(id: Option[Long]): EitherT[F, String, Unit]
 }
 
 class TrialContractValidationInterpreter[F[_]: Applicative](trialContractRepo: TrialContractRepositoryAlgebra[F])
   extends TrialContractValidationAlgebra[F] {
-  def exists(id: Option[Long]): EitherT[F, TrialContractNotFoundError.type, Unit] =
+  def exists(id: Option[Long]): EitherT[F, String, Unit] =
     id match {
       case Some(id) =>
         trialContractRepo.get(id)
-          .toRight(TrialContractNotFoundError)
+          .toRight("Trial contract not found.")
           .map(_ => ())
       case None =>
-        EitherT.leftT(TrialContractNotFoundError)
+        EitherT.leftT("Trial contract not found.")
     }
 }
 
@@ -46,8 +46,8 @@ class TrialContractService[F[_]](
   repository: TrialContractRepositoryAlgebra[F],
   validation: TrialContractValidationAlgebra[F]
 ) {
-  def get(id: Long)(implicit F: Functor[F]): EitherT[F, TrialContractNotFoundError.type, TrialContract] =
-    repository.get(id).toRight(TrialContractNotFoundError)
+  def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, TrialContract] =
+    repository.get(id).toRight("Trial contract not found.")
 }
 
 object TrialContractService {

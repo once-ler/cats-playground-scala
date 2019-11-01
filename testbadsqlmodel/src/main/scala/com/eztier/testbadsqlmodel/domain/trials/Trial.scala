@@ -17,20 +17,20 @@ trait TrialRepositoryAlgebra[F[_]] {
 }
 
 trait TrialValidationAlgebra[F[_]] {
-  def exists(id: Option[Long]): EitherT[F, TrialNotFoundError.type, Trial]
+  def exists(id: Option[Long]): EitherT[F, String, Trial]
 }
 
 class TrialValidationInterpreter[F[_]: Applicative](trialRepo: TrialRepositoryAlgebra[F])
   extends TrialValidationAlgebra[F] {
-  def exists(id: Option[Long]): EitherT[F, TrialNotFoundError.type, Trial] =
+  def exists(id: Option[Long]): EitherT[F, String, Trial] =
     id match {
       case Some(id) =>
         trialRepo.get(id)
-          .toRight(TrialNotFoundError) // Converts OptionT[F, A] to EitherT[F, L, A]
+          .toRight("Trial not found.") // Converts OptionT[F, A] to EitherT[F, L, A]
           // .map(_ => ())
       case None =>
         // EitherT.leftT, EitherT.rightT is alias for EitherT.pure is same as EitherT.left[Unit](TrialNotFoundError.pure[F])
-        EitherT.leftT(TrialNotFoundError)
+        EitherT.leftT("Trial not found.")
     }
 }
 
@@ -43,10 +43,10 @@ class TrialService[F[_]: Functor](
   repository: TrialRepositoryAlgebra[F],
   validation: TrialValidationAlgebra[F]
 ) {
-  def get(id: Long): EitherT[F, TrialNotFoundError.type, Trial] =
-    repository.get(id).toRight(TrialNotFoundError)
+  def get(id: Long): EitherT[F, String, Trial] =
+    repository.get(id).toRight("Trial not found.")
 
-  def exists(id: Option[Long])(implicit M: Monad[F]): EitherT[F, TrialNotFoundError.type, Trial] =
+  def exists(id: Option[Long])(implicit M: Monad[F]): EitherT[F, String, Trial] =
     validation.exists(id)
 }
 

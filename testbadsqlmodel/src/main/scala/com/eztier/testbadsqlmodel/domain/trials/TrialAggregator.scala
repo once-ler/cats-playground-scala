@@ -1,16 +1,14 @@
 package com.eztier.testbadsqlmodel
 package domain.trials
 
-import java.util.concurrent.Executors
+// import java.util.concurrent.Executors
+// import scala.concurrent.ExecutionContext
 
-import scala.concurrent.ExecutionContext
-import cats.{Applicative, Functor, Show}
-import cats.data.EitherT
-import cats.effect.{IO, Sync}
+import cats.{Applicative, Show}
+import cats.effect.IO
 import cats.implicits._
 import cats.effect._
-import com.eztier.testbadsqlmodel.domain.{TrialNotFoundError, ValidationError}
-import fs2.{Pipe, Stream}
+import fs2.{Stream}
 
 class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], junctionService: JunctionService[F]) {
   // implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(8))
@@ -23,11 +21,20 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
   def run  = {
     // https://medium.com/@scalaisfun/optiont-and-eithert-in-scala-90241aba1bb7
 
+    val L = implicitly[LiftIO[F]]
+
     val action = for {
-      a <- trialContractService.get(1)
+      a <- trialContractService.get(1001)
       b <- trialService.exists(a.trialId)
-      d <- EitherT.liftF(junctionService.list(b.trialArmSet))
+      d <- junctionService.list(b.trialArmSet)
     } yield d
+
+    val mi = action.fold(
+      a =>
+        List[Junction](),
+      b =>
+        b
+    )
 
     val maybeItems = action.value.map {
       case Right(list) => list
@@ -40,9 +47,10 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
     val list = Stream.eval(maybeItems)
       .flatMap(Stream.emits)
       // .chunkN(concurrency)
-      .parEvalMapUnordered(concurrency)(a => trialArmService.get(a.setId).value)
-      .through(filterLeft)
-      .covary[F]
+      .parEvalMapUnordered(concurrency)(a => trialArmService.get(a.itemId).value)
+      // .through(filterLeft)
+      // .covary[F]
+      .showLinesStdOut
       // .evalTap(a  => IO {println(s"${a.id} ${a.name}")})
       // .compile
       // .toList

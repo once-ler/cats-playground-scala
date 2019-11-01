@@ -19,19 +19,18 @@ trait TrialArmRepositoryAlgebra[F[_]] {
 }
 
 trait TrialArmValidationAlgebra[F[_]] {
-  def exists(id: Option[Long]): EitherT[F, TrialArmNotFoundError.type, Unit]
+  def exists(id: Option[Long]): EitherT[F, String, TrialArm]
 }
 
 class TrialArmValidationInterpreter[F[_]: Applicative](trialArmRepo: TrialArmRepositoryAlgebra[F])
   extends TrialArmValidationAlgebra[F] {
-  def exists(id: Option[Long]): EitherT[F, TrialArmNotFoundError.type, Unit] =
+  def exists(id: Option[Long]): EitherT[F, String, TrialArm] =
     id match {
       case Some(id) =>
         trialArmRepo.get(id)
-          .toRight(TrialArmNotFoundError)
-          .map(_ => ())
+          .toRight("Trial arm not found.")
       case None =>
-        EitherT.leftT(TrialArmNotFoundError)
+        EitherT.leftT("Trial arm not found.")
     }
 }
 
@@ -44,8 +43,8 @@ class TrialArmService[F[_]](
   repository: TrialArmRepositoryAlgebra[F],
   validation: TrialArmValidationAlgebra[F]
 ) {
-  def get(id: Long)(implicit F: Functor[F]): EitherT[F, TrialArmNotFoundError.type, TrialArm] =
-    repository.get(id).toRight(TrialArmNotFoundError)
+  def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, TrialArm] =
+    repository.get(id).toRight(s"Trial arm $id not found.")
 }
 
 object TrialArmService {

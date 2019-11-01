@@ -1,6 +1,7 @@
 package com.eztier.testbadsqlmodel
 package domain.trials
 
+import cats.data.EitherT
 import cats.{Applicative, Functor}
 
 case class Junction
@@ -19,10 +20,10 @@ class JunctionService[F[_]: Applicative](
 ) {
   def list(id: Long): F[List[Junction]] = repository.list(id)
 
-  def list(id: Option[Long]): F[List[Junction]] =
+  def list(id: Option[Long]): EitherT[F, String, List[Junction]] =
     id match {
-      case Some(a) => repository.list(a)
-      case None => Applicative[F].pure(List[Junction]())
+      case Some(a) => EitherT.liftF(repository.list(a))
+      case None => EitherT.leftT("Set id not provided.")
     }
 }
 
