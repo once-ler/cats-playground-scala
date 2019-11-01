@@ -35,7 +35,7 @@ object App extends IOApp {
     } yield trialAggregator
 
 
-  val agg = createTrialAggregator[IO].use(_.run.compile.drain)
+  val agg = createTrialAggregator[IO].use(_.run(1001).compile.drain)
 
   override def run(args: List[String]): IO[ExitCode] = agg.as(ExitCode.Success)
 

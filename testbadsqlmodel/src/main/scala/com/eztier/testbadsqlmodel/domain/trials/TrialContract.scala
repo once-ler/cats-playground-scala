@@ -7,13 +7,13 @@ import com.eztier.testbadsqlmodel.domain.TrialContractNotFoundError
 
 case class TrialContract
 (
-  id: Long,
-  name: String,
-  trialId: Option[Long],
-  fixedGeneralItemSet: Option[Long],
-  fixedPersonnelItemSet: Option[Long],
-  indirectRate: Option[Double],
-  costPerParticipant: Option[Double]
+  id: Long = -1,
+  name: String = "",
+  trialId: Option[Long] = None,
+  fixedGeneralItemSet: Option[Long] = None,
+  fixedPersonnelItemSet: Option[Long] = None,
+  indirectRate: Option[Double] = None,
+  costPerParticipant: Option[Double] = None
 )
 
 trait TrialContractRepositoryAlgebra[F[_]] {

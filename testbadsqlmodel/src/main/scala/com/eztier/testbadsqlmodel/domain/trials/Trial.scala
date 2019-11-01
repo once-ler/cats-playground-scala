@@ -7,9 +7,9 @@ import com.eztier.testbadsqlmodel.domain.TrialNotFoundError
 
 case class Trial
 (
-  id: Long,
-  name: String,
-  trialArmSet: Option[Long]
+  id: Long = -1,
+  name: String = "",
+  trialArmSet: Option[Long] = None
 )
 
 trait TrialRepositoryAlgebra[F[_]] {

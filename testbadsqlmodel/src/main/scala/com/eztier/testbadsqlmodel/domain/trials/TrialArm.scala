@@ -3,15 +3,16 @@ package domain.trials
 
 import cats.{Applicative, Functor}
 import cats.data.{EitherT, OptionT}
-import com.eztier.testbadsqlmodel.domain.TrialArmNotFoundError
+import cats.effect.{Async, Concurrent, Sync}
+import fs2.Stream
 
 case class TrialArm
 (
-  id: Long,
-  name: String,
-  numParticipants: Option[Int],
-  variableProcedureItemSet: Option[Long],
-  variableGeneralItemSet: Option[Long]
+  id: Long = -1,
+  name: String = "",
+  numParticipants: Option[Int] = None,
+  variableProcedureItemSet: Option[Long] = None,
+  variableGeneralItemSet: Option[Long] = None
 )
 
 trait TrialArmRepositoryAlgebra[F[_]] {
