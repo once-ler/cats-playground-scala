@@ -2,13 +2,12 @@ package com.eztier.testbadsqlmodel
 
 import cats.implicits._
 import cats.effect._
-
 import cats.effect.{Async, ContextShift, IOApp, Resource}
-import com.eztier.testbadsqlmodel.domain.trials.{JunctionService, TrialAggregator, TrialArmService, TrialArmValidationInterpreter, TrialContractService, TrialContractValidationInterpreter, TrialService, TrialValidationInterpreter}
+import com.eztier.testbadsqlmodel.domain.trials.{JunctionService, TrialAggregator, TrialArmService, TrialArmValidationInterpreter, TrialContractService, TrialContractValidationInterpreter, TrialService, TrialValidationInterpreter, VariableGeneralItemService, VariableProcedureItemService}
 import io.circe.config.{parser => ConfigParser}
 import doobie.util.ExecutionContexts
 import config._
-import infrastructure.repository.doobie.{DoobieJunctionRepositoryInterpreter, DoobieTrialArmRepositoryInterpreter, DoobieTrialContractRepositoryInterpreter, DoobieTrialRepositoryInterpreter}
+import infrastructure.repository.doobie.{DoobieJunctionRepositoryInterpreter, DoobieTrialArmRepositoryInterpreter, DoobieTrialContractRepositoryInterpreter, DoobieTrialRepositoryInterpreter, DoobieVariableGeneralItemRepositoryInterpreter, DoobieVariableProcedureItemRepositoryInterpreter}
 
 object App extends IOApp {
 
@@ -29,9 +28,13 @@ object App extends IOApp {
       trialContractRepo = DoobieTrialContractRepositoryInterpreter[F](xa)
       trialContractValidation = TrialContractValidationInterpreter[F](trialContractRepo)
       trialContractService = TrialContractService(trialContractRepo, trialContractValidation)
+      variableProcedureItemRepo = DoobieVariableProcedureItemRepositoryInterpreter[F](xa)
+      variableProcedureItemService = VariableProcedureItemService(variableProcedureItemRepo)
+      variableGeneralItemRepo = DoobieVariableGeneralItemRepositoryInterpreter[F](xa)
+      variableGeneralItemService = VariableGeneralItemService(variableGeneralItemRepo)
       junctionRepo = DoobieJunctionRepositoryInterpreter[F](xa)
       junctionService = JunctionService(junctionRepo)
-      trialAggregator = TrialAggregator(trialService, trialArmService, trialContractService, junctionService)
+      trialAggregator = TrialAggregator(trialService, trialArmService, trialContractService, variableProcedureItemService, variableGeneralItemService, junctionService)
     } yield trialAggregator
 
 

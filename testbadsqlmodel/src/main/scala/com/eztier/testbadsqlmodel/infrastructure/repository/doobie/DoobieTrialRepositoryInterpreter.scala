@@ -31,6 +31,22 @@ private object TrialArmSql {
   """.query
 }
 
+private object VariableProcedureItemSql {
+  def get(id: Long): Query0[VariableProcedureItem] = sql"""
+    SELECT id, quantity, sponsor_cost
+    FROM variable_procedure_item
+    WHERE id = $id
+  """.query
+}
+
+private object VariableGeneralItemSql {
+  def get(id: Long): Query0[VariableProcedureItem] = sql"""
+    SELECT id, quantity, sponsor_cost
+    FROM variable_general_item
+    WHERE id = $id
+  """.query
+}
+
 private object JunctionSql {
   def list(id: Long): Query0[Junction] = sql"""
     SELECT set_id, item_id
@@ -86,6 +102,28 @@ class DoobieTrialContractRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](v
 object DoobieTrialContractRepositoryInterpreter {
   def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieTrialContractRepositoryInterpreter[F] =
     new DoobieTrialContractRepositoryInterpreter(xa)
+}
+
+class DoobieVariableProcedureItemRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
+  extends VariableProcedureItemRepositoryAlgebra[F] {
+
+  override def get(id: Long): OptionT[F, VariableProcedureItem] = OptionT(VariableProcedureItemSql.get(id).option.transact(xa))
+}
+
+object DoobieVariableProcedureItemRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieVariableProcedureItemRepositoryInterpreter[F] =
+    new DoobieVariableProcedureItemRepositoryInterpreter(xa)
+}
+
+class DoobieVariableGeneralItemRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
+  extends VariableGeneralItemRepositoryAlgebra[F] {
+
+  override def get(id: Long): OptionT[F, VariableGeneralItem] = OptionT(VariableGeneralItemSql.get(id).option.transact(xa))
+}
+
+object DoobieVariableGeneralItemRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieVariableGeneralItemRepositoryInterpreter[F] =
+    new DoobieVariableGeneralItemRepositoryInterpreter(xa)
 }
 
 class DoobieJunctionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])

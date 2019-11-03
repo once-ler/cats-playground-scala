@@ -1,12 +1,13 @@
 package com.eztier.testbadsqlmodel
 package domain.trials
 
+import cats.data.EitherT
 import cats.{Applicative, Show}
 import cats.implicits._
 import cats.effect._
 import fs2.{Pipe, Stream}
 
-class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], junctionService: JunctionService[F]) {
+class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], variableProcedureItemService: VariableProcedureItemService[F], variableGeneralItemService: VariableGeneralItemService[F], junctionService: JunctionService[F]) {
   // For showLinesStdOut
   implicit val showTrialArm: Show[TrialArm] = Show.show(t => s"${t.id}\n${t.name}")
   implicit val showTuple: Show[(TrialContract, Trial, List[TrialArm])] =
@@ -51,19 +52,64 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
           }
       }
 
+    def getJunctions(id: Option[Long]): F[List[Junction]] = {
+      junctionService.list(id)
+        .fold(
+          err => {
+            println(err) // TODO: logger
+            List[Junction]()
+          },
+          li => li
+        )
+    }
+
+    def getJunctionItems[A](junctions: F[List[Junction]], fa: Junction => F[Either[String, A]]): F[List[A]] = {
+      Stream.eval(junctions)
+        .flatMap(Stream.emits)
+        .parEvalMapUnordered(concurrency)(fa)
+        .through(filterLeft)
+        .compile.toList
+    }
+
     def parGetVariableCosts: Pipe[F, (TrialContract, Trial, List[TrialArm]), ()] =
       _.evalMap {
         in =>
-          val f3 = Applicative[F].pure(in._3)
+          val A = Applicative[F]
+          val f3 = A.pure(in._3)
 
           val varProcedureCosts = Stream.eval(f3)
             .flatMap(Stream.emits)
+            .parEvalMapUnordered(concurrency) {
+              a =>
+
+                val procedureJunctions = getJunctions(a.variableProcedureItemSet)
+
+                val generalJunctions = getJunctions(a.variableGeneralItemSet)
+
+                val procedureItems = getJunctionItems[VariableProcedureItem](procedureJunctions, b => variableProcedureItemService.get(b.itemId).value)
+
+                val generalItems = getJunctionItems[VariableGeneralItem](generalJunctions, b => variableGeneralItemService.get(b.itemId).value)
+
+                /*
+                val procedureItems = Stream.eval(procedureJunctions)
+                  .flatMap(Stream.emits)
+                  .parEvalMapUnordered(concurrency) {
+                    b => variableProcedureItemService.get(b.itemId).value
+                  }
+                  .through(filterLeft)
+                  .compile.toList
+                */
+
+                ???
+            }
+
+            /*
             .parEvalMapUnordered(concurrency)(a => junctionService.list(a.variableProcedureItemSet).value)
             .through(filterLeft)
             .flatMap(Stream.emits)
-            .parEvalMapUnordered(concurrency)(a => ???)
+            .parEvalMapUnordered(concurrency)(a => variableProcedureItemService.get(a.itemId).value)
             .compile.toList
-
+            */
           ???
       }
 
@@ -75,6 +121,6 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
 }
 
 object TrialAggregator {
-  def apply[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], junctionService: JunctionService[F]) =
-    new TrialAggregator[F](trialService, trialArmService, trialContractService, junctionService)
+  def apply[F[_]: Applicative: Async: Concurrent](trialService: TrialService[F], trialArmService: TrialArmService[F], trialContractService: TrialContractService[F], variableProcedureItemService: VariableProcedureItemService[F], variableGeneralItemService: VariableGeneralItemService[F], junctionService: JunctionService[F]) =
+    new TrialAggregator[F](trialService, trialArmService, trialContractService, variableProcedureItemService, variableGeneralItemService, junctionService)
 }
