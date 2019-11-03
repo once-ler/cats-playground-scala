@@ -32,8 +32,8 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
 
     val concurrency = 4
 
-    def parGetArms: Pipe[F, (TrialContract, Trial, List[Junction]), (TrialContract, Trial, F[List[TrialArm]])] =
-      _.map {
+    def parGetArms: Pipe[F, (TrialContract, Trial, List[Junction]), (TrialContract, Trial, List[TrialArm])] =
+      _.evalMap {
         in =>
           val f3 = Applicative[F].pure(in._3)
 
@@ -45,23 +45,31 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
               .through(filterLeft)
               .compile.toList
 
-          (in._1, in._2, arms)
-      }
-
-    def finalize: Pipe[F, (TrialContract, Trial, F[List[TrialArm]]), (TrialContract, Trial, List[TrialArm])] =
-      _.evalMap {
-        in =>
-          val out = in._3.map {
+          arms.map {
             l =>
               (in._1, in._2, l)
           }
-          out
+      }
+
+    def parGetVariableCosts: Pipe[F, (TrialContract, Trial, List[TrialArm]), ()] =
+      _.evalMap {
+        in =>
+          val f3 = Applicative[F].pure(in._3)
+
+          val varProcedureCosts = Stream.eval(f3)
+            .flatMap(Stream.emits)
+            .parEvalMapUnordered(concurrency)(a => junctionService.list(a.variableProcedureItemSet).value)
+            .through(filterLeft)
+            .flatMap(Stream.emits)
+            .parEvalMapUnordered(concurrency)(a => ???)
+            .compile.toList
+
+          ???
       }
 
     // def eval[F[_],A](f: F[A]): Stream[F,A]
     Stream.eval(action)
       .through(parGetArms)
-      .through(finalize)
       .showLinesStdOut
   }
 }
