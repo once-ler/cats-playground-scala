@@ -10,6 +10,7 @@ case class TrialContract
   id: Long = -1,
   name: String = "",
   trialId: Option[Long] = None,
+  sponsor: Option[Long] = None,
   fixedGeneralItemSet: Option[Long] = None,
   fixedPersonnelItemSet: Option[Long] = None,
   indirectRate: Option[Double] = None,
@@ -18,6 +19,8 @@ case class TrialContract
 
 trait TrialContractRepositoryAlgebra[F[_]] {
   def get(id: Long): OptionT[F, TrialContract]
+
+  def getByTrialAndSponsor(trialId: Option[Long], sponsor: Option[Long]): OptionT[F, TrialContract]
 }
 
 trait TrialContractValidationAlgebra[F[_]] {
@@ -48,6 +51,9 @@ class TrialContractService[F[_]](
 ) {
   def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, TrialContract] =
     repository.get(id).toRight("Trial contract not found.")
+
+  def getByTrialAndSponsor(trialId: Option[Long], sponsor: Option[Long])(implicit F: Functor[F]): EitherT[F, String, TrialContract] =
+    repository.getByTrialAndSponsor(trialId, sponsor).toRight("Trial contract not found.")
 }
 
 object TrialContractService {

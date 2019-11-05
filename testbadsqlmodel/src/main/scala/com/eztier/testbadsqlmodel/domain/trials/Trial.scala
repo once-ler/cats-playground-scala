@@ -9,7 +9,8 @@ case class Trial
 (
   id: Long = -1,
   name: String = "",
-  trialArmSet: Option[Long] = None
+  trialArmSet: Option[Long] = None,
+  sponsor: Option[Long] = None
 )
 
 trait TrialRepositoryAlgebra[F[_]] {

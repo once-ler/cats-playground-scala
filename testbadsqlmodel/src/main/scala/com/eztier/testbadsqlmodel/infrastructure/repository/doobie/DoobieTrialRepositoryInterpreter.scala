@@ -1,6 +1,7 @@
 package com.eztier.testbadsqlmodel
 package infrastructure.repository.doobie
 
+import cats.Applicative
 import cats.data.OptionT
 import cats.effect.Bracket
 import doobie._
@@ -20,6 +21,12 @@ private object TrialContractSql {
     SELECT id, name, trial_id, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
     FROM trial_contract
     WHERE id = $id
+  """.query
+
+  def getByTrialAndSponsor(trialId: Long, sponsor: Long) = sql"""
+    SELECT id, name, trial_id, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
+    FROM trial_contract
+    WHERE trial_id = $trialId and sponsor = $sponsor
   """.query
 }
 
@@ -53,21 +60,6 @@ private object JunctionSql {
     FROM junction
     WHERE set_id = $id
   """.query
-
-  def list(id: Option[Long]): Query0[Junction] =
-    id match {
-      case Some(a) =>
-        sql"""
-          SELECT set_id, item_id
-          FROM junction
-          WHERE set_id = $a
-        """.query
-      case None =>
-        sql"""
-          SELECT top 0 set_id, item_id
-          FROM junction
-        """.query
-    }
 }
 
 class DoobieTrialRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
@@ -97,6 +89,13 @@ class DoobieTrialContractRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](v
   extends TrialContractRepositoryAlgebra[F] {
 
   override def get(id: Long): OptionT[F, TrialContract] = OptionT(TrialContractSql.get(id).option.transact(xa))
+
+  override def getByTrialAndSponsor(trialId: Option[Long], sponsor: Option[Long]): OptionT[F, TrialContract] = {
+    if (trialId.isEmpty || sponsor.isEmpty)
+      OptionT.none
+    else
+      OptionT(TrialContractSql.getByTrialAndSponsor(trialId.get, sponsor.get).option.transact(xa))
+  }
 }
 
 object DoobieTrialContractRepositoryInterpreter {
@@ -131,7 +130,11 @@ class DoobieJunctionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa
 
   override def list(id: Long): F[List[Junction]] = JunctionSql.list(id).to[List].transact(xa)
 
-  override def list(id: Option[Long]): F[List[Junction]] = JunctionSql.list(id).to[List].transact(xa)
+  override def list(id: Option[Long]): F[List[Junction]] =
+    if (id.isEmpty)
+      Applicative[F].pure(List[Junction]())
+    else
+      JunctionSql.list(id.get).to[List].transact(xa)
 }
 
 object DoobieJunctionRepositoryInterpreter {
