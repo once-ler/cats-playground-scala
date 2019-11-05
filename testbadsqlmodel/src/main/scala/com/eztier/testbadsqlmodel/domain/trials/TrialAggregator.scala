@@ -65,13 +65,13 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
         }
     }
 
-  def parGetVariableCosts: Pipe[F, (TrialContract, Trial, List[TrialArm]), Unit] =
+  def parGetVariableCosts: Pipe[F, (TrialContract, Trial, List[TrialArm]), (TrialContract, Trial, List[TrialArm], List[VariableProcedureItem], List[VariableGeneralItem])] =
     _.evalMap {
       in =>
         val A = Applicative[F]
         val f3 = A.pure(in._3)
 
-        val varProcedureCosts = Stream.eval(f3)
+        val variableCosts = Stream.eval(f3)
           .flatMap(Stream.emits)
           .parEvalMapUnordered(concurrency) {
             a =>
@@ -84,30 +84,22 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
 
               val generalItems = parGetJunctionItems[VariableGeneralItem](generalJunctions, b => variableGeneralItemService.get(b.itemId).value)
 
-              /*
-              val procedureItems = Stream.eval(procedureJunctions)
-                .flatMap(Stream.emits)
-                .parEvalMapUnordered(concurrency) {
-                  b => variableProcedureItemService.get(b.itemId).value
-                }
-                .through(filterLeft)
-                .compile.toList
-              */
+              for {
+                pi <- procedureItems
+                gi <- generalItems
+              } yield (pi, gi)
+          }.compile.toList
 
-              ???
-          }
+        variableCosts.map {
+          l =>
+            val h = l.headOption.getOrElse(((List[VariableProcedureItem](), List[VariableGeneralItem]())))
 
-        /*
-        .parEvalMapUnordered(concurrency)(a => junctionService.list(a.variableProcedureItemSet).value)
-        .through(filterLeft)
-        .flatMap(Stream.emits)
-        .parEvalMapUnordered(concurrency)(a => variableProcedureItemService.get(a.itemId).value)
-        .compile.toList
-        */
-        ???
+            (in._1, in._2, in._3, h._1, h._2)
+        }
+
     }
 
-  def runByTrialContract[F](id: Long) = {
+  def runByTrialContract(id: Long): F[(TrialContract, Trial)] = {
     val action = (for {
       a <- trialContractService.get(id)
       b <- trialService.exists(a.trialId)
@@ -124,7 +116,7 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
     action
   }
 
-  def runByTrial[F](id: Long) = {
+  def runByTrial(id: Long): F[(TrialContract, Trial)] = {
     val action = (for {
       a <- trialService.get(id)
       b <- trialContractService.getByTrialAndSponsor(Some(id), a.sponsor)
@@ -141,35 +133,25 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
     action
   }
 
+  def log[A](prefix: String): Pipe[F, A,A] = _.evalMap{ a => Sync[F].delay{ println(s"$prefix> $a"); a}}
+
   // EitherT[F, A, B] == F[Either[A, B]]
   def run(id: Long)  = {
     // https://medium.com/@scalaisfun/optiont-and-eithert-in-scala-90241aba1bb7
-    /*
-    val action = (for {
-      a <- trialContractService.get(id)
-      b <- trialService.exists(a.trialId)
-      d <- junctionService.list(b.trialArmSet)
-    } yield (a, b, d))
-      .fold(
-        err => {
-          println(err) // TODO: logger
 
-          (TrialContract(), Trial(), List[Junction]())
-        },
-        resp => resp
-      )
-
-    // def eval[F[_],A](f: F[A]): Stream[F,A]
-    Stream.eval(action)
-      .through(parGetArms)
-      .showLinesStdOut
-
-     */
 
     Stream.eval(runByTrial(1002))
       .through(parGetArms)
-      .showLinesStdOut
+      .through(parGetVariableCosts)
+      .through(log("logging"))
 
+    /*
+    Stream.eval(runByTrialContract(1001))
+      .through(parGetArms)
+      .through(parGetVariableCosts)
+      .through(log("logging"))
+      // .showLinesStdOut
+    */
   }
 }
 

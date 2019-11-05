@@ -10,7 +10,7 @@ import domain.trials._
 
 private object TrialSql {
   def get(id: Long): Query0[Trial] = sql"""
-    SELECT id, name, trial_arm_set
+    SELECT id, name, trial_arm_set, sponsor
     FROM trial
     WHERE id = $id
   """.query
@@ -18,13 +18,13 @@ private object TrialSql {
 
 private object TrialContractSql {
   def get(id: Long): Query0[TrialContract] = sql"""
-    SELECT id, name, trial_id, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
+    SELECT id, name, trial_id, sponsor, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
     FROM trial_contract
     WHERE id = $id
   """.query
 
-  def getByTrialAndSponsor(trialId: Long, sponsor: Long) = sql"""
-    SELECT id, name, trial_id, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
+  def getByTrialAndSponsor(trialId: Long, sponsor: Long): Query0[TrialContract] = sql"""
+    SELECT id, name, trial_id, sponsor, fixed_general_item_set, fixed_personnel_item_set, indirect_rate, cost_per_participant
     FROM trial_contract
     WHERE trial_id = $trialId and sponsor = $sponsor
   """.query
@@ -47,7 +47,7 @@ private object VariableProcedureItemSql {
 }
 
 private object VariableGeneralItemSql {
-  def get(id: Long): Query0[VariableProcedureItem] = sql"""
+  def get(id: Long): Query0[VariableGeneralItem] = sql"""
     SELECT id, quantity, sponsor_cost
     FROM variable_general_item
     WHERE id = $id
@@ -90,12 +90,11 @@ class DoobieTrialContractRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](v
 
   override def get(id: Long): OptionT[F, TrialContract] = OptionT(TrialContractSql.get(id).option.transact(xa))
 
-  override def getByTrialAndSponsor(trialId: Option[Long], sponsor: Option[Long]): OptionT[F, TrialContract] = {
+  override def getByTrialAndSponsor(trialId: Option[Long], sponsor: Option[Long]): OptionT[F, TrialContract] =
     if (trialId.isEmpty || sponsor.isEmpty)
       OptionT.none
     else
       OptionT(TrialContractSql.getByTrialAndSponsor(trialId.get, sponsor.get).option.transact(xa))
-  }
 }
 
 object DoobieTrialContractRepositoryInterpreter {
