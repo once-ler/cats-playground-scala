@@ -1,5 +1,5 @@
-insert into PLACE (CODE, DISPLAY) values ('NYC', 'New York');
-insert into PLACE (CODE, DISPLAY) values ('BKN', 'Brooklyn');
-insert into PLACE (CODE, DISPLAY) values ('BNX', 'Bronx');
-insert into PLACE (CODE, DISPLAY) values ('QNS', 'Queens');
-insert into PLACE (CODE, DISPLAY) values ('SI', 'Staten Island');
+insert into PLACE (CODE, DISPLAY) values ('New York', 'Manhanttan');
+insert into PLACE (CODE, DISPLAY) values ('Brooklyn', 'Kings');
+insert into PLACE (CODE, DISPLAY) values ('Bronx', 'The Bronx');
+insert into PLACE (CODE, DISPLAY) values ('Queens', 'Queens');
+insert into PLACE (CODE, DISPLAY) values ('Staten Island', 'Richmond');

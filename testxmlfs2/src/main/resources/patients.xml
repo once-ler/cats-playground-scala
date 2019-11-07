@@ -1,0 +1,122 @@
+<patients>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1990-10-10</DateTimeofBirth>
+        <EthnicGroup />
+        <PatientAddress>957 FANCY AVE S^^NEW YORK^NY^10010^US</PatientAddress>
+        <PatientName>FOURTEEN^TEST</PatientName>
+        <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>
+        <Race />
+        <_id>10038996</_id>
+        <dateCreated>1555518073000</dateCreated>
+        <dateLocal>2019-04-17 12:21:13.084</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1990-10-10</DateTimeofBirth>
+        <EthnicGroup />
+        <PatientAddress>957 FANCY AVE^^NEW YORK^NY^10010^US</PatientAddress>
+        <PatientName>FIFTEEN^TEST</PatientName>
+        <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>
+        <Race />
+        <_id>10038998</_id>
+        <dateCreated>1555518163000</dateCreated>
+        <dateLocal>2019-04-17 12:22:43.132</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1990-10-04</DateTimeofBirth>
+        <EthnicGroup>N</EthnicGroup>
+        <PatientAddress>123 BOGGY HOLLOW ROAD^^PURVIS^MS^39475^US^^^88</PatientAddress>
+        <PatientName>ODINSON^THOR^^^MR.</PatientName>
+        <PhoneNumberHome>(516)555-1212^HOME^PH^^^516^5551212</PhoneNumberHome>
+        <Race>W</Race>
+        <_id>52058523</_id>
+        <dateCreated>1560367849000</dateCreated>
+        <dateLocal>2019-06-12 15:30:49.076</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>F</AdministrativeSex>
+        <DateTimeofBirth>1979-04-16</DateTimeofBirth>
+        <EthnicGroup>M</EthnicGroup>
+        <PatientAddress>2222 WELCOME STREET^^NEW YORK^NY^10001^US^^^60</PatientAddress>
+        <PatientName>WELCOME^HATTIE</PatientName>
+        <PhoneNumberHome>(553)553-4445^HOME^PH^^^553^5534445</PhoneNumberHome>
+        <Race>O</Race>
+        <_id>52065991</_id>
+        <dateCreated>1559585363000</dateCreated>
+        <dateLocal>2019-06-03 14:09:23.295</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>F</AdministrativeSex>
+        <DateTimeofBirth>1947-01-19</DateTimeofBirth>
+        <EthnicGroup>U</EthnicGroup>
+        <PatientAddress>957 FANCY AVE SOUTH^8TH FL^NEW YORK^NY^10010^US^^^60</PatientAddress>
+        <PatientName>TOYOTA^PINK^LION^^MS.</PatientName>
+        <PhoneNumberHome>(212)555-6874^HOME^PH^^^212^5556874</PhoneNumberHome>
+        <Race>O</Race>
+        <_id>10037939</_id>
+        <dateCreated>1559585355000</dateCreated>
+        <dateLocal>2019-06-03 14:09:15.124</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1989-04-17</DateTimeofBirth>
+        <EthnicGroup />
+        <PatientAddress>^^^^^US</PatientAddress>
+        <PatientName>FINKENTHAL-TEST^TEST</PatientName>
+        <PhoneNumberHome />
+        <Race />
+        <_id>52065999</_id>
+        <dateCreated>1555520657000</dateCreated>
+        <dateLocal>2019-04-17 13:04:17.695</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1972-09-10</DateTimeofBirth>
+        <EthnicGroup>N</EthnicGroup>
+        <PatientAddress>6785 LAUGHALOT LANE^^TRENTON^NJ^08608^US^^^88</PatientAddress>
+        <PatientName>CROSS^DAVID^M</PatientName>
+        <PhoneNumberHome>(631)524-5001^HOME^PH^^^631^5245001</PhoneNumberHome>
+        <Race>W</Race>
+        <_id>10031350</_id>
+        <dateCreated>1562138616000</dateCreated>
+        <dateLocal>2019-07-03 03:23:36.413</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1951-11-11</DateTimeofBirth>
+        <EthnicGroup>D</EthnicGroup>
+        <PatientAddress>325 88TH ST^^NEW YORK^NY^10007^US^^^60</PatientAddress>
+        <PatientName>APBEAKER^TESTIP^DONOTTOUCH</PatientName>
+        <PhoneNumberHome>(212)535-4578^HOME^PH^^^212^5354578</PhoneNumberHome>
+        <Race>X</Race>
+        <_id>52065824</_id>
+        <dateCreated>1568062209000</dateCreated>
+        <dateLocal>2019-09-09 16:50:09.852</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>F</AdministrativeSex>
+        <DateTimeofBirth>1971-04-03</DateTimeofBirth>
+        <EthnicGroup>U</EthnicGroup>
+        <PatientAddress>5693 PARK AVE^^NEW YORK^NY^10011^US^^^60</PatientAddress>
+        <PatientName>HMGLABCOMMACK^TESTONE</PatientName>
+        <PhoneNumberHome>(212)555-6125^HOME^PH^^^212^5556125</PhoneNumberHome>
+        <Race>U</Race>
+        <_id>10038957</_id>
+        <dateCreated>1560371844000</dateCreated>
+        <dateLocal>2019-06-12 16:37:24.055</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1967-02-27</DateTimeofBirth>
+        <EthnicGroup>N</EthnicGroup>
+        <PatientAddress>123 MAIN STREET^^NEW YORK^NY^10010^US^^^60</PatientAddress>
+        <PatientName>BELUGAWHALE^BOBBI</PatientName>
+        <PhoneNumberHome>(212)555-1212^HOME^PH^^^212^5551212</PhoneNumberHome>
+        <Race>O</Race>
+        <_id>10038181</_id>
+        <dateCreated>1565642778000</dateCreated>
+        <dateLocal>2019-08-12 16:46:18.962</dateLocal>
+    </patient>
+</patients>

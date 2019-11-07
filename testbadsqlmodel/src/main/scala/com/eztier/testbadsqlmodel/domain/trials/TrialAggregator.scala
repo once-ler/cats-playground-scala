@@ -116,7 +116,7 @@ class TrialAggregator[F[_]: Applicative: Async: Concurrent](trialService: TrialS
     action
   }
 
-  def runByTrial(id: Long): F[(TrialContract, Trial)] = {
+  def runByTrial(id: Long): F[(TrialContract, Trial)]  = {
     val action = (for {
       a <- trialService.get(id)
       b <- trialContractService.getByTrialAndSponsor(Some(id), a.sponsor)
