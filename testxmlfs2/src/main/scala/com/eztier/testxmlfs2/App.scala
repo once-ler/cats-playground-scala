@@ -1,8 +1,20 @@
 package com.eztier.testxmlfs2
 
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{Blocker, ContextShift, ExitCode, IO, IOApp, Sync}
 import cats.implicits._
 import com.eztier.testxmlfs2.openstreetmap.infrastructure.OpenStreetMap
+import fs2.{Stream, io, text}
+import java.nio.file.Paths
+
+class XmlService[F[_]: Sync : ContextShift] {
+
+  def read: Stream[F, String] = Stream.resource(Blocker[F]).flatMap { blocker =>
+    io.file.readAll[F](Paths.get("resources/patients.xml"), blocker, 4096)
+      .through(text.utf8Decode)
+      .through(text.lines)
+  }
+
+}
 
 object App extends IOApp {
   val miner = Database.getMiner[IO]
@@ -12,7 +24,7 @@ object App extends IOApp {
 
 /*
 Result:
-
+f
 List(<DomainPlace>
   <AddressLine1>550 1st Avenue</AddressLine1>
   <City>New York</City>
