@@ -37,7 +37,7 @@ class XmlService[F[_]: Sync : ContextShift] {
 
     val s: Stream[F, XMLEvent] = Stream.unfold(xmlEventReader){
       a =>
-        if (a.hasNext)
+        if (a.hasNext())
           Some(a.nextEvent(), a)
         else
           None
@@ -46,7 +46,8 @@ class XmlService[F[_]: Sync : ContextShift] {
     def pipeXMLEventS: Pipe[F, XMLEvent, XMLEvent] = {
 
       def pullTest(s: Stream[F, XMLEvent]): Pull[F, String, Unit] = {
-        s.pull.uncons1.flatMap {
+
+        s.pull.uncons.flatMap {
           case Some(ev) =>
             ev._1 match {
               case t: StartElement =>
@@ -66,13 +67,16 @@ class XmlService[F[_]: Sync : ContextShift] {
         }
       }
 
-      in => pullTest(in).stream
+      in =>
+        // Process inner stream.
+        pullTest(in).stream.showLinesStdOut.compile.drain
+
+        in
     }
 
+    s.through(pipeXMLEventS)
 
-
-
-
+    /* java iterator style.
     while (xmlEventReader.hasNext()) {
 
       val evType = xmlEventReader.nextEvent()
@@ -91,18 +95,11 @@ class XmlService[F[_]: Sync : ContextShift] {
 
     xmlEventReader.close()
 
-    /*
-    val xmlStreamReader = inputFactory.createXMLStreamReader(fileAsInputStream)
-    while (xmlStreamReader.hasNext) {
-      val evType = xmlStreamReader.next()
-      evType match {
-        case a:  =>
-      }
-    }
-    xmlStreamReader.close()
+    Stream.eval(Applicative[F].pure(()))
+
     */
 
-    Stream.eval(Applicative[F].pure(()))
+
   }
 
 }
