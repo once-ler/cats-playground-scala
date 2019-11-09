@@ -70,7 +70,7 @@ class XmlService[F[_]: Sync : ContextShift] {
 
   }
 
-  def read3 = {
+  def fetchPatients = {
     import com.scalawilliam.xs4s.XmlElementExtractor
     import com.scalawilliam.xs4s.Implicits._
 
@@ -132,7 +132,6 @@ class XmlService[F[_]: Sync : ContextShift] {
       .through(stringToPatient)
       .through(filterLeft)
       .flatMap(Stream.emits)
-      .showLinesStdOut
   }
 
 }

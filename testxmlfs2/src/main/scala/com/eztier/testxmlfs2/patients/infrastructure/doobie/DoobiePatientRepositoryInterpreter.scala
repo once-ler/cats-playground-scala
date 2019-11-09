@@ -11,19 +11,23 @@ import patients.domain._
 private object PatientSQL {
 
   def listSql: Query0[Patient] = sql"""
-    SELECT administrative_sex, date_timeof_birth, ethnic_group, patient_address, phone_number_home, race, mrn, date_created, date_local
+    SELECT administrative_sex, date_timeof_birth, ethnic_group, patient_address, patient_name, phone_number_home, race, mrn, date_created, date_local
     FROM patient
   """.query
 
   def insertManySql(a: List[Patient]): ConnectionIO[Int] = {
     val stmt = """
-      insert into patient (administrative_sex, date_timeof_birth, ethnic_group, patient_address, phone_number_home, race, mrn, date_created, date_local)
+      insert into patient (administrative_sex, date_timeof_birth, ethnic_group, patient_address, patient_name, phone_number_home, race, mrn, date_created, date_local)
       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     Update[Patient](stmt)
       .updateMany(a)
   }
+
+  def truncateSql: Update0 = sql"""
+    truncate table patient
+  """.update
 
 }
 
@@ -34,6 +38,8 @@ class DoobiePatientRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa:
   override def insertMany(a: List[Patient]): F[Int] = insertManySql(a).transact(xa)
 
   override def list(): F[List[Patient]] = listSql.to[List].transact(xa)
+
+  override def truncate(): F[Int] = truncateSql.run.transact(xa)
 }
 
 object DoobiePatientRepositoryInterpreter {

@@ -11,13 +11,14 @@ import patients.infrastructure.doobie._
 import patients.infrastructure.file._
 import config._
 
-
+/*
 object App2 extends IOApp {
   import com.eztier.testxmlfs2.openstreetmap.infrastructure.OpenStreetMap
   import com.eztier.testxmlfs2.openstreetmap.infrastructure.Database
   val miner = Database.getMiner[IO]
   def run(args: List[String]): IO[ExitCode] = (OpenStreetMap[IO](miner)).run.as(ExitCode.Success)
 }
+*/
 
 object App extends IOApp {
   def createPatientAggregator[F[_]: Async: ContextShift: ConcurrentEffect] =
@@ -30,7 +31,7 @@ object App extends IOApp {
       patientRepo = DoobiePatientRepositoryInterpreter[F](xa)
       patientService = PatientService(patientRepo)
       xmlService = new XmlService[F]
-      patientAggregator = PatientAggregator(patientService, xmlService)
+      patientAggregator = PatientAggregator[F](patientService, xmlService)
     } yield patientAggregator
 
   val agg = createPatientAggregator[IO].use(x => x.run.compile.drain)

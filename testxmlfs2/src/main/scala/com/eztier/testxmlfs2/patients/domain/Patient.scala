@@ -22,6 +22,7 @@ case class Patient
 trait PatientRepositoryAlgebra[F[_]] {
   def list(): F[List[Patient]]
   def insertMany(a: List[Patient]): F[Int]
+  def truncate(): F[Int]
 }
 
 class PatientService[F[_]: Functor](
@@ -32,6 +33,9 @@ class PatientService[F[_]: Functor](
 
   def insertMany(a: List[Patient]): F[Int] =
     repository.insertMany(a)
+
+  def truncate(): F[Int] =
+    repository.truncate()
 }
 
 object PatientService {
