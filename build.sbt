@@ -120,6 +120,7 @@ lazy val testxmlfs2 = project.
       http4sCirce,
       fs2,
       fs2Io,
+
       kantanXpath,
       kantanXpathCats,
       kantanXPathJava8,

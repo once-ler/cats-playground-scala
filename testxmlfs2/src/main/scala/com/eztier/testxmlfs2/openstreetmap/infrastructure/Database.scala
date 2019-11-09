@@ -1,16 +1,13 @@
 package com.eztier.testxmlfs2
+package openstreetmap.infrastructure
 
+import cats.effect.{Async, Blocker, Bracket, ContextShift, Resource, Sync}
 import cats.implicits._
-import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync, Timer}
 import doobie.hikari.HikariTransactor
+import doobie.implicits._
 import doobie.util.ExecutionContexts
 import doobie.util.query.Query0
 import doobie.util.transactor.Transactor
-
-import doobie._
-import doobie.hikari._
-import doobie.implicits._
-
 import fs2.Stream
 import org.flywaydb.core.Flyway
 
