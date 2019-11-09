@@ -6,8 +6,11 @@ import com.eztier.testxmlfs2.openstreetmap.infrastructure.OpenStreetMap
 import fs2.{Chunk, Pipe, Pull, Stream, io, text}
 import java.nio.file.Paths
 
-import cats.Applicative
-import javax.xml.stream.events.Characters
+import cats.{Applicative, Show}
+import com.eztier.testxmlfs2.Util.{filterLeft, filterRight}
+import com.eztier.testxmlfs2.patients.domain.Patient
+
+import scala.xml.Elem
 
 class XmlService[F[_]: Sync : ContextShift] {
   val workingDir = System.getProperty("user.dir")
@@ -21,12 +24,10 @@ class XmlService[F[_]: Sync : ContextShift] {
   }
 
   def read2 = {
-    import java.io.{File, FileInputStream, InputStream}
+    import java.io.{File, FileInputStream}
     import java.io.FileReader
     import javax.xml.stream.XMLInputFactory
-    import javax.xml.stream.events.{EndElement, StartElement, XMLEvent}
-    import javax.xml.stream.XMLStreamException
-    import javax.xml.stream.XMLStreamReader
+    import javax.xml.stream.events.{XMLEvent}
 
     val inputFactory = XMLInputFactory.newInstance()
 
@@ -43,38 +44,9 @@ class XmlService[F[_]: Sync : ContextShift] {
           None
     }
 
-    def pipeXMLEventS: Pipe[F, XMLEvent, XMLEvent] = {
+    implicit val showXMLEvent: Show[XMLEvent] = a => a.isStartElement().toString()
 
-      def pullTest(s: Stream[F, XMLEvent]): Pull[F, String, Unit] = {
-
-        s.pull.uncons.flatMap {
-          case Some(ev) =>
-            ev._1 match {
-              case t: StartElement =>
-                // println(t.getName.getLocalPart)
-                Pull.output(Chunk[String](t.getName.getLocalPart)) >> pullTest(ev._2)
-              case e: EndElement =>
-                // println(e.getName.getLocalPart)
-                Pull.done
-              case c: Characters =>
-                // println(c.getData)
-                Pull.done
-              case _ =>
-                Pull.done
-            }
-          case None => Pull.done
-
-        }
-      }
-
-      in =>
-        // Process inner stream.
-        pullTest(in).stream.showLinesStdOut.compile.drain
-
-        in
-    }
-
-    s.through(pipeXMLEventS)
+    s.showLinesStdOut
 
     /* java iterator style.
     while (xmlEventReader.hasNext()) {
@@ -90,16 +62,77 @@ class XmlService[F[_]: Sync : ContextShift] {
           println(c.getData)
         case _ =>
       }
-
     }
-
     xmlEventReader.close()
 
     Stream.eval(Applicative[F].pure(()))
-
     */
 
+  }
 
+  def read3 = {
+    import com.scalawilliam.xs4s.XmlElementExtractor
+    import com.scalawilliam.xs4s.Implicits._
+
+    import java.io.{File, FileInputStream}
+    import java.io.FileReader
+    import javax.xml.stream.XMLInputFactory
+
+    import kantan.xpath._
+    import kantan.xpath.implicits._
+    import kantan.xpath.java8._ // LocalDateTime
+
+    val inputFactory = XMLInputFactory.newInstance()
+
+    val fileReader = new FileReader(filePath)
+    def fileAsInputStream = new FileInputStream(new File(filePath))
+
+    val xmlEventReader = inputFactory.createXMLEventReader(fileAsInputStream)
+
+    val splitter = XmlElementExtractor.collectElements(_.last == "patient")
+
+    /*
+    val li = for {
+      el <- xmlEventReader.toIterator.scanCollect(splitter.Scan)
+    } yield el
+
+    li.foreach(a => println(a.toString))
+    */
+
+    implicit val placeDecoder: NodeDecoder[Patient] = NodeDecoder.decoder(
+      xp"./AdministrativeSex/text()",
+      xp"./DateTimeofBirth/text()",
+      xp"./EthnicGroup/text()",
+      xp"./PatientAddress/text()",
+      xp"./PatientName/text()",
+      xp"./PhoneNumberHome/text()",
+      xp"./Race/text()",
+      xp"./_id/text()",
+      xp"./dateCreated/text()",
+      xp"./dateLocal/text()"
+    )(Patient.apply)
+
+    val elemToStringPipeS: Pipe[F, Elem, String] = _.map {
+      in =>
+        in.toString()
+    }
+
+    def stringToPatient: Pipe[F, String, Either[XPathError, List[Patient]]] = _.map {
+      str =>
+        val result: kantan.xpath.XPathResult[List[Patient]] = str.evalXPath[List[Patient]](xp"/patient")
+        result
+    }
+
+    implicit val showPatient: Show[Patient] = a => s"${a.PatientName}"
+
+    implicit val showXPathError: Show[kantan.xpath.XPathError] = a => a.getMessage
+
+    Stream.fromIterator(xmlEventReader.toIterator.scanCollect(splitter.Scan))
+      .through(elemToStringPipeS)
+      .through(stringToPatient)
+      .through(filterLeft)
+      .flatMap(Stream.emits)
+      .showLinesStdOut
   }
 
 }
@@ -109,7 +142,7 @@ object App extends IOApp {
 
   // def run(args: List[String]): IO[ExitCode] = (OpenStreetMap[IO](miner)).run.as(ExitCode.Success)
 
-  def run(args: List[String]): IO[ExitCode] = (new XmlService[IO]).read2.compile.drain.as(ExitCode.Success)
+  def run(args: List[String]): IO[ExitCode] = (new XmlService[IO]).read3.compile.drain.as(ExitCode.Success)
 }
 
 /*

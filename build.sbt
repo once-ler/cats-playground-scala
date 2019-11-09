@@ -122,6 +122,7 @@ lazy val testxmlfs2 = project.
       fs2Io,
       kantanXpath,
       kantanXpathCats,
+      kantanXPathJava8,
       xstream,
 
       doobie,
@@ -129,7 +130,9 @@ lazy val testxmlfs2 = project.
       doobieScalatest,
       doobieHikari,
       h2,
-      flyway
+      flyway,
+
+      xs4s
     )
   ).dependsOn(
   common
@@ -172,6 +175,7 @@ val FlywayVersion = "6.0.4"
 val FS2Version = "2.0.0"
 val KantanXPathVersion = "0.5.0"
 val XStreamVersion = "1.4.11.1"
+val Xs4sVersion = "0.4"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -206,8 +210,11 @@ val fs2Io = "co.fs2" %% "fs2-io" % FS2Version
 
 val kantanXpath = "com.nrinaudo" %% "kantan.xpath" % KantanXPathVersion
 val kantanXpathCats = "com.nrinaudo" %% "kantan.xpath-cats" % KantanXPathVersion
+val kantanXPathJava8 = "com.nrinaudo" %% "kantan.xpath-java8" % KantanXPathVersion
 
 val xstream = "com.thoughtworks.xstream" % "xstream" % XStreamVersion
+
+val xs4s = "com.scalawilliam" %% "xs4s" % Xs4sVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
