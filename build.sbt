@@ -133,7 +133,9 @@ lazy val testxmlfs2 = project.
       h2,
       flyway,
 
-      xs4s
+      xs4s,
+
+      mssqlJdbc
     )
   ).dependsOn(
   common
@@ -177,6 +179,7 @@ val FS2Version = "2.0.0"
 val KantanXPathVersion = "0.5.0"
 val XStreamVersion = "1.4.11.1"
 val Xs4sVersion = "0.4"
+val MssqlJdbcVersion = "7.4.1.jre8"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -216,6 +219,9 @@ val kantanXPathJava8 = "com.nrinaudo" %% "kantan.xpath-java8" % KantanXPathVersi
 val xstream = "com.thoughtworks.xstream" % "xstream" % XStreamVersion
 
 val xs4s = "com.scalawilliam" %% "xs4s" % Xs4sVersion
+
+val mssqlJdbc = "com.microsoft.sqlserver" % "mssql-jdbc" % MssqlJdbcVersion
+
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

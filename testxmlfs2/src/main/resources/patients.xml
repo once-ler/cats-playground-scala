@@ -15,6 +15,18 @@
         <AdministrativeSex>M</AdministrativeSex>
         <DateTimeofBirth>1990-10-10</DateTimeofBirth>
         <EthnicGroup />
+        <PatientAddress>957 FANCY AVE S^^NEW YORK^NY^10010^US</PatientAddress>
+        <PatientName>FOURTEEN^TEST</PatientName>
+        <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>
+        <Race />
+        <_id>10038996</_id>
+        <dateCreated>1555526169000</dateCreated>
+        <dateLocal>2019-04-17 14:36:09.105</dateLocal>
+    </patient>
+    <patient>
+        <AdministrativeSex>M</AdministrativeSex>
+        <DateTimeofBirth>1990-10-10</DateTimeofBirth>
+        <EthnicGroup />
         <PatientAddress>957 FANCY AVE^^NEW YORK^NY^10010^US</PatientAddress>
         <PatientName>FIFTEEN^TEST</PatientName>
         <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>

@@ -10,9 +10,10 @@ import patients.domain._
 
 private object PatientSQL {
 
+  // Grab the latest.
   def listSql: Query0[Patient] = sql"""
-    SELECT administrative_sex, date_timeof_birth, ethnic_group, patient_address, patient_name, phone_number_home, race, mrn, date_created, date_local
-    FROM patient
+    SELECT administrative_sex, date_timeof_birth, ethnic_group, patient_address, patient_name, phone_number_home, race, a.mrn, date_created, date_local
+    FROM patient a join (select mrn, max(date_created) max_date_created from patient group by mrn) b on b.mrn = a.mrn and b.max_date_created = a.date_created
   """.query
 
   def insertManySql(a: List[Patient]): ConnectionIO[Int] = {

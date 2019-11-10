@@ -15,3 +15,7 @@ CREATE TABLE PATIENT (
   DATE_CREATED BIGINT,
   DATE_LOCAL VARCHAR
 );
+
+-- Foreign table links.
+
+CREATE LINKED TABLE LINK('com.microsoft.sqlserver.jdbc.SQLServerDriver', 'jdbc:sqlserver://localhost:1433;DatabaseName=test', 'admin', '12345678', '__Participant_CustomAttributesManager');
