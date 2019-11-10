@@ -30,8 +30,10 @@ object App extends IOApp {
       xa <- DatabaseConfig.dbTransactor(conf.db, connEc, Blocker.liftExecutionContext(txnEc))
       patientRepo = DoobiePatientRepositoryInterpreter[F](xa)
       patientService = PatientService(patientRepo)
+      participantRepo = DoobieParticipantRepositoryInterpreter[F](xa)
+      participantService = ParticipantService(participantRepo)
       xmlService = new XmlService[F]
-      patientAggregator = PatientAggregator[F](patientService, xmlService)
+      patientAggregator = PatientAggregator[F](patientService, participantService, xmlService)
     } yield patientAggregator
 
   val agg = createPatientAggregator[IO].use(x => x.run.compile.drain)
