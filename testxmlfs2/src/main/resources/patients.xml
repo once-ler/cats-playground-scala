@@ -2,7 +2,7 @@
     <patient>
         <AdministrativeSex>M</AdministrativeSex>
         <DateTimeofBirth>1990-10-10</DateTimeofBirth>
-        <EthnicGroup />
+        <EthnicGroup>N</EthnicGroup>
         <PatientAddress>957 FANCY AVE S^^NEW YORK^NY^10010^US</PatientAddress>
         <PatientName>FOURTEEN^TEST</PatientName>
         <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>
@@ -14,7 +14,7 @@
     <patient>
         <AdministrativeSex>M</AdministrativeSex>
         <DateTimeofBirth>1990-10-10</DateTimeofBirth>
-        <EthnicGroup />
+        <EthnicGroup>N</EthnicGroup>
         <PatientAddress>957 FANCY AVE S^^NEW YORK^NY^10010^US</PatientAddress>
         <PatientName>FOURTEEN^TEST</PatientName>
         <PhoneNumberHome>(585)456-7890^HOME^PH^^^585^4567890</PhoneNumberHome>

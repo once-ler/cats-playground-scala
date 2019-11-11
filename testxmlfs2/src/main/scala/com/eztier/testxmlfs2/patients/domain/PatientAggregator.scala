@@ -1,11 +1,17 @@
 package com.eztier.testxmlfs2
 package patients.domain
 
-import cats.{Applicative, Functor, Semigroupal, Show}
+import cats.{Applicative, Functor, Monad, SemigroupK, Semigroupal, Show}
 import cats.effect.{Async, Concurrent, Sync}
 import com.eztier.testxmlfs2.patients.infrastructure.file.XmlService
+import doobie.util.param.Param
 import fs2.Pipe
 import fs2.Stream
+import shapeless.{HList, HNil}
+import shapeless.record.Record
+
+import Util._
+import Codecs._
 
 class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: PatientService[F], participantService: ParticipantService[F], xmlService: XmlService[F]) {
   val fetchXmlPatients = (in: Stream[F, Int]) => Stream.eval(xmlService.fetchPatients.compile.toList)
@@ -38,6 +44,27 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
       f.pure[F]
   }
 
+  def parsePatient: Pipe[F, Patient, Patient] = _.map {
+    in =>
+
+      import cats.implicits._
+
+      import cats.instances.string._// // for Semigroupal
+      import cats.syntax.apply._ // for mapN
+      import cats.syntax.applicative._ // for pure
+
+      val m = delimitedStringToMap[Ethnicity](in.EthnicGroup)
+      val et: Ethnicity = m
+
+      // Order does not matter.
+      // val et2 = SemigroupK[Option].combineK(m.get("ethnicity2"), m.get("ethnicity1"))
+      val et3 = SemigroupK[Option].combineK(et.ethnicity1, et.ethnicity2)
+
+      // https://jto.github.io/articles/getting-started-with-shapeless/
+
+      in
+  }
+
   def run = {
     implicit val showPatient: Show[Patient] = a => s"${a.PatientName} ${a.dateCreated.toString}"
 
@@ -48,6 +75,7 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
       .through(fetchParticipants)
       .through(removeNonExistentParticipants)
       .flatMap(Stream.emits)
+      .through(parsePatient)
       .showLinesStdOut
 
     // Stream.eval(Applicative[F].pure(()))

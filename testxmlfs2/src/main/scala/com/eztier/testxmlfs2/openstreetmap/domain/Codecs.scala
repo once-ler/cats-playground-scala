@@ -2,10 +2,10 @@ package com.eztier.testxmlfs2.openstreetmap
 package domain
 
 object Codecs {
-  implicit val openMapPlaceToDomainPlace: domain.OpenStreetPlace => DomainPlace =
+  implicit val openMapPlaceToDomainPlace: OpenStreetPlace => DomainPlace =
     o => DomainPlace(s"${o.HouseNumber} ${o.Cycleway}", o.City, o.State, o.Postcode)
 
-  implicit val domainPlaceToOpenMapPlace: DomainPlace => domain.OpenStreetPlace =
+  implicit val domainPlaceToOpenMapPlace: DomainPlace => OpenStreetPlace =
     d => OpenStreetPlace(
       "",
       d.AddressLine1.split(' ').headOption.getOrElse(""),
