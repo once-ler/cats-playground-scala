@@ -1,7 +1,7 @@
 package com.eztier.testxmlfs2
 package patients.domain
 
-import cats.{Applicative, Functor, Show}
+import cats.{Applicative, Functor, Semigroupal, Show}
 import cats.effect.{Async, Concurrent, Sync}
 import com.eztier.testxmlfs2.patients.infrastructure.file.XmlService
 import fs2.Pipe
@@ -20,14 +20,22 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
 
   def fetchParticipants: Pipe[F, List[Patient], (List[Patient], List[Participant])] = _.evalMap {
     in =>
-      val a = Stream.eval(participantService.list(in)).flatMap(Stream.emits).compile.toList
+      val fa = Applicative[F].pure(in)
+      val fb = Stream.eval(participantService.list(in)).flatMap(Stream.emits).compile.toList
 
-      val fb = Functor[F].map(a) {
-        out =>
-          (in, out)
-      }
+      // Or use Semigroupal.tuple2(fa, fb)
+      Semigroupal[F].product(fa, fb)
+  }
 
-      fb
+  def removeNonExistentParticipants: Pipe[F, (List[Patient], List[Participant]), List[Patient]] = _.evalMap {
+    in =>
+      import cats.instances.string._    // for Eq
+      import cats.instances.option._ // for Eq
+      import cats.syntax.eq._ // for ===
+      import cats.syntax.applicative._ // for pure
+
+      val f = in._1.filter(a => in._2.exists(_.medicalRecordNumber === a.Mrn))
+      f.pure[F]
   }
 
   def run = {
@@ -37,6 +45,8 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
       .through(fetchXmlPatients)
       .through(persistRuntimePatients)
       .through(fetchRuntimePatients)
+      .through(fetchParticipants)
+      .through(removeNonExistentParticipants)
       .flatMap(Stream.emits)
       .showLinesStdOut
 

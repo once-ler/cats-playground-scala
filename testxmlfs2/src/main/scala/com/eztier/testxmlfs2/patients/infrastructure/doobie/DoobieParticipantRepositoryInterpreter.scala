@@ -14,7 +14,7 @@ private object ParticipantSQL {
 
     (fr"""
     SELECT medicalRecordNumber
-    FROM __participant_customattributesmanager where """ ++ Fragments.in(fr"medicalRecordNumber", NonEmptyList.fromListUnsafe(b))
+    FROM participant where """ ++ Fragments.in(fr"medicalRecordNumber", NonEmptyList.fromListUnsafe(b))
       ).query
   }
 }

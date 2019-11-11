@@ -18,4 +18,4 @@ CREATE TABLE PATIENT (
 
 -- Foreign table links.
 
-CREATE LINKED TABLE LINK('com.microsoft.sqlserver.jdbc.SQLServerDriver', 'jdbc:sqlserver://localhost:1433;DatabaseName=test', 'admin', '12345678', '__Participant_CustomAttributesManager');
+CREATE LINKED TABLE PARTICIPANT('com.microsoft.sqlserver.jdbc.SQLServerDriver', 'jdbc:sqlserver://localhost:1433;DatabaseName=test', 'admin', '12345678', '__Participant_CustomAttributesManager');
