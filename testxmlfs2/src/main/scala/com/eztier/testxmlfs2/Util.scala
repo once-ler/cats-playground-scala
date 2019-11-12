@@ -1,7 +1,8 @@
 package com.eztier.testxmlfs2
 
 import fs2.{Pipe, Stream}
-import cats.syntax.option._ // for some and none
+import cats.syntax.option._
+
 import scala.reflect.runtime.universe._
 
 object Util {
@@ -22,7 +23,7 @@ object Util {
   def getCCFieldNames[A: TypeTag]: List[String] = {
     val members = classAccessors[A]
 
-    members.map(_.name.toString).reverse
+    members.map(_.name.toString)
   }
 
   def delimitedStringToMap[A: TypeTag](str: Option[String], delim: Char = '^'): Map[String, String] = {
@@ -33,4 +34,10 @@ object Util {
 
     (h zip e).toMap
   }
+
+  // When using CSVConverter, empty string becomes Some(), we want None.
+  implicit class OptionEmptyStringToNone(fa: Option[String]) {
+    def toNoneIfEmpty = fa.flatMap(a => if (a.length == 0) None else Some(a))
+  }
+
 }
