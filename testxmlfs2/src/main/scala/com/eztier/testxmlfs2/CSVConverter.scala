@@ -25,7 +25,7 @@ class CSVException(s: String) extends RuntimeException(s)
 
 /** Trait for types that can be serialized to/deserialized from CSV */
 trait CSVConverter[T] {
-  def from(s: String): Try[T]
+  def from(s: String, delim: Char = ','): Try[T]
   def to(t: T): String
 }
 
@@ -35,16 +35,15 @@ object CSVConverter {
 
   def fail(s: String) = Failure(new CSVException(s))
 
-
   // Primitives
 
   implicit def stringCSVConverter: CSVConverter[String] = new CSVConverter[String] {
-    def from(s: String): Try[String] = Success(s)
+    def from(s: String, delim: Char = ','): Try[String] = Success(s)
     def to(s: String): String = s
   }
 
   implicit def intCsvConverter: CSVConverter[Int] = new CSVConverter[Int] {
-    def from(s: String): Try[Int] = Try(s.toInt)
+    def from(s: String, delim: Char = ','): Try[Int] = Try(s.toInt)
     def to(i: Int): String = i.toString
   }
 
@@ -59,7 +58,7 @@ object CSVConverter {
 
   implicit def listCsvConverter[A](implicit ec: CSVConverter[A])
   : CSVConverter[List[A]] = new CSVConverter[List[A]] {
-    def from(s: String): Try[List[A]] = listCsvLinesConverter(s.split("\n").toList)(ec)
+    def from(s: String, delim: Char = ','): Try[List[A]] = listCsvLinesConverter(s.split("\n").toList)(ec)
     def to(l: List[A]): String = l.map(ec.to).mkString("\n")
   }
 
@@ -68,7 +67,7 @@ object CSVConverter {
 
   implicit def deriveHNil: CSVConverter[HNil] =
     new CSVConverter[HNil] {
-      def from(s: String): Try[HNil] = s match {
+      def from(s: String, delim: Char = ','): Try[HNil] = s match {
         case "" => Success(HNil)
         case s => fail("Cannot convert '" ++ s ++ "' to HNil")
       }
@@ -80,7 +79,7 @@ object CSVConverter {
   : CSVConverter[V :: T] =
     new CSVConverter[V :: T] {
 
-      def from(s: String): Try[V :: T] = s.span(_ != ',') match {
+      def from(s: String, delim: Char = ','): Try[V :: T] = s.span(_ != delim) match {
         case (before,after) =>
           for {
             front <- scv.value.from(before)
@@ -100,12 +99,13 @@ object CSVConverter {
   : CSVConverter[Option[V] :: T] =
     new CSVConverter[Option[V] :: T] {
 
-      def from(s: String): Try[Option[V] :: T] = s.span(_ != ',') match {
+      // Default to None if empty string.
+      def from(s: String, delim: Char = ','): Try[Option[V] :: T] = s.span(_ != delim) match {
         case (before,after) =>
           (for {
             front <- scv.value.from(before)
             back <- sct.value.from(if (after.isEmpty) after else after.tail)
-          } yield Some(front) :: back).orElse {
+          } yield (if (!before.isEmpty) Some(front) else None) :: back).orElse {
             sct.value.from(if (s.isEmpty) s else s.tail).map(None :: _)
           }
 
@@ -123,7 +123,7 @@ object CSVConverter {
   implicit def deriveClass[A,R](implicit gen: Generic.Aux[A,R], conv: CSVConverter[R])
   : CSVConverter[A] = new CSVConverter[A] {
 
-    def from(s: String): Try[A] = conv.from(s).map(gen.from)
+    def from(s: String, delim: Char = ','): Try[A] = conv.from(s).map(gen.from)
     def to(a: A): String = conv.to(gen.to(a))
   }
 }

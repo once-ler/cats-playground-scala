@@ -44,20 +44,20 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
   def parsePatient: Pipe[F, Patient, Patient] = _.map {
     in =>
 
-      val tt = CSVConverter[List[Ethnicity]].from(in.EthnicGroup.fold("")(_.replace('^', ',')))
+      val tt = CSVConverter[List[Ethnicity]].from(in.EthnicGroup.fold("")(a => a), delim = '^')
 
       val tt2 = tt.fold(e => List[Ethnicity](), s => s)
 
       val et = tt2.headOption.fold(Ethnicity())(a => a)
 
       val et3 = SemigroupK[Option].combineK(
-        et.ethnicity2.toNoneIfEmpty,
-        et.ethnicity1.toNoneIfEmpty)
+        et.ethnicity2,
+        et.ethnicity1)
 
       // Order does not matter.
       val et4 = SemigroupK[Option].combineK(
-        et.ethnicity1.toNoneIfEmpty,
-        et.ethnicity2.toNoneIfEmpty)
+        et.ethnicity1,
+        et.ethnicity2)
 
       in
   }
