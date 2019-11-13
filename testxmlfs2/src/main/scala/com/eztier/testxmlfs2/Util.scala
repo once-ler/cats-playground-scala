@@ -35,9 +35,15 @@ object Util {
     (h zip e).toMap
   }
 
-  // When using CSVConverter, empty string becomes Some(), we want None.
+  // Empty string becomes Some(), we want None.
   implicit class OptionEmptyStringToNone(fa: Option[String]) {
     def toNoneIfEmpty = fa.flatMap(a => if (a.length == 0) None else Some(a))
+  }
+
+  def csvToCC[A](converter: CSVConverter[List[A]], str: Option[String], default: A) = {
+    converter.from(str.fold("")(a => a))
+      .fold(e => List[A](), s => s)
+      .headOption.fold(default)(a => a)
   }
 
 }

@@ -44,11 +44,13 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Pa
   def parsePatient: Pipe[F, Patient, Patient] = _.map {
     in =>
 
-      val tt = CSVConverter[List[Ethnicity]].from(in.EthnicGroup.fold("")(a => a), delim = '^')
+      implicit val csvconf = CSVConfig(delimiter = '^')
 
-      val tt2 = tt.fold(e => List[Ethnicity](), s => s)
-
-      val et = tt2.headOption.fold(Ethnicity())(a => a)
+      val et = csvToCC(CSVConverter[List[Ethnicity]], in.EthnicGroup, Ethnicity())
+      val pa = csvToCC(CSVConverter[List[PatientAddress]], in.PatientAddress, PatientAddress())
+      val pn = csvToCC(CSVConverter[List[PatientName]], in.PatientName, PatientName())
+      val rc = csvToCC(CSVConverter[List[Race]], in.Race, Race())
+      val pnh = csvToCC(CSVConverter[List[PhoneNumberHome]], in.PhoneNumberHome, PhoneNumberHome())
 
       val et3 = SemigroupK[Option].combineK(
         et.ethnicity2,
