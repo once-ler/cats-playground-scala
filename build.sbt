@@ -164,6 +164,22 @@ lazy val testbadsqlmodel = project.
   common
 )
 
+lazy val clickmock = project.
+  settings(
+    name := "clickmock",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      scalaXml,
+      scalaParser,
+      dispatchHttp,
+      fs2,
+      fs2Io
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
@@ -181,6 +197,9 @@ val XStreamVersion = "1.4.11.1"
 val Xs4sVersion = "0.4"
 val MssqlJdbcVersion = "7.4.1.jre8"
 val HapiVersion = "2.3"
+val DispatchHttpVerison = "0.14.1"
+val ScalaXmlVersion = "1.0.6"
+val ScalaParserVersion = "1.0.6"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -224,6 +243,10 @@ val xs4s = "com.scalawilliam" %% "xs4s" % Xs4sVersion
 val mssqlJdbc = "com.microsoft.sqlserver" % "mssql-jdbc" % MssqlJdbcVersion
 
 val hapiV231 = "ca.uhn.hapi" % "hapi-structures-v231" % HapiVersion
+
+val dispatchHttp = "org.dispatchhttp" %% "dispatch-core" % DispatchHttpVerison
+val scalaXml = "org.scala-lang.modules" %% "scala-xml" % ScalaXmlVersion
+val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % ScalaParserVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
