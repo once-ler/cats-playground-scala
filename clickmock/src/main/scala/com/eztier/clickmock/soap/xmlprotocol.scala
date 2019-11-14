@@ -2829,7 +2829,7 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   trait EntityServicesSoap12Bindings { this: scalaxb.SoapClientsAsync =>
     lazy val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
     lazy val service: com.eztier.clickmock.soap.EntityServicesSoap = new EntityServicesSoap12Binding {}
-    def baseAddress = new java.net.URI("http://rsnirbwcdcdvm01.nyumc.org/ClickXWebServices/EntityManager/EntityServices.asmx")
+    def baseAddress = new java.net.URI("http://localhost/ClickXWebServices/EntityManager/EntityServices.asmx")
 
     trait EntityServicesSoap12Binding extends com.eztier.clickmock.soap.EntityServicesSoap {
       import scalaxb.ElemName._
@@ -5255,7 +5255,7 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   trait EntitySetServicesSoap12Bindings { this: scalaxb.SoapClientsAsync =>
     lazy val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
     lazy val service: com.eztier.clickmock.soap.EntitySetServicesSoap = new EntitySetServicesSoap12Binding {}
-    def baseAddress = new java.net.URI("http://rsnirbwcdcdvm01.nyumc.org/ClickXWebServices/EntityManager/EntitySetServices.asmx")
+    def baseAddress = new java.net.URI("http://localhost/ClickXWebServices/EntityManager/EntitySetServices.asmx")
 
     trait EntitySetServicesSoap12Binding extends com.eztier.clickmock.soap.EntitySetServicesSoap {
       import scalaxb.ElemName._
