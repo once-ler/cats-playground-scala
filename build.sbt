@@ -176,11 +176,11 @@ lazy val clickmock = project.
       scalaParser,
       dispatchHttp,
       fs2,
-      fs2Io
+      specs2
     )
   ).dependsOn(
-  common
-)
+    common
+  )
 
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"

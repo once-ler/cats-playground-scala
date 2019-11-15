@@ -17,7 +17,7 @@ import config._
 import domain._
 import CkXmlToTypeImplicits._
 
-class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
+class CkMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
 
   val entityservice = new EntityServicesSoap12Bindings with
     scalaxb.SoapClientsAsync with
@@ -233,7 +233,7 @@ class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resourc
   }
 }
 
-object ClickMockService {
+object CkMockService {
   def apply[F[_]: Sync : Async : ContextShift : Concurrent](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) =
-    new ClickMockService[F](conf, blockingThreadPool)
+    new CkMockService[F](conf, blockingThreadPool)
 }

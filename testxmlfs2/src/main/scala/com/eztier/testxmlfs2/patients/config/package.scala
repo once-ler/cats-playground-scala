@@ -1,6 +1,5 @@
 package com.eztier.testxmlfs2
 
-import com.eztier.testxmlfs2.openstreetmap.infrastructure.{DatabaseConfig, DatabaseConnectionsConfig}
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 
