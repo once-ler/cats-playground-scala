@@ -15,9 +15,9 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 import fs2.Stream
 
 trait CkBase {
-  val oid: String
-  val Class: String
-  val extent: String
+  val oid: Option[String]
+  val Class: Option[String]
+  val extent: Option[String]
 }
 
 trait WithCustomAttributes {
@@ -25,23 +25,23 @@ trait WithCustomAttributes {
 }
 
 trait WithProject {
-  val _webrUnique_ID: String
+  val _webrUnique_ID: Option[String]
 }
 
 trait WithNonProject {
-  val ID: String
+  val ID: Option[String]
 }
 
 trait WithFindById {
-  def findById(id: String): Option[_]
+  def findById(id: Option[String]): Option[_]
 }
 
 trait WithFindByMrn {
-  def findByMrn(mrn: String): Option[_]
+  def findByMrn(mrn: Option[String]): Option[_]
 }
 
 trait WithExplicitTypeName {
-  def typeName: String
+  def typeName: Option[String]
 }
 
 trait WithEncoder {
@@ -53,8 +53,8 @@ trait WithEncoder {
       case a: Int => <integer value={a.toString}></integer>
       case a: Float => <float value={a.toString}></float>
       case a: Date => <date value={a.getTime.toString}></date>
-      case a: EntityReference[_] if a.Poref.length > 0 => <entityReference type={a.Type} poref={a.Poref}></entityReference>
-      case a: PersistentReference if a.Poref.length > 0 => <persistentReference poref={a.Poref}></persistentReference>
+      case a: EntityReference[_] if a.Poref.getOrElse("").length > 0 => <entityReference type={a.Type} poref={a.Poref}></entityReference>
+      case a: PersistentReference if a.Poref.getOrElse("").length > 0 => <persistentReference poref={a.Poref}></persistentReference>
       case _ => <null />
     }
     <attr name={name}>{in}</attr>
@@ -73,7 +73,7 @@ trait WithEncoder {
 
   def toCkTypeName = this.getClass.getSimpleName.replace("Ck", "")
 
-  def toOid: String = this.oid
+  def toOid: String = this.oid.getOrElse("")
 }
 
 class EntitySupport[F[_]: Async] {
@@ -89,14 +89,14 @@ class EntitySupport[F[_]: Async] {
     redefineEntity(in.Class + ":" + in.oid, in.toXml.toString)
 
   def redefineCompleteEntity[A <: CkBase with WithCustomAttributes with WithEncoder, B <: CkBase with WithEncoder](root: A, child: B)(implicit cf: ClickMockService[F]): F[NodeSeq] =
-    Monad[F].flatMap(redefineEntity(root.customAttributes.Poref, child.toXml.toString()))(a => redefineEntity(root))
+    Monad[F].flatMap(redefineEntity(root.customAttributes.Poref.getOrElse(""), child.toXml.toString()))(a => redefineEntity(root))
 
   // Create Entity
   def createEntity(typeName: String, xmlString: String)(implicit cf: ClickMockService[F]): F[NodeSeq] =
     Monad[F].flatMap(cf.tryCreateEntity(Some(typeName), Some(xmlString)))(d => cf.tryParseXML(d.createEntityResult))
 
   def createEntity[A <: CkBase with WithEncoder with WithExplicitTypeName](in: A)(implicit cf: ClickMockService[F]): F[NodeSeq] =
-    createEntity(in.typeName, in.toXml.toString)
+    createEntity(in.typeName.getOrElse(""), in.toXml.toString)
 
   implicit class WrapWithEncoder[B <: WithEncoder](outer: B) {
     // Updates the outer entity with new reference to customAttributes entity
@@ -170,9 +170,9 @@ class EntitySupport[F[_]: Async] {
    */
   private def addOrUpdateImpl[A <: CkBase with WithCustomAttributes with WithEncoder with WithFindById, B <: CkBase with WithEncoder](mrn: String = "", fromCk: A, fromCa: A, fromCkCm: B, fromCaCm: B) (implicit cf: ClickMockService[IO]): IO[NodeSeq] = {
     fromCk.oid match {
-      case null | "" =>
+      case null | Some("") =>
         // Does root object with mrn exist?
-        val a = if (mrn.length > 0) fromCk.findById(mrn) else None
+        val a = if (mrn.length > 0) fromCk.findById(Some(mrn)) else None
         a match {
           case Some(c) =>
             val fromCaCm1 = maybeMerge(fromCaCm, fromCkCm)
