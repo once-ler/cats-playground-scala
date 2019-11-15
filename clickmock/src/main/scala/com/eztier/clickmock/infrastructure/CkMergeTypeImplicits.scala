@@ -1,14 +1,18 @@
 package com.eztier.clickmock
-package domain
+package infrastructure
 
-object CkImplicits {
+import cats.syntax.option._
+
+import domain._
+
+object CkMergeTypeImplicits {
 
   implicit class CopyToCkPerson(in: CkPerson) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
         case a: CkPerson => in.copy(ID = a.ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
-        case a: CkCompany => in.copy(employer = EntityReference[CkCompany](Poref = a.Class + ":" + a.oid, Type = classOf[CkCompany].getSimpleName))
-        case a: CkPerson_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference(Poref = a.Class + ":" + a.oid, Type = classOf[CkPerson_CustomAttributesManager].getSimpleName))
+        case a: CkCompany => in.copy(employer = EntityReference[CkCompany](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkCompany].getSimpleName.some).some)
+        case a: CkPerson_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[CkPerson_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkPerson_CustomAttributesManager].getSimpleName.some).some)
         case _ => in
       }
     }
@@ -17,8 +21,8 @@ object CkImplicits {
   implicit class CopyToCkPerson_CustomAttributesManager(in: CkPerson_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_PersonCustomExtension => in.copy(personCustomExtension = EntityReference[Ck_PersonCustomExtension](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_PersonCustomExtension].getSimpleName))
-        case a: CkPerson_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: Ck_PersonCustomExtension => in.copy(personCustomExtension = EntityReference[Ck_PersonCustomExtension](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_PersonCustomExtension].getSimpleName.some).some)
+        case a: CkPerson_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }
@@ -36,7 +40,7 @@ object CkImplicits {
     def merge[T <: CkBase](diff: T) = {
       diff match {
         case a: Ck_Participant => in.copy(_webrUnique_ID = a._webrUnique_ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
-        case a: Ck_Participant_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference[Ck_Participant_CustomAttributesManager](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_Participant_CustomAttributesManager].getSimpleName))
+        case a: Ck_Participant_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[Ck_Participant_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_Participant_CustomAttributesManager].getSimpleName.some).some)
         case _ => in
       }
     }
@@ -53,9 +57,9 @@ object CkImplicits {
   implicit class CopyToCk_Participant_CustomAttributesManager(in: Ck_Participant_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: CkPerson => in.copy(person = EntityReference[CkPerson](Poref = a.Class + ":" + a.oid, Type = classOf[CkPerson]))
-        case a: Ck_ParticipantCustomExtension => in.copy(participantCustomExtension = EntityReference[Ck_ParticipantCustomExtension](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ParticipantCustomExtension].getSimpleName))
-        case a: Ck_Participant_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: CkPerson => in.copy(person = EntityReference[CkPerson](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkPerson].getSimpleName.some).some)
+        case a: Ck_ParticipantCustomExtension => in.copy(participantCustomExtension = EntityReference[Ck_ParticipantCustomExtension](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ParticipantCustomExtension].getSimpleName.some).some)
+        case a: Ck_Participant_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }
@@ -73,9 +77,9 @@ object CkImplicits {
   implicit class CopyToCk_ParticipantRecord_CustomAttributesManager(in: Ck_ParticipantRecord_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_Participant => in.copy(participant = EntityReference[Ck_Participant](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_Participant].getSimpleName))
-        case a: Ck_ClickPartyContactInformation => in.copy(partyContactInformation = EntityReference[Ck_ClickPartyContactInformation](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ClickPartyContactInformation].getSimpleName))
-        case a: Ck_ParticipantRecord_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: Ck_Participant => in.copy(participant = EntityReference[Ck_Participant](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_Participant].getSimpleName.some).some)
+        case a: Ck_ClickPartyContactInformation => in.copy(partyContactInformation = EntityReference[Ck_ClickPartyContactInformation](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ClickPartyContactInformation].getSimpleName.some).some)
+        case a: Ck_ParticipantRecord_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }
@@ -93,7 +97,7 @@ object CkImplicits {
   implicit class CopyToCkPostalContactInformation(in: CkPostalContactInformation) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: CkState => in.copy(stateProvince = EntityReference[CkState](Poref = a.Class + ":" + a.oid, Type = classOf[CkState].getSimpleName))
+        case a: CkState => in.copy(stateProvince = EntityReference[CkState](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkState].getSimpleName.some).some)
         case a: CkPostalContactInformation => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -143,9 +147,9 @@ object CkImplicits {
   implicit class CopyToCkPartyContactInformation(in: CkPartyContactInformation) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: CkPostalContactInformation => in.copy(addressHome = EntityReference[CkPostalContactInformation](Poref = a.Class + ":" + a.oid, Type = classOf[CkPostalContactInformation].getSimpleName))
-        case a: CkEmailContactInformation => in.copy(emailPreferred = EntityReference[CkEmailContactInformation](Poref = a.Class + ":" + a.oid, Type = classOf[CkEmailContactInformation].getSimpleName))
-        case a: CkPhoneContactInformation => in.copy(phoneHome = EntityReference[CkPhoneContactInformation](Poref = a.Class + ":" + a.oid, Type = classOf[CkPhoneContactInformation].getSimpleName))
+        case a: CkPostalContactInformation => in.copy(addressHome = EntityReference[CkPostalContactInformation](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkPostalContactInformation].getSimpleName.some).some)
+        case a: CkEmailContactInformation => in.copy(emailPreferred = EntityReference[CkEmailContactInformation](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkEmailContactInformation].getSimpleName.some).some)
+        case a: CkPhoneContactInformation => in.copy(phoneHome = EntityReference[CkPhoneContactInformation](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkPhoneContactInformation].getSimpleName.some).some)
         case a: CkPartyContactInformation => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -165,7 +169,7 @@ object CkImplicits {
   implicit class CopyToCkParty(in: CkParty) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: CkPartyContactInformation => in.copy(contactInformation = EntityReference[CkPartyContactInformation](Poref = a.Class + ":" + a.oid, Type = classOf[CkPartyContactInformation].getSimpleName))
+        case a: CkPartyContactInformation => in.copy(contactInformation = EntityReference[CkPartyContactInformation](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkPartyContactInformation].getSimpleName.some).some)
         case a: CkParty => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -183,7 +187,7 @@ object CkImplicits {
   implicit class CopyToCk_ClickAddress(in: Ck_ClickAddress) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_ClickAddress_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference[Ck_ClickAddress_CustomAttributesManager](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ClickAddress_CustomAttributesManager].getSimpleName))
+        case a: Ck_ClickAddress_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[Ck_ClickAddress_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ClickAddress_CustomAttributesManager].getSimpleName.some).some)
         case a: Ck_ClickAddress => in.copy(ID = a.ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
         case _ => in
       }
@@ -201,7 +205,7 @@ object CkImplicits {
   implicit class CopyToCk_ClickAddress_CustomAttributesManager(in: Ck_ClickAddress_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: CkState => in.copy(state = EntityReference[CkState](Poref = a.Class + ":" + a.oid, Type = classOf[CkState].getSimpleName))
+        case a: CkState => in.copy(state = EntityReference[CkState](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[CkState].getSimpleName.some).some)
         case a: Ck_ClickAddress_CustomAttributesManager => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -220,7 +224,7 @@ object CkImplicits {
     def merge[T <: CkBase](diff: T) = {
       diff match {
         case a: Ck_ClickPartyContactInformation => in.copy(ID = a.ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
-        case a: Ck_ClickPartyContactInformation_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ClickPartyContactInformation_CustomAttributesManager].getSimpleName))
+        case a: Ck_ClickPartyContactInformation_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ClickPartyContactInformation_CustomAttributesManager].getSimpleName.some).some)
         case _ => in
       }
     }
@@ -237,8 +241,8 @@ object CkImplicits {
   implicit class CopyToCk_ClickPartyContactInformation_CustomAttributesManager(in: Ck_ClickPartyContactInformation_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_ClickAddress => in.copy(homeAddress = EntityReference[Ck_ClickAddress](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ClickAddress].getSimpleName))
-        case a: Ck_ClickPartyContactInformation_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: Ck_ClickAddress => in.copy(homeAddress = EntityReference[Ck_ClickAddress](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ClickAddress].getSimpleName.some).some)
+        case a: Ck_ClickPartyContactInformation_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }
@@ -256,7 +260,7 @@ object CkImplicits {
     def merge[T <: CkBase](diff: T) = {
       diff match {
         case a: Ck_PersonCustomExtension => in.copy(ID = a.ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
-        case a: Ck_PersonCustomExtension_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference[Ck_PersonCustomExtension_CustomAttributesManager](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_PersonCustomExtension_CustomAttributesManager].getSimpleName))
+        case a: Ck_PersonCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[Ck_PersonCustomExtension_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_PersonCustomExtension_CustomAttributesManager].getSimpleName.some).some)
         case _ => in
       }
     }
@@ -273,8 +277,8 @@ object CkImplicits {
   implicit class CopyToCk_PersonCustomExtension_CustomAttributesManager(in: Ck_PersonCustomExtension_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_NYUGenderSelection => in.copy(gender = EntityReference[Ck_NYUGenderSelection](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_NYUGenderSelection].getSimpleName))
-        case a: Ck_PersonCustomExtension_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: Ck_NYUGenderSelection => in.copy(gender = EntityReference[Ck_NYUGenderSelection](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUGenderSelection].getSimpleName.some).some)
+        case a: Ck_PersonCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }
@@ -292,7 +296,7 @@ object CkImplicits {
     def merge[T <: CkBase](diff: T) = {
       diff match {
         case a: Ck_ParticipantCustomExtension => in.copy(ID = a.ID, oid = a.oid, Class = a.Class, customAttributes = a.customAttributes)
-        case a: Ck_ParticipantCustomExtension_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(customAttributes = EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_ParticipantCustomExtension_CustomAttributesManager].getSimpleName))
+        case a: Ck_ParticipantCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(customAttributes = EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ParticipantCustomExtension_CustomAttributesManager].getSimpleName.some).some)
         case _ => in
       }
     }
@@ -309,9 +313,9 @@ object CkImplicits {
   implicit class CopyToCk_ParticipantCustomExtension_CustomAttributesManager(in: Ck_ParticipantCustomExtension_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_NYUParticipantEthnicity => in.copy(particpantEthnicity = EntityReference[Ck_NYUParticipantEthnicity](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_NYUParticipantEthnicity].getSimpleName))
-        case a: Ck_NYUParticipantRace => in.copy(participantRace = EntityReference[Ck_NYUParticipantRace](Poref = a.Class + ":" + a.oid, Type = classOf[Ck_NYUParticipantRace].getSimpleName))
-        case a: Ck_ParticipantCustomExtension_CustomAttributesManager if a.oid != null && a.oid.length > 0 => in.copy(oid = a.oid, Class = a.Class)
+        case a: Ck_NYUParticipantEthnicity => in.copy(particpantEthnicity = EntityReference[Ck_NYUParticipantEthnicity](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUParticipantEthnicity].getSimpleName.some).some)
+        case a: Ck_NYUParticipantRace => in.copy(participantRace = EntityReference[Ck_NYUParticipantRace](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUParticipantRace].getSimpleName.some).some)
+        case a: Ck_ParticipantCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
     }

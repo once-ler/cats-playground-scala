@@ -1,18 +1,21 @@
 package com.eztier.clickmock
+package infrastructure
 
 import java.net.URI
 import java.util.Date
 
-import cats.{Applicative, Monad}
-import cats.effect.{Async, Concurrent, ContextShift, IO, Resource, Sync}
+import cats.syntax.applicative._
+import cats.Applicative
+import cats.effect.{Async, Concurrent, ContextShift, Resource, Sync}
 import fs2.Pipe
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import scala.xml.{Node, NodeSeq, XML}
+
 import soap._
 import config._
 import domain._
+import CkXmlToTypeImplicits._
 
 class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
 
@@ -209,23 +212,11 @@ class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resourc
 
   def getEntityType(root: NodeSeq): String = (root \ "entity" \ "@type").headOption.getOrElse("").toString
 
-  val getIdFromEntityXmlFlow = Flow[NodeSeq].mapAsync(1){tryGetAttrString(_, "name", "ID")}
-
   val getIdFromEntityXmlFlow: Pipe[F, NodeSeq, String] = _.evalMap{ tryGetAttrString(_, "name", "ID") }
 
-  def addOrCreateEntityFlow()(implicit cf: ClickSoapClient) = Flow[CkBase].mapAsync(parallelism = 3){
-    a =>
-      a match {
-        case a if a.getClass == classOf[CkPostalContactInformation] => addOrUpdateEntity(a.asInstanceOf[CkPostalContactInformation])
-        case a if a.getClass == classOf[CkEmailContactInformation] => addOrUpdateEntity(a.asInstanceOf[CkEmailContactInformation])
-        case a if a.getClass == classOf[CkPhoneContactInformation] => addOrUpdateEntity(a.asInstanceOf[CkPhoneContactInformation])
-        case _ => Future(NodeSeq.Empty)
-      }
-  }
-
-  val fromEntityXmlToCkTypeFlow: Pipe[F, NodeSeq] = Flow[NodeSeq].map {
+  def fromEntityXmlToCkTypeFlow: Pipe[F, NodeSeq, Option[CkBase]] = _.evalMap {
     x =>
-      getEntityType(x) match {
+      val a = getEntityType(x) match {
         case a if a == "Postal Contact Information" =>
           val b: CkPostalContactInformation = WrappedEntityXml(xml = x)
           Some(b)
@@ -237,8 +228,9 @@ class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resourc
           Some(b)
         case _ => None
       }
-  }
 
+      a.pure[F]
+  }
 }
 
 object ClickMockService {

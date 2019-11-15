@@ -1,6 +1,7 @@
 libraryDependencies in ThisBuild += compilerPlugin(kindProjectorPlugin)
 
 name := "cats-playground-scala"
+// scalaVersion in ThisBuild := "2.12.8"
 
 lazy val compilerOptions = Seq(
   "-Xfatal-warnings",
@@ -13,7 +14,7 @@ lazy val compilerOptions = Seq(
 lazy val commonSettings = Seq(
   organization := "com.eztier",
   version := "0.1.1-SNAPSHOT",
-  scalaVersion := "2.12.8",  
+  scalaVersion := "2.12.8",
   scalacOptions ++= compilerOptions,
   resolvers ++= Seq(
     Resolver.sonatypeRepo("public"),
@@ -37,7 +38,8 @@ lazy val common = project
       circeParser,
       circeConfig,
       specs2,
-      logback
+      logback,
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value
     )
   )
   

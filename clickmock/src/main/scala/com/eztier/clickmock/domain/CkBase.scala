@@ -4,6 +4,7 @@ package domain
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.Date
 import scala.xml.NodeSeq
+import cats.syntax.option._
 
 // com.webridge.entity.Entity:
 case class EntityReference[A <: Any](Poref: Option[String] = None, Type: Option[String] = None)
@@ -21,7 +22,7 @@ case class Ck_NYUGenderSelection_CustomAttributesManager
   Class: Option[String] = None,
   extent: Option[String] = None,
   name: Option[String] = None,
-  enabled: Option[Int] = Some(1)
+  enabled: Option[Int] = 1.some
 ) extends CkBase with WithEncoder
 
 case class Ck_NYUGenderSelection
@@ -30,7 +31,7 @@ case class Ck_NYUGenderSelection
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_NYUGenderSelection_CustomAttributesManager] = EntityReference[Ck_NYUGenderSelection_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_NYUGenderSelection_CustomAttributesManager]] = EntityReference[Ck_NYUGenderSelection_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
 case class Ck_NYUParticipantEthnicity_CustomAttributesManager
@@ -39,7 +40,7 @@ case class Ck_NYUParticipantEthnicity_CustomAttributesManager
   Class: Option[String] = None,
   extent: Option[String] = None,
   name: Option[String] = None,
-  enabled: Option[Int] = Some(1),
+  enabled: Option[Int] = 1.some,
   ctrpCode: Option[String] = None
 ) extends CkBase with WithEncoder
 
@@ -48,7 +49,7 @@ case class Ck_NYUParticipantEthnicity(
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager] = EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager]] = EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
 case class Ck_NYUParticipantRace_CustomAttributesManager
@@ -57,7 +58,7 @@ case class Ck_NYUParticipantRace_CustomAttributesManager
   Class: Option[String] = None,
   extent: Option[String] = None,
   name: Option[String] = None,
-  isActive: Option[Int] = Some(1),
+  isActive: Option[Int] = 1.some,
   ctrpCode: Option[String] = None
 ) extends CkBase with WithEncoder
 
@@ -67,7 +68,7 @@ case class Ck_NYUParticipantRace
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_NYUParticipantRace_CustomAttributesManager] = EntityReference[Ck_NYUParticipantRace_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_NYUParticipantRace_CustomAttributesManager]] = EntityReference[Ck_NYUParticipantRace_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
 case class Ck_PersonCustomExtension_CustomAttributesManager
@@ -75,7 +76,7 @@ case class Ck_PersonCustomExtension_CustomAttributesManager
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  gender: EntityReference[Ck_NYUGenderSelection] = EntityReference[Ck_NYUGenderSelection]()
+  gender: Option[EntityReference[Ck_NYUGenderSelection]] = EntityReference[Ck_NYUGenderSelection]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_PersonCustomExtension(
@@ -83,7 +84,7 @@ case class Ck_PersonCustomExtension(
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_PersonCustomExtension_CustomAttributesManager] = EntityReference[Ck_PersonCustomExtension_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_PersonCustomExtension_CustomAttributesManager]] = EntityReference[Ck_PersonCustomExtension_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -101,7 +102,7 @@ case class CkPerson_CustomAttributesManager(
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  personCustomExtension: EntityReference[Ck_PersonCustomExtension] = EntityReference[Ck_PersonCustomExtension]()
+  personCustomExtension: Option[EntityReference[Ck_PersonCustomExtension]] = EntityReference[Ck_PersonCustomExtension]().some
 ) extends CkBase with WithEncoder
 
 case class CkPerson(
@@ -109,13 +110,13 @@ case class CkPerson(
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  employer: EntityReference[CkCompany] = EntityReference[CkCompany](),
+  employer: Option[EntityReference[CkCompany]] = Some(EntityReference[CkCompany]()),
   firstName: Option[String] = None,
   lastName: Option[String] = None,
   middleName: Option[String] = None,
-  customAttributes: EntityReference[CkPerson_CustomAttributesManager] = EntityReference[CkPerson_CustomAttributesManager](),
-  dateOfBirth: Date = new Date(),
-  gender: String = "Male"
+  customAttributes: Option[EntityReference[CkPerson_CustomAttributesManager]] = EntityReference[CkPerson_CustomAttributesManager]().some,
+  dateOfBirth: Option[Date] = Some(new Date()),
+  gender: Option[String] = "Male".some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -136,7 +137,7 @@ case class Ck_ClickAddress_CustomAttributesManager
   address1: Option[String] = None,
   city: Option[String] = None,
   postalCode: Option[String] = None,
-  state: EntityReference[CkState] = EntityReference[CkState]()
+  state: Option[EntityReference[CkState]] = EntityReference[CkState]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_ClickAddress
@@ -145,7 +146,7 @@ case class Ck_ClickAddress
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_ClickAddress_CustomAttributesManager] = EntityReference[Ck_ClickAddress_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_ClickAddress_CustomAttributesManager]] = EntityReference[Ck_ClickAddress_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -155,7 +156,7 @@ case class Ck_ClickPartyContactInformation_CustomAttributesManager
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  homeAddress: EntityReference[Ck_ClickAddress] = EntityReference[Ck_ClickAddress](),
+  homeAddress: Option[EntityReference[Ck_ClickAddress]] = EntityReference[Ck_ClickAddress]().some,
   phoneHome: Option[String] = None,
   preferredEmail: Option[String] = None
 ) extends CkBase with WithEncoder
@@ -166,7 +167,7 @@ case class Ck_ClickPartyContactInformation
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager] = EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager]] = EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -188,10 +189,10 @@ case class CkPostalContactInformation
   city: Option[String] = None,
   postalCode: Option[String] = None,
   address1: Option[String] = None,
-  stateProvince: EntityReference[CkState] = EntityReference[CkState](),
-  country: EntityReference[CkCountry] = EntityReference[CkCountry]()
+  stateProvince: Option[EntityReference[CkState]] = EntityReference[CkState]().some,
+  country: Option[EntityReference[CkCountry]] = EntityReference[CkCountry]().some
 ) extends CkBase with WithEncoder with WithExplicitTypeName {
-  def typeName = Some("Postal Contact Information")
+  def typeName = "Postal Contact Information".some
 }
 
 case class CkPhoneContactInformation(
@@ -200,9 +201,9 @@ case class CkPhoneContactInformation(
   extent: Option[String] = None,
   areaCode: Option[String] = None,
   phoneNumber: Option[String] = None,
-  country: EntityReference[CkCountry] = EntityReference[CkCountry]()
+  country: Option[EntityReference[CkCountry]] = EntityReference[CkCountry]().some
 ) extends CkBase with WithEncoder with WithExplicitTypeName {
-  def typeName = Some("Phone Contact Information")
+  def typeName = "Phone Contact Information".some
 }
 
 case class CkEmailContactInformation
@@ -212,7 +213,7 @@ case class CkEmailContactInformation
   extent: Option[String] = None,
   eMailAddress: Option[String] = None
 ) extends CkBase with WithEncoder with WithExplicitTypeName {
-  def typeName = Some("E-mail Contact Information")
+  def typeName = "E-mail Contact Information".some
 }
 
 case class CkPartyContactInformation
@@ -220,11 +221,11 @@ case class CkPartyContactInformation
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  phoneHome: EntityReference[CkPhoneContactInformation] = EntityReference[CkPhoneContactInformation](),
-  emailPreferred: EntityReference[CkEmailContactInformation] = EntityReference[CkEmailContactInformation](),
-  addressHome: EntityReference[CkPostalContactInformation] = EntityReference[CkPostalContactInformation]()
+  phoneHome: Option[EntityReference[CkPhoneContactInformation]] = EntityReference[CkPhoneContactInformation]().some,
+  emailPreferred: Option[EntityReference[CkEmailContactInformation]] = EntityReference[CkEmailContactInformation]().some,
+  addressHome: Option[EntityReference[CkPostalContactInformation]] = EntityReference[CkPostalContactInformation]().some
 ) extends CkBase with WithEncoder with WithExplicitTypeName {
-  def typeName = Some("PartyContactInformation")
+  def typeName = "PartyContactInformation".some
 }
 
 case class CkParty
@@ -232,9 +233,9 @@ case class CkParty
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  contactInformation: EntityReference[CkPartyContactInformation] = EntityReference[CkPartyContactInformation]()
+  contactInformation: Option[EntityReference[CkPartyContactInformation]] = EntityReference[CkPartyContactInformation]().some
 ) extends CkBase with WithEncoder with WithExplicitTypeName {
-  def typeName = Some("Party")
+  def typeName = "Party".some
 }
 
 case class CkClassification
@@ -250,7 +251,7 @@ case class CkProject
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  status: EntityReference[CkClassification] = EntityReference[CkClassification]()
+  status: Option[EntityReference[CkClassification]] = EntityReference[CkClassification]().some
 ) extends CkBase with WithEncoder
 
 case class CkResource
@@ -259,16 +260,16 @@ case class CkResource
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  dateModified: Date = Date.from(ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant),
-  dateCreated: Date =  Date.from(ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant)
+  dateModified: Option[Date] = Date.from(ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant).some,
+  dateCreated: Option[Date] =  Date.from(ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant).some
 ) extends CkBase with WithEncoder
 
 case class Ck_ParticipantCustomExtension_CustomAttributesManager(
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  particpantEthnicity: EntityReference[Ck_NYUParticipantEthnicity] = EntityReference[Ck_NYUParticipantEthnicity](),
-  participantRace: EntityReference[Ck_NYUParticipantRace] = EntityReference[Ck_NYUParticipantRace]()
+  particpantEthnicity: Option[EntityReference[Ck_NYUParticipantEthnicity]] = EntityReference[Ck_NYUParticipantEthnicity]().some,
+  participantRace: Option[EntityReference[Ck_NYUParticipantRace]] = EntityReference[Ck_NYUParticipantRace]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_ParticipantCustomExtension
@@ -277,7 +278,7 @@ case class Ck_ParticipantCustomExtension
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager] = EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager]] = EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -288,8 +289,8 @@ case class Ck_Participant_CustomAttributesManager
   Class: Option[String] = None,
   extent: Option[String] = None,
   medicalRecordNumber: Option[String] = None,
-  person: EntityReference[CkPerson] = EntityReference[CkPerson](),
-  participantCustomExtension: EntityReference[Ck_ParticipantCustomExtension] = EntityReference[Ck_ParticipantCustomExtension]()
+  person: Option[EntityReference[CkPerson]] = EntityReference[CkPerson]().some,
+  participantCustomExtension: Option[EntityReference[Ck_ParticipantCustomExtension]] = EntityReference[Ck_ParticipantCustomExtension]().some
 ) extends CkBase with WithEncoder with WithFindByMrn {
   def findByMrn(id: Option[String]) = ???
 }
@@ -299,7 +300,7 @@ case class Ck_Participant(
   Class: Option[String] = None,
   extent: Option[String] = None,
   _webrUnique_ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_Participant_CustomAttributesManager] = EntityReference[Ck_Participant_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_Participant_CustomAttributesManager]] = EntityReference[Ck_Participant_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
@@ -308,9 +309,9 @@ case class Ck_ParticipantRecord_CustomAttributesManager(
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  participant: EntityReference[Ck_Participant] = EntityReference[Ck_Participant](),
-  partyContactInformation: EntityReference[Ck_ClickPartyContactInformation] = EntityReference[Ck_ClickPartyContactInformation](),
-  clinicalTrial: EntityReference[Ck_ClinicalTrial] = EntityReference[Ck_ClinicalTrial]()
+  participant: Option[EntityReference[Ck_Participant]] = EntityReference[Ck_Participant]().some,
+  partyContactInformation: Option[EntityReference[Ck_ClickPartyContactInformation]] = EntityReference[Ck_ClickPartyContactInformation]().some,
+  clinicalTrial: Option[EntityReference[Ck_ClinicalTrial]] = EntityReference[Ck_ClinicalTrial]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_ParticipantRecord(
@@ -318,7 +319,7 @@ case class Ck_ParticipantRecord(
   Class: Option[String] = None,
   extent: Option[String] = None,
   _webrUnique_ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_ParticipantRecord_CustomAttributesManager] = EntityReference[Ck_ParticipantRecord_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_ParticipantRecord_CustomAttributesManager]] = EntityReference[Ck_ParticipantRecord_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithProject
 
 case class Ck_ClinicalTrial_CustomAttributesManager(
@@ -332,7 +333,7 @@ case class Ck_ClinicalTrial(
   Class: Option[String] = None,
   extent: Option[String] = None,
   _webrUnique_ID: Option[String] = None,
-  customAttributes: EntityReference[Ck_ClinicalTrial_CustomAttributesManager] = EntityReference[Ck_ClinicalTrial_CustomAttributesManager]()
+  customAttributes: Option[EntityReference[Ck_ClinicalTrial_CustomAttributesManager]] = EntityReference[Ck_ClinicalTrial_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithProject with WithFindById {
   def findById(id: Option[String]) = ???
 }
