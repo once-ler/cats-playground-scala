@@ -14,7 +14,7 @@ import soap._
 import config._
 import domain._
 
-class ClickMockService[F[_]: Sync : Async : ContextShift : Concurrent](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
+class ClickMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
 
   val entityservice = new EntityServicesSoap12Bindings with
     scalaxb.SoapClientsAsync with

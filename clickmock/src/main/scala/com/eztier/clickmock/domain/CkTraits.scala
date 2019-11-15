@@ -1,28 +1,17 @@
 package com.eztier.clickmock
 package domain
 
-package com.eztier.clickmock.types
-
 import java.util.Date
 
-import cats.Applicative
-import cats.effect.{Async, Bracket, IO, Sync}
+import cats.{Applicative, Functor, Monad}
+import cats.effect.{Async, Bracket, Concurrent, ContextShift, IO, Sync}
 import fs2.Pipe
 
 import scala.xml.XML
-// import org.apache.poi.ss.formula.functions.T
-import scalikejdbc.{DBSession, NamedAutoSession, NamedDB}
-
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.xml.{Elem, Node, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
-
-import scalikejdbc.SQLSyntaxSupport
-
-import com.eztier.clickmock.soap.ClickMockService
-// import com.eztier.clickmock.implicits._
-
 import fs2.Stream
 
 trait CkBase {
@@ -44,11 +33,11 @@ trait WithNonProject {
 }
 
 trait WithFindById {
-  def findById(id: String)(implicit session: DBSession): Option[_]
+  def findById(id: String): Option[_]
 }
 
 trait WithFindByMrn {
-  def findByMrn(mrn: String)(implicit session: DBSession): Option[_]
+  def findByMrn(mrn: String): Option[_]
 }
 
 trait WithExplicitTypeName {
@@ -87,44 +76,26 @@ trait WithEncoder {
   def toOid: String = this.oid
 }
 
-trait WithEntitySupport {
+class EntitySupport[F[_]: Async] {
   // Get Entity
-  def getEntity(oid: String) (implicit cf: ClickMockService[IO]): IO[NodeSeq] = {
-
-    for {
-      d <- cf.tryGetEntityByID(Some(oid))
-      x <- cf.tryParseXML(d.getEntityByIDResult)
-    } yield x
-
-  }
+  def getEntity(oid: String) (implicit cf: ClickMockService[F]): F[NodeSeq] =
+    Monad[F].flatMap(cf.tryGetEntityByID(Some(oid)))(d => cf.tryParseXML(d.getEntityByIDResult))
 
   // Redefine Entity
-  def redefineEntity(oid: String, xmlString: String) (implicit cf: ClickMockService[IO]): IO[NodeSeq] = {
-    for {
-      r <- cf.tryRedefineEntityByID(Some(oid), Some(xmlString))
-      x <- cf.tryParseXML(r.redefineEntityByIDResult)
-    } yield x
-  }
+  def redefineEntity(oid: String, xmlString: String) (implicit cf: ClickMockService[F]): F[NodeSeq] =
+    Monad[F].flatMap(cf.tryRedefineEntityByID(Some(oid), Some(xmlString)))(d => cf.tryParseXML(d.redefineEntityByIDResult))
 
-  def redefineEntity[A <: CkBase with WithEncoder](in: A)(implicit cf: ClickMockService[IO]): IO[NodeSeq] =
+  def redefineEntity[A <: CkBase with WithEncoder](in: A)(implicit cf: ClickMockService[F]): F[NodeSeq] =
     redefineEntity(in.Class + ":" + in.oid, in.toXml.toString)
 
-  def redefineCompleteEntity[A <: CkBase with WithCustomAttributes with WithEncoder, B <: CkBase with WithEncoder](root: A, child: B)(implicit cf: ClickMockService[IO]): IO[NodeSeq] = {
-    for {
-      x <- redefineEntity(root.customAttributes.Poref, child.toXml.toString())
-      y <- redefineEntity(root)
-    } yield y
-  }
+  def redefineCompleteEntity[A <: CkBase with WithCustomAttributes with WithEncoder, B <: CkBase with WithEncoder](root: A, child: B)(implicit cf: ClickMockService[F]): F[NodeSeq] =
+    Monad[F].flatMap(redefineEntity(root.customAttributes.Poref, child.toXml.toString()))(a => redefineEntity(root))
 
   // Create Entity
-  def createEntity(typeName: String, xmlString: String)(implicit cf: ClickMockService[IO]): IO[NodeSeq] = {
-    for {
-      r <- cf.tryCreateEntity(Some(typeName), Some(xmlString))
-      x <- cf.tryParseXML(r.createEntityResult)
-    } yield x
-  }
+  def createEntity(typeName: String, xmlString: String)(implicit cf: ClickMockService[F]): F[NodeSeq] =
+    Monad[F].flatMap(cf.tryCreateEntity(Some(typeName), Some(xmlString)))(d => cf.tryParseXML(d.createEntityResult))
 
-  def createEntity[A <: CkBase with WithEncoder with WithExplicitTypeName](in: A)(implicit cf: ClickMockService[IO]): IO[NodeSeq] =
+  def createEntity[A <: CkBase with WithEncoder with WithExplicitTypeName](in: A)(implicit cf: ClickMockService[F]): F[NodeSeq] =
     createEntity(in.typeName, in.toXml.toString)
 
   implicit class WrapWithEncoder[B <: WithEncoder](outer: B) {
@@ -144,32 +115,24 @@ trait WithEntitySupport {
     }
   }
 
-  def processInnerResultImpl[B <: WithEncoder](outer: B)(implicit cf: ClickMockService[IO]): NodeSeq => IO[NodeSeq] = (res: NodeSeq) => {
+  def processInnerResultImpl[B <: WithEncoder](outer: B)(implicit cf: ClickMockService[F]): NodeSeq => F[NodeSeq] = (res: NodeSeq) => {
     val entity = res \ "entity"
     val typeName = (entity \ "@type").headOption.getOrElse(NodeSeq.Empty).text
     val poref = (entity \ "@poref").headOption.getOrElse(NodeSeq.Empty).text
     val xModified = outer updateCustomAttributes(typeName, poref)
     val xModifiedStr = xModified.toString
 
-    for {
-      r <- cf.tryCreateEntity(Some(outer.toCkTypeName), Some(xModifiedStr))
-      x <- cf.tryParseXML(r.createEntityResult)
-    } yield x
+    Monad[F].flatMap(cf.tryCreateEntity(Some(outer.toCkTypeName), Some(xModifiedStr)))(d => cf.tryParseXML(d.createEntityResult))
   }
 
-  def processInnerResult[B <: WithEncoder](outer: B)(implicit cf: ClickMockService[IO]): Pipe[IO, NodeSeq, NodeSeq] = _.evalMap{
-    res =>
-      processInnerResultImpl(outer)(cf)(res)
+  def processInnerResult[B <: WithEncoder](outer: B)(implicit cf: ClickMockService[F]): Pipe[F, NodeSeq, NodeSeq] =
+    _.evalMap(res => processInnerResultImpl(outer)(cf)(res))
+
+  def createCompleteEntity[A <: WithEncoder, B <: WithEncoder](inner: A, outer: B)(implicit cf: ClickMockService[F]): F[F[NodeSeq]] = {
+    val fa = Monad[F].flatMap(cf.tryCreateEntity(Some(inner.toCkTypeName), Some(inner.toXml.toString)))(d => cf.tryParseXML(d.createEntityResult))
+    Functor[F].map(fa)(x => processInnerResultImpl(outer)(cf)(x))
   }
 
-  def createCompleteEntity[A <: WithEncoder, B <: WithEncoder](inner: A, outer: B)(implicit cf: ClickMockService[IO]): IO[IO[NodeSeq]] = {
-    for {
-      r <- cf.tryCreateEntity(Some(inner.toCkTypeName), Some(inner.toXml.toString))
-      x <- cf.tryParseXML(r.createEntityResult)
-    } yield {
-      processInnerResultImpl(outer)(cf)(x)
-    }
-  }
 
   /*
   def maybeMerge[A <: CkBase](fromCa: A, fromCk: A, fromCaCm: A) = {
@@ -198,7 +161,7 @@ trait WithEntitySupport {
     }
   }
   */
-  
+
   /*
     mrn -> Empty means just create new
     fromCk -> Ck object from SQL database
@@ -209,21 +172,21 @@ trait WithEntitySupport {
     fromCk.oid match {
       case null | "" =>
         // Does root object with mrn exist?
-        val a = if (mrn.length > 0) NamedDB('crms) readOnly { implicit session => fromCk.findById(mrn) } else None
+        val a = if (mrn.length > 0) fromCk.findById(mrn) else None
         a match {
           case Some(c) =>
             val fromCaCm1 = maybeMerge(fromCaCm, fromCkCm)
             val fromCa1 = maybeMerge(fromCa, c.asInstanceOf[A], fromCaCm1)
-            cf.redefineCompleteEntity(fromCa1.asInstanceOf[A], fromCaCm1.asInstanceOf[B])
+            redefineCompleteEntity(fromCa1.asInstanceOf[A], fromCaCm1.asInstanceOf[B])
           case _ =>
             // Create new
-            cf.createCompleteEntity(fromCaCm, fromCa)
+            createCompleteEntity(fromCaCm, fromCa)
         }
       case _ =>
         // Object already exists, but may or may not have the mrn as its ID.
         val fromCaCm1 = maybeMerge(fromCaCm, fromCkCm)
         val fromCa1 = maybeMerge(fromCa, fromCk, fromCaCm1)
-        cf.redefineCompleteEntity(fromCa1.asInstanceOf[A], fromCaCm1.asInstanceOf[B])
+        redefineCompleteEntity(fromCa1.asInstanceOf[A], fromCaCm1.asInstanceOf[B])
     }
   }
 
