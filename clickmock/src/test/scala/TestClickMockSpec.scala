@@ -26,7 +26,7 @@ class TestClickMockSpec[F[_]] extends Specification {
   implicit val timer = IO.timer(ec)
   implicit val cs = IO.contextShift(ec)  // Need cats.effect.ContextShift[cats.effect.IO] because not inside of IOApp
 
-  def blockingThreadPool(implicit F: Sync[F]): Resource[F, ExecutionContext] =
+  def blockingThreadPool[F[_]](implicit F: Sync[F]): Resource[F, ExecutionContext] =
     Resource(F.delay {
       val executor = Executors.newCachedThreadPool()
       val ec = ExecutionContext.fromExecutor(executor)
@@ -38,7 +38,7 @@ class TestClickMockSpec[F[_]] extends Specification {
 
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("clickmock")) // Lifts an applicative into a resource.
-      b = blockingThreadPool
+      b = blockingThreadPool[F]
       ms = CkMockService(conf, b)
     } yield ms
   }

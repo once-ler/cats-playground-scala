@@ -8,11 +8,12 @@ import cats.syntax.applicative._
 import cats.Applicative
 import cats.effect.{Async, Concurrent, ContextShift, Resource, Sync}
 import fs2.Pipe
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 import scala.xml.{Node, NodeSeq, XML}
 
-import soap._
+import soap.entity._
+import soap.entityset._
 import config._
 import domain._
 import CkXmlToTypeImplicits._
