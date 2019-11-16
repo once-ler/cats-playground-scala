@@ -569,3 +569,49 @@ case class UnregisterAllFromEntityTypeExtent(svcSessionToken: Option[String] = N
 case class UnregisterAllFromEntityTypeExtentResponse()
       
 
+
+case class GetStorageList()
+      
+
+
+case class GetStorageListResponse(GetStorageListResult: Option[com.eztier.clickmock.soap.ArrayOfString] = None)
+      
+
+
+case class ArrayOfString(string: Seq[Option[String]] = Nil)
+      
+
+
+case class Login(storeName: Option[String] = None,
+  userName: Option[String] = None,
+  password: Option[String] = None)
+      
+
+
+case class LoginResponse(LoginResult: Option[String] = None)
+      
+
+
+case class LoginAsWindowsIdentity(storeName: Option[String] = None)
+      
+
+
+case class LoginAsWindowsIdentityResponse(LoginAsWindowsIdentityResult: Option[String] = None)
+      
+
+
+case class Logoff(svcSessionToken: Option[String] = None)
+      
+
+
+case class LogoffResponse()
+      
+
+
+case class GetUserID(svcSessionToken: Option[String] = None)
+      
+
+
+case class GetUserIDResponse(GetUserIDResult: Option[String] = None)
+      
+

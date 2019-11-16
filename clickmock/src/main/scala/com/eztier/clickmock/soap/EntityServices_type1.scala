@@ -353,10 +353,6 @@ case class GetPORefsFromSnapshotResponse(getPORefsFromSnapshotResult: Option[com
       
 
 
-case class ArrayOfString(string: Seq[Option[String]] = Nil)
-      
-
-
 case class ReleaseSnapshot(svcSessionToken: Option[String] = None,
   snapshotID: Option[String] = None)
       
@@ -651,47 +647,5 @@ case class SetEntityTypeAttributeValue(svcSessionToken: Option[String] = None,
 
 
 case class SetEntityTypeAttributeValueResponse()
-      
-
-
-case class GetStorageList()
-      
-
-
-case class GetStorageListResponse(GetStorageListResult: Option[com.eztier.clickmock.soap.ArrayOfString] = None)
-      
-
-
-case class Login(storeName: Option[String] = None,
-  userName: Option[String] = None,
-  password: Option[String] = None)
-      
-
-
-case class LoginResponse(LoginResult: Option[String] = None)
-      
-
-
-case class LoginAsWindowsIdentity(storeName: Option[String] = None)
-      
-
-
-case class LoginAsWindowsIdentityResponse(LoginAsWindowsIdentityResult: Option[String] = None)
-      
-
-
-case class Logoff(svcSessionToken: Option[String] = None)
-      
-
-
-case class LogoffResponse()
-      
-
-
-case class GetUserID(svcSessionToken: Option[String] = None)
-      
-
-
-case class GetUserIDResponse(GetUserIDResult: Option[String] = None)
       
 

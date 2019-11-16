@@ -13,7 +13,6 @@ object `package` extends XMLProtocol { }
 
 trait XMLProtocol extends scalaxb.XMLStandardTypes {
   val defaultScope = scalaxb.toScope(None -> "http://clickcommerce.com/Extranet/WebServices",
-    Some("tns0") -> "http://www.webserviceX.NET/",
     Some("tns") -> "http://clickcommerce.com/Extranet/WebServices",
     Some("xs") -> "http://www.w3.org/2001/XMLSchema",
     Some("xsi") -> "http://www.w3.org/2001/XMLSchema-instance")
@@ -89,7 +88,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   implicit lazy val Comeztierclickmocksoap_AllEntitiesOfTypeSnapshotResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.AllEntitiesOfTypeSnapshotResponse] = new DefaultComeztierclickmocksoap_AllEntitiesOfTypeSnapshotResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_GetPORefsFromSnapshotFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetPORefsFromSnapshot] = new DefaultComeztierclickmocksoap_GetPORefsFromSnapshotFormat {}
   implicit lazy val Comeztierclickmocksoap_GetPORefsFromSnapshotResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetPORefsFromSnapshotResponse] = new DefaultComeztierclickmocksoap_GetPORefsFromSnapshotResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_ArrayOfStringFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.ArrayOfString] = new DefaultComeztierclickmocksoap_ArrayOfStringFormat {}
   implicit lazy val Comeztierclickmocksoap_ReleaseSnapshotFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.ReleaseSnapshot] = new DefaultComeztierclickmocksoap_ReleaseSnapshotFormat {}
   implicit lazy val Comeztierclickmocksoap_ReleaseSnapshotResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.ReleaseSnapshotResponse] = new DefaultComeztierclickmocksoap_ReleaseSnapshotResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_GetXmlStringsOfOidStringsFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetXmlStringsOfOidStrings] = new DefaultComeztierclickmocksoap_GetXmlStringsOfOidStringsFormat {}
@@ -147,16 +145,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   implicit lazy val Comeztierclickmocksoap_SetEntityAttributeValueResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.SetEntityAttributeValueResponse] = new DefaultComeztierclickmocksoap_SetEntityAttributeValueResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_SetEntityTypeAttributeValueFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.SetEntityTypeAttributeValue] = new DefaultComeztierclickmocksoap_SetEntityTypeAttributeValueFormat {}
   implicit lazy val Comeztierclickmocksoap_SetEntityTypeAttributeValueResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.SetEntityTypeAttributeValueResponse] = new DefaultComeztierclickmocksoap_SetEntityTypeAttributeValueResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_GetStorageListFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageList] = new DefaultComeztierclickmocksoap_GetStorageListFormat {}
-  implicit lazy val Comeztierclickmocksoap_GetStorageListResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageListResponse] = new DefaultComeztierclickmocksoap_GetStorageListResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_LoginFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.Login] = new DefaultComeztierclickmocksoap_LoginFormat {}
-  implicit lazy val Comeztierclickmocksoap_LoginResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginResponse] = new DefaultComeztierclickmocksoap_LoginResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_LoginAsWindowsIdentityFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginAsWindowsIdentity] = new DefaultComeztierclickmocksoap_LoginAsWindowsIdentityFormat {}
-  implicit lazy val Comeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] = new DefaultComeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_LogoffFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.Logoff] = new DefaultComeztierclickmocksoap_LogoffFormat {}
-  implicit lazy val Comeztierclickmocksoap_LogoffResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LogoffResponse] = new DefaultComeztierclickmocksoap_LogoffResponseFormat {}
-  implicit lazy val Comeztierclickmocksoap_GetUserIDFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetUserID] = new DefaultComeztierclickmocksoap_GetUserIDFormat {}
-  implicit lazy val Comeztierclickmocksoap_GetUserIDResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetUserIDResponse] = new DefaultComeztierclickmocksoap_GetUserIDResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_CreateNewETypeFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.CreateNewEType] = new DefaultComeztierclickmocksoap_CreateNewETypeFormat {}
   implicit lazy val Comeztierclickmocksoap_CreateNewETypeResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.CreateNewETypeResponse] = new DefaultComeztierclickmocksoap_CreateNewETypeResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_CreateNewETypeExFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.CreateNewETypeEx] = new DefaultComeztierclickmocksoap_CreateNewETypeExFormat {}
@@ -273,6 +261,17 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
   implicit lazy val Comeztierclickmocksoap_GetEntityTypeExtentUniqueKeysReadableResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetEntityTypeExtentUniqueKeysReadableResponse] = new DefaultComeztierclickmocksoap_GetEntityTypeExtentUniqueKeysReadableResponseFormat {}
   implicit lazy val Comeztierclickmocksoap_UnregisterAllFromEntityTypeExtentFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.UnregisterAllFromEntityTypeExtent] = new DefaultComeztierclickmocksoap_UnregisterAllFromEntityTypeExtentFormat {}
   implicit lazy val Comeztierclickmocksoap_UnregisterAllFromEntityTypeExtentResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.UnregisterAllFromEntityTypeExtentResponse] = new DefaultComeztierclickmocksoap_UnregisterAllFromEntityTypeExtentResponseFormat {}
+  implicit lazy val Comeztierclickmocksoap_GetStorageListFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageList] = new DefaultComeztierclickmocksoap_GetStorageListFormat {}
+  implicit lazy val Comeztierclickmocksoap_GetStorageListResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageListResponse] = new DefaultComeztierclickmocksoap_GetStorageListResponseFormat {}
+  implicit lazy val Comeztierclickmocksoap_ArrayOfStringFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.ArrayOfString] = new DefaultComeztierclickmocksoap_ArrayOfStringFormat {}
+  implicit lazy val Comeztierclickmocksoap_LoginFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.Login] = new DefaultComeztierclickmocksoap_LoginFormat {}
+  implicit lazy val Comeztierclickmocksoap_LoginResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginResponse] = new DefaultComeztierclickmocksoap_LoginResponseFormat {}
+  implicit lazy val Comeztierclickmocksoap_LoginAsWindowsIdentityFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginAsWindowsIdentity] = new DefaultComeztierclickmocksoap_LoginAsWindowsIdentityFormat {}
+  implicit lazy val Comeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] = new DefaultComeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat {}
+  implicit lazy val Comeztierclickmocksoap_LogoffFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.Logoff] = new DefaultComeztierclickmocksoap_LogoffFormat {}
+  implicit lazy val Comeztierclickmocksoap_LogoffResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.LogoffResponse] = new DefaultComeztierclickmocksoap_LogoffResponseFormat {}
+  implicit lazy val Comeztierclickmocksoap_GetUserIDFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetUserID] = new DefaultComeztierclickmocksoap_GetUserIDFormat {}
+  implicit lazy val Comeztierclickmocksoap_GetUserIDResponseFormat: scalaxb.XMLFormat[com.eztier.clickmock.soap.GetUserIDResponse] = new DefaultComeztierclickmocksoap_GetUserIDResponseFormat {}
 
   def fromAnySchemaTypeHelper1(elem: scala.xml.Elem): Option[scalaxb.DataRecord[Any]] = {
     import scalaxb.{Helper, DataRecord, fromXML}
@@ -414,8 +413,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       case (Some("getExtentForSC"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetExtentForSC](elem)))
       case (Some("setExtentFromSC"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.SetExtentFromSC](elem)))
       case (Some("setEntityAttributeValue"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.SetEntityAttributeValue](elem)))
-      case (Some("setEntityTypeAttributeValue"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.SetEntityTypeAttributeValue](elem)))
-      case (Some("GetStorageList"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetStorageList](elem)))
 
       case _ => None
     }
@@ -429,6 +426,8 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
     val (xsns, xstype) = Helper.instanceType(elem)
 
     (key, ns) match {
+      case (Some("setEntityTypeAttributeValue"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.SetEntityTypeAttributeValue](elem)))
+      case (Some("GetStorageList"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetStorageList](elem)))
       case (Some("Login"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.Login](elem)))
       case (Some("LoginAsWindowsIdentity"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.LoginAsWindowsIdentity](elem)))
       case (Some("Logoff"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.Logoff](elem)))
@@ -559,9 +558,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
       case (Some("LoginAsWindowsIdentity"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.LoginAsWindowsIdentity](elem)))
       case (Some("Logoff"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.Logoff](elem)))
       case (Some("GetUserID"), Some("http://clickcommerce.com/Extranet/WebServices") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetUserID](elem)))
-      case (Some("string"), Some("http://www.webserviceX.NET/") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[String](elem)))
-      case (Some("GetQuote"), Some("http://www.webserviceX.NET/") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetQuote](elem)))
-      case (Some("GetQuoteResponse"), Some("http://www.webserviceX.NET/") | None) => Some(DataRecord(ns, key, xsns, xstype, fromXML[com.eztier.clickmock.soap.GetQuoteResponse](elem)))
 
       case _ => None
     }
@@ -1704,21 +1700,6 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
 
   }
 
-  trait DefaultComeztierclickmocksoap_ArrayOfStringFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.ArrayOfString] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    override def typeName: Option[String] = Some("ArrayOfString")
-
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.ArrayOfString] =
-      phrase(safeRep(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "string")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.ArrayOfString(p1 map { _.nilOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }}) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.ArrayOfString, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.string flatMap { scalaxb.toXML[Option[String]](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("string"), __scope, false) })
-
-  }
-
   trait DefaultComeztierclickmocksoap_ReleaseSnapshotFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.ReleaseSnapshot] {
     val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
     
@@ -2685,151 +2666,11 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
 
   }
 
-  trait DefaultComeztierclickmocksoap_GetStorageListFormat extends scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageList] with scalaxb.CanWriteChildNodes[com.eztier.clickmock.soap.GetStorageList] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    import scalaxb.ElemName._
-    
-    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, com.eztier.clickmock.soap.GetStorageList] = seq match {
-      case node: scala.xml.Node => Right(com.eztier.clickmock.soap.GetStorageList())
-      case _ => Left("reads failed: seq must be scala.xml.Node")
-    }
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetStorageList, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      Nil
-
-
-  }
-
-  trait DefaultComeztierclickmocksoap_GetStorageListResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetStorageListResponse] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetStorageListResponse] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "GetStorageListResult")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.GetStorageListResponse(p1.headOption map { scalaxb.fromXML[com.eztier.clickmock.soap.ArrayOfString](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetStorageListResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.GetStorageListResult map { scalaxb.toXML[com.eztier.clickmock.soap.ArrayOfString](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("GetStorageListResult"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LoginFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.Login] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.Login] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "storeName")) ~ 
-      opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "userName")) ~ 
-      opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "password")) ^^
-      { case p1 ~ p2 ~ p3 =>
-      com.eztier.clickmock.soap.Login(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-        p2.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
-        p3.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.Login, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      Seq.concat(__obj.storeName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("storeName"), __scope, false) } getOrElse {Nil},
-        __obj.userName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("userName"), __scope, false) } getOrElse {Nil},
-        __obj.password map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("password"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LoginResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginResponse] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginResponse] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "LoginResult")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.LoginResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.LoginResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("LoginResult"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LoginAsWindowsIdentityFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginAsWindowsIdentity] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginAsWindowsIdentity] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "storeName")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.LoginAsWindowsIdentity(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginAsWindowsIdentity, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.storeName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("storeName"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "LoginAsWindowsIdentityResult")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.LoginAsWindowsIdentityResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("LoginAsWindowsIdentityResult"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LogoffFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.Logoff] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.Logoff] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "svcSessionToken")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.Logoff(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.Logoff, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.svcSessionToken map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("svcSessionToken"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_LogoffResponseFormat extends scalaxb.XMLFormat[com.eztier.clickmock.soap.LogoffResponse] with scalaxb.CanWriteChildNodes[com.eztier.clickmock.soap.LogoffResponse] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    import scalaxb.ElemName._
-    
-    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, com.eztier.clickmock.soap.LogoffResponse] = seq match {
-      case node: scala.xml.Node => Right(com.eztier.clickmock.soap.LogoffResponse())
-      case _ => Left("reads failed: seq must be scala.xml.Node")
-    }
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.LogoffResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      Nil
-
-
-  }
-
-  trait DefaultComeztierclickmocksoap_GetUserIDFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetUserID] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetUserID] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "svcSessionToken")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.GetUserID(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetUserID, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.svcSessionToken map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("svcSessionToken"), __scope, false) } getOrElse {Nil})
-
-  }
-
-  trait DefaultComeztierclickmocksoap_GetUserIDResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetUserIDResponse] {
-    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
-    
-    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetUserIDResponse] =
-      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "GetUserIDResult")) ^^
-      { case p1 =>
-      com.eztier.clickmock.soap.GetUserIDResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
-    
-    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetUserIDResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
-      (__obj.GetUserIDResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("GetUserIDResult"), __scope, false) } getOrElse {Nil})
-
-  }
-
 
   trait EntityServicesSoap12Bindings { this: scalaxb.SoapClientsAsync =>
     lazy val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
     lazy val service: com.eztier.clickmock.soap.EntityServicesSoap = new EntityServicesSoap12Binding {}
-    def baseAddress = new java.net.URI("http://localhost/ClickXWebServices/EntityManager/EntityServices.asmx")
+    def baseAddress = new java.net.URI("http://rsnirbwcdcdvm01.nyumc.org/ClickXWebServices/EntityManager/EntityServices.asmx")
 
     trait EntityServicesSoap12Binding extends com.eztier.clickmock.soap.EntityServicesSoap {
       import scalaxb.ElemName._
@@ -5251,11 +5092,166 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
 
   }
 
+  trait DefaultComeztierclickmocksoap_GetStorageListFormat extends scalaxb.XMLFormat[com.eztier.clickmock.soap.GetStorageList] with scalaxb.CanWriteChildNodes[com.eztier.clickmock.soap.GetStorageList] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    import scalaxb.ElemName._
+    
+    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, com.eztier.clickmock.soap.GetStorageList] = seq match {
+      case node: scala.xml.Node => Right(com.eztier.clickmock.soap.GetStorageList())
+      case _ => Left("reads failed: seq must be scala.xml.Node")
+    }
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetStorageList, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      Nil
+
+
+  }
+
+  trait DefaultComeztierclickmocksoap_GetStorageListResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetStorageListResponse] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetStorageListResponse] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "GetStorageListResult")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.GetStorageListResponse(p1.headOption map { scalaxb.fromXML[com.eztier.clickmock.soap.ArrayOfString](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetStorageListResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.GetStorageListResult map { scalaxb.toXML[com.eztier.clickmock.soap.ArrayOfString](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("GetStorageListResult"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_ArrayOfStringFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.ArrayOfString] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    override def typeName: Option[String] = Some("ArrayOfString")
+
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.ArrayOfString] =
+      phrase(safeRep(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "string")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.ArrayOfString(p1 map { _.nilOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }}) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.ArrayOfString, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.string flatMap { scalaxb.toXML[Option[String]](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("string"), __scope, false) })
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LoginFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.Login] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.Login] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "storeName")) ~ 
+      opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "userName")) ~ 
+      opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "password")) ^^
+      { case p1 ~ p2 ~ p3 =>
+      com.eztier.clickmock.soap.Login(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+        p2.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) },
+        p3.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.Login, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      Seq.concat(__obj.storeName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("storeName"), __scope, false) } getOrElse {Nil},
+        __obj.userName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("userName"), __scope, false) } getOrElse {Nil},
+        __obj.password map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("password"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LoginResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginResponse] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginResponse] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "LoginResult")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.LoginResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.LoginResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("LoginResult"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LoginAsWindowsIdentityFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginAsWindowsIdentity] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginAsWindowsIdentity] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "storeName")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.LoginAsWindowsIdentity(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginAsWindowsIdentity, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.storeName map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("storeName"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LoginAsWindowsIdentityResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "LoginAsWindowsIdentityResult")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.LoginAsWindowsIdentityResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.LoginAsWindowsIdentityResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("LoginAsWindowsIdentityResult"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LogoffFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.Logoff] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.Logoff] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "svcSessionToken")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.Logoff(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.Logoff, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.svcSessionToken map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("svcSessionToken"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_LogoffResponseFormat extends scalaxb.XMLFormat[com.eztier.clickmock.soap.LogoffResponse] with scalaxb.CanWriteChildNodes[com.eztier.clickmock.soap.LogoffResponse] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    import scalaxb.ElemName._
+    
+    def reads(seq: scala.xml.NodeSeq, stack: List[scalaxb.ElemName]): Either[String, com.eztier.clickmock.soap.LogoffResponse] = seq match {
+      case node: scala.xml.Node => Right(com.eztier.clickmock.soap.LogoffResponse())
+      case _ => Left("reads failed: seq must be scala.xml.Node")
+    }
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.LogoffResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      Nil
+
+
+  }
+
+  trait DefaultComeztierclickmocksoap_GetUserIDFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetUserID] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetUserID] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "svcSessionToken")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.GetUserID(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetUserID, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.svcSessionToken map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("svcSessionToken"), __scope, false) } getOrElse {Nil})
+
+  }
+
+  trait DefaultComeztierclickmocksoap_GetUserIDResponseFormat extends scalaxb.ElemNameParser[com.eztier.clickmock.soap.GetUserIDResponse] {
+    val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
+    
+    def parser(node: scala.xml.Node, stack: List[scalaxb.ElemName]): Parser[com.eztier.clickmock.soap.GetUserIDResponse] =
+      phrase(opt(scalaxb.ElemName(Some("http://clickcommerce.com/Extranet/WebServices"), "GetUserIDResult")) ^^
+      { case p1 =>
+      com.eztier.clickmock.soap.GetUserIDResponse(p1.headOption map { scalaxb.fromXML[String](_, scalaxb.ElemName(node) :: stack) }) })
+    
+    def writesChildNodes(__obj: com.eztier.clickmock.soap.GetUserIDResponse, __scope: scala.xml.NamespaceBinding): Seq[scala.xml.Node] =
+      (__obj.GetUserIDResult map { scalaxb.toXML[String](_, Some("http://clickcommerce.com/Extranet/WebServices"), Some("GetUserIDResult"), __scope, false) } getOrElse {Nil})
+
+  }
+
 
   trait EntitySetServicesSoap12Bindings { this: scalaxb.SoapClientsAsync =>
     lazy val targetNamespace: Option[String] = Some("http://clickcommerce.com/Extranet/WebServices")
     lazy val service: com.eztier.clickmock.soap.EntitySetServicesSoap = new EntitySetServicesSoap12Binding {}
-    def baseAddress = new java.net.URI("http://localhost/ClickXWebServices/EntityManager/EntitySetServices.asmx")
+    def baseAddress = new java.net.URI("http://rsnirbwcdcdvm01.nyumc.org/ClickXWebServices/EntityManager/EntitySetServices.asmx")
 
     trait EntitySetServicesSoap12Binding extends com.eztier.clickmock.soap.EntitySetServicesSoap {
       import scalaxb.ElemName._
@@ -5765,6 +5761,8 @@ trait XMLProtocol extends scalaxb.XMLStandardTypes {
             })
     }
   }
+
+
 
 }
 

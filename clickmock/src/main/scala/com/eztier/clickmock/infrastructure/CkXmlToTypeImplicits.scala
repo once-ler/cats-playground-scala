@@ -46,12 +46,11 @@ object CkXmlToTypeImplicits {
     )
   }
 
-  private def maybeEntity(x: Map[String, Any], attrName: String) = {
-    x(attrName) match {
-      case a if a.isInstanceOf[Map[String, String]] => x(attrName).asInstanceOf[Map[String, String]]
-      case _ => Map("poref" -> "", "type" -> "")
+  private def maybeEntity(x: Map[String, Any], attrName: String) =
+    x.get(attrName) match {
+      case Some(a) => x(attrName).asInstanceOf[Map[String, String]]
+      case None => Map("poref" -> "", "type" -> "")
     }
-  }
 
   implicit def fromEntityXmlToCkPhoneContactInformation(in: WrappedEntityXml) = {
     val x = parseEntity(in.xml)

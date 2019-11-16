@@ -206,7 +206,7 @@ class CkMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F
     }
   }
 
-  def tryGetPoref(root: NodeSeq): Future[String] = Future((root \ "entity" \ "@poref").headOption.getOrElse("").toString)
+  def tryGetPoref(root: NodeSeq): F[String] = Applicative[F].pure((root \ "entity" \ "@poref").headOption.getOrElse("").toString)
 
   def getEntityPoref(root: NodeSeq): String = (root \ "entity" \ "@poref").headOption.getOrElse("").toString
 
