@@ -176,7 +176,12 @@ lazy val clickmock = project.
       scalaParser,
       dispatchHttp,
       fs2,
-      specs2
+
+      specs2,
+      scalaTest,
+      http4sBlazeServer,
+      http4sDsl,
+      http4sTesting
     )
   ).dependsOn(
     common
@@ -202,6 +207,7 @@ val HapiVersion = "2.3"
 val DispatchHttpVerison = "0.14.1"
 val ScalaXmlVersion = "1.0.6"
 val ScalaParserVersion = "1.0.6"
+val ScalaTestVersion = "3.2.0-M1"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -216,6 +222,8 @@ val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % Http4sVersion
 val http4sBlazeClient = "org.http4s" %% "http4s-blaze-client" % Http4sVersion
 val http4sCirce = "org.http4s" %% "http4s-circe" % Http4sVersion
 val http4sDsl = "org.http4s" %% "http4s-dsl" % Http4sVersion
+val http4sTesting = "org.http4s" %% "http4s-testing" % Http4sVersion % Test
+
 
 val doobie = "org.tpolecat" %% "doobie-core" % DoobieVersion
 val doobieH2 ="org.tpolecat" %% "doobie-h2" % DoobieVersion
@@ -249,6 +257,8 @@ val hapiV231 = "ca.uhn.hapi" % "hapi-structures-v231" % HapiVersion
 val dispatchHttp = "org.dispatchhttp" %% "dispatch-core" % DispatchHttpVerison
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % ScalaXmlVersion
 val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % ScalaParserVersion
+
+val scalaTest = "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
