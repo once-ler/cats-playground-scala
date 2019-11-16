@@ -13,6 +13,7 @@ import io.circe.config.{parser => ConfigParser}
 import scala.concurrent.ExecutionContext
 import io.circe.Decoder
 import io.circe.generic.semiauto._
+import fs2.Stream
 
 object config {
   implicit val appDecoder: Decoder[AppConfig] = deriveDecoder
@@ -46,6 +47,13 @@ class TestClickMockSpec[F[_]] extends Specification {
     "Initialize" in {
 
       val ms = createMockService[IO]
+
+      ms.use{
+        s =>
+          val a = Stream.eval(s.tryGetEntityByID(Some("123"))).compile.toList
+
+          IO(println(a))
+      }.unsafeRunSync()
 
       1 mustEqual 1
     }

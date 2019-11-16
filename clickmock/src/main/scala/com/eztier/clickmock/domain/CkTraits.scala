@@ -48,13 +48,13 @@ trait WithEncoder {
   this: CkBase =>
   def encoder(name: String, el: Any) = {
     val in = el match {
-      case a: String => <string value={a}></string>
-      case a: Boolean => <boolean value={a.toString}></boolean>
-      case a: Int => <integer value={a.toString}></integer>
-      case a: Float => <float value={a.toString}></float>
-      case a: Date => <date value={a.getTime.toString}></date>
-      case a: EntityReference[_] if a.Poref.getOrElse("").length > 0 => <entityReference type={a.Type} poref={a.Poref}></entityReference>
-      case a: PersistentReference if a.Poref.getOrElse("").length > 0 => <persistentReference poref={a.Poref}></persistentReference>
+      case a: Option[String] if a.isDefined => <string value={a.get}></string>
+      case a: Option[Boolean] if a.isDefined => <boolean value={a.get.toString}></boolean>
+      case a: Option[Int] if a.isDefined => <integer value={a.get.toString}></integer>
+      case a: Option[Float] if a.isDefined => <float value={a.get.toString}></float>
+      case a: Option[Date] if a.isDefined => <date value={a.get.getTime.toString}></date>
+      case a: Option[EntityReference[_]] if a.isDefined && a.get.Poref.getOrElse("").length > 0 => <entityReference type={a.get.Type} poref={a.get.Poref}></entityReference>
+      case a: Option[PersistentReference] if a.isDefined && a.get.Poref.getOrElse("").length > 0 => <persistentReference poref={a.get.Poref}></persistentReference>
       case _ => <null />
     }
     <attr name={name}>{in}</attr>
