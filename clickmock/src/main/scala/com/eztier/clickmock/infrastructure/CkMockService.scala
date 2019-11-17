@@ -49,7 +49,9 @@ class CkMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F
 
           f.onComplete {
             case Success(s) => cb(Right(s))
-            case Failure(e) => cb(Left(e))
+            case Failure(e) =>
+              println(e.getMessage)
+              cb(Left(e))
           }
       }
     }

@@ -15,12 +15,14 @@ import io.circe.Decoder
 import io.circe.generic.semiauto._
 import fs2.Stream
 import cats.effect._
+import fs2.text.utf8Decode
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Router
+import soapenvelope12.Envelope
 
 object config {
   implicit val appDecoder: Decoder[AppConfig] = deriveDecoder
@@ -38,12 +40,25 @@ object FauxWeb {
   }
 
   def rpcService[F[_]](repo: Option[RpcRepo[F]] = None)(implicit F: Effect[F]): HttpRoutes[F] = HttpRoutes.of[F] {
-    case POST -> Root / "soap" => {
+    case req @ POST -> Root / "soap" => {
 
-      val body = <html><h1>h1</h1></html>
-      val xml = s"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>$body"""
+      val b = req.body.through(utf8Decode)
 
-      F.pure(Response(status = Status.BadRequest)
+      b.flatMap { s =>
+        s
+      }
+
+        // .through(utf8Encode)
+
+      val body = <LoginResponse><LoginResult>1234</LoginResult></LoginResponse>
+      val xml = s"""<?xml version="1.0"?><soap:Envelope
+xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding"><soap:Body>$body</soap:Body></soap:Envelope>"""
+/*
+      val response = scala.xml.XML.loadString(xml)
+      scalaxb.fromXML[Envelope](response)
+*/
+      F.pure(Response(status = Status.Ok)
         .withContentType(`Content-Type`(MediaType.text.xml))
         .withEntity(xml)
       )
