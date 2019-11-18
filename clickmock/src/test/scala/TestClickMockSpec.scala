@@ -2,27 +2,28 @@ package com.eztier.clickmock
 package test
 
 import org.specs2.mutable._
-import infrastructure._
 import java.util.concurrent.Executors
-
-import cats.Applicative
-import cats.effect.{Async, ConcurrentEffect, ContextShift, IO, Resource, Sync}
-import com.eztier.clickmock.config.{AppConfig, SoapConfig}
-import io.circe.config.{parser => ConfigParser}
 
 import scala.concurrent.ExecutionContext
 import io.circe.Decoder
 import io.circe.generic.semiauto._
-import fs2.Stream
+import io.circe.config.{parser => ConfigParser}
+
 import cats.effect._
-import fs2.text.utf8Decode
+
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Router
-import soapenvelope12.Envelope
+
+import fs2.Stream
+
+import com.eztier.clickmock.config.{AppConfig, SoapConfig}
+import com.eztier.clickmock.soap.entity._
+import soap._
+import infrastructure._
 
 object config {
   implicit val appDecoder: Decoder[AppConfig] = deriveDecoder
@@ -49,57 +50,53 @@ object FauxWeb {
           a <- c.mediaType.extensions.get("action")
         } yield a
 
-        action.fold("") {
+        val body = action.fold("") {
           sa =>
             val soapAction = sa.split('/').last
 
             soapAction match {
               case "Login" =>
-            }
+                val obj = LoginResponse(Some("abc123"))
+                val loginResponse = scalaxb.toXML[LoginResponse](obj, "LoginResponse", com.eztier.clickmock.soap.entity.defaultScope)
+                loginResponse.toString()
+              case "getEntityByID" =>
+                val obj = GetEntityByIDResponse(Some("<mainspan />"))
+                val getEntityByIDResponse = scalaxb.toXML[GetEntityByIDResponse](obj, "getEntityByIDResponse", entity.defaultScope)
+                getEntityByIDResponse.toString()
+              case "redefineEntityByID" =>
+                val obj = RedefineEntityByIDResponse(Some("<mainspan />"))
+                val redefineEntityByIDResponse = scalaxb.toXML[RedefineEntityByIDResponse](obj, "redefineEntityByIDResponse", entity.defaultScope)
+                redefineEntityByIDResponse.toString()
+              case "createEntity" =>
+                val obj = CreateEntityResponse(Some("<mainspan />"))
+                val createEntityResponse = scalaxb.toXML[CreateEntityResponse](obj, "createEntityResponse", entity.defaultScope)
+                createEntityResponse.toString()
+              case "Logoff" =>
+                val obj = LogoffResponse()
+                val logoffResponse = scalaxb.toXML[LogoffResponse](obj, "LogoffResponse", entity.defaultScope)
+                logoffResponse.toString()
+              case _ =>
+                import soapenvelope12._
 
-            ""
+                val obj = soapenvelope12.Fault(
+                  Faultcode(FaultcodeEnum.fromString("BS", entity.defaultScope)),
+                  Faultreason(Reasontext("Badness", "en-US"))
+                )
+
+                scalaxb.toXML[Fault](obj, "Fault", entity.defaultScope).toString()
+            }
         }
 
-
-
-
-        val response = scala.xml.XML.loadString(m)
-        val xml = scalaxb.fromXML[Envelope](response)
-
-        // val login = scalaxb.fromXML[com.eztier.clickmock.soap.entity.Login](response)
-
-        /*
-        val obj = scalaxb.fromXML[com.eztier.clickmock.soap.entity.Foo](node)
-        val document = scalaxb.toXML[com.eztier.clickmock.soap.entity.Foo](obj, "foo", com.eztier.clickmock.soap.entity.defaultScope)
-        */
-
-        F.pure(Response(status = Status.Ok)
-          .withContentType(`Content-Type`(MediaType.text.xml))
-          .withEntity(m)
-        )
-      }
-
-      /*
-      val b = req.body.through(utf8Decode)
-
-      b.flatMap { s =>
-        println(s)
-
-        Stream.eval(s)
-      }
-      */
-
-/*
-      val body = s"""<LoginResponse xmlns="http://clickcommerce.com/Extranet/WebServices"><LoginResult>1234</LoginResult></LoginResponse>"""
-      val xml = s"""<?xml version="1.0"?><soap:Envelope
+        val xml = s"""<?xml version="1.0"?><soap:Envelope
 xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
 soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding"><soap:Body>$body</soap:Body></soap:Envelope>"""
 
-      F.pure(Response(status = Status.Ok)
-        .withContentType(`Content-Type`(MediaType.text.xml))
-        .withEntity(xml)
-      )
- */
+        F.pure(Response(status = Status.Ok)
+          .withContentType(`Content-Type`(MediaType.text.xml))
+          .withEntity(xml)
+        )
+
+      }
 
     }
   }
@@ -111,18 +108,6 @@ soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding"><soap:Body>$body</s
 
   def createHttpServer[F[_]: Effect : ConcurrentEffect : Timer] = {
     val httpApp = Router("/" -> helloWorldService[F], "/api" -> rpcService[F]()).orNotFound
-
-    /*
-    blockingThreadPool.use {
-      ec =>
-        val serverBuilder = BlazeServerBuilder[F]
-          .bindHttp(8080, "localhost")
-          .withHttpApp(httpApp)
-          .withExecutionContext(ec)
-
-        Applicative[F].pure(serverBuilder)
-    }
-    */
 
     val serverBuilder = BlazeServerBuilder[F]
       .bindHttp(8080, "localhost")
@@ -166,14 +151,10 @@ class TestClickMockSpec[F[_]] extends Specification {
 
       import FauxWeb._
 
-      /*
-      val executor = Executors.newCachedThreadPool()
-      val ec = ExecutionContext.fromExecutor(executor)
-      implicit val cs = IO.contextShift(ec)
-      implicit val timer = IO.timer(ec)
-      */
-      val backgroundThread = createHttpServer[IO].resource.use(_ => IO.never).start.unsafeRunSync()
+      // Server
+      val fiberThread = createHttpServer[IO].resource.use(_ => IO.never).start.unsafeRunSync()
 
+      // Client
       val resources = createMockService[IO]
 
       resources.use{
@@ -182,7 +163,7 @@ class TestClickMockSpec[F[_]] extends Specification {
           val a = Stream.eval(mock.tryGetEntityByID(Some("123"))).compile.toList
           val b = a.unsafeRunSync()
 
-          IO(println("Start"))
+          IO(println(b))
       }.unsafeRunSync()
 
       1 mustEqual 1
