@@ -44,6 +44,25 @@ object FauxWeb {
 
       req.decode[String] { m =>
 
+        val action = for {
+          c <- req.headers.get(`Content-Type`)
+          a <- c.mediaType.extensions.get("action")
+        } yield a
+
+        action.fold("") {
+          sa =>
+            val soapAction = sa.split('/').last
+
+            soapAction match {
+              case "Login" =>
+            }
+
+            ""
+        }
+
+
+
+
         val response = scala.xml.XML.loadString(m)
         val xml = scalaxb.fromXML[Envelope](response)
 
