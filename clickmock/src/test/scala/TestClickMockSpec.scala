@@ -42,26 +42,46 @@ object FauxWeb {
   def rpcService[F[_]](repo: Option[RpcRepo[F]] = None)(implicit F: Effect[F]): HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "soap" => {
 
+      req.decode[String] { m =>
+
+        val response = scala.xml.XML.loadString(m)
+        val xml = scalaxb.fromXML[Envelope](response)
+
+        // val login = scalaxb.fromXML[com.eztier.clickmock.soap.entity.Login](response)
+
+        /*
+        val obj = scalaxb.fromXML[com.eztier.clickmock.soap.entity.Foo](node)
+        val document = scalaxb.toXML[com.eztier.clickmock.soap.entity.Foo](obj, "foo", com.eztier.clickmock.soap.entity.defaultScope)
+        */
+
+        F.pure(Response(status = Status.Ok)
+          .withContentType(`Content-Type`(MediaType.text.xml))
+          .withEntity(m)
+        )
+      }
+
+      /*
       val b = req.body.through(utf8Decode)
 
       b.flatMap { s =>
-        s
+        println(s)
+
+        Stream.eval(s)
       }
+      */
 
-        // .through(utf8Encode)
-
-      val body = <LoginResponse><LoginResult>1234</LoginResult></LoginResponse>
+/*
+      val body = s"""<LoginResponse xmlns="http://clickcommerce.com/Extranet/WebServices"><LoginResult>1234</LoginResult></LoginResponse>"""
       val xml = s"""<?xml version="1.0"?><soap:Envelope
 xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
 soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding"><soap:Body>$body</soap:Body></soap:Envelope>"""
-/*
-      val response = scala.xml.XML.loadString(xml)
-      scalaxb.fromXML[Envelope](response)
-*/
+
       F.pure(Response(status = Status.Ok)
         .withContentType(`Content-Type`(MediaType.text.xml))
         .withEntity(xml)
       )
+ */
+
     }
   }
 
