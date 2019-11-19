@@ -8,27 +8,21 @@ import scala.concurrent.ExecutionContext
 import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.config.{parser => ConfigParser}
-
 import cats.effect._
-
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Router
-
 import fs2.Stream
+import doobie.util.ExecutionContexts
 
-import com.eztier.clickmock.config.{AppConfig, SoapConfig}
-import com.eztier.clickmock.soap.entity._
 import soap._
+import soap.entity._
+import domain._
 import infrastructure._
-
-object config {
-  implicit val appDecoder: Decoder[AppConfig] = deriveDecoder
-  implicit val soapDecoder: Decoder[SoapConfig] = deriveDecoder
-}
+import config._
 
 object FauxWeb {
   case class SomeXmlResponse(xml: String)
@@ -133,14 +127,26 @@ class TestClickMockSpec[F[_]] extends Specification {
       (ec, F.delay(executor.shutdown()))
     })
 
-  def createMockService[F[_]: Async: ContextShift: ConcurrentEffect: Timer] = {
-    import config._
+  def createMockService[F[_]: Async: ContextShift: ConcurrentEffect: Timer]: Resource[F, CkMockService[F]] = {
 
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("clickmock")) // Lifts an applicative into a resource.
       b = blockingThreadPool[F]
       ms = CkMockService(conf, b)
     } yield ms
+  }
+
+  def createDoobieService[F[_]: Async :ContextShift :ConcurrentEffect: Timer] = {
+    for {
+      conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("clickmock"))
+      connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.connections.poolSize)
+      txnEc <- ExecutionContexts.cachedThreadPool[F]
+      xa <- DatabaseConfig.dbTransactor[F](conf.db, connEc, Blocker.liftExecutionContext(txnEc))
+      participantRepo = DoobieCk_ParticipantRepositoryInterpreter[F](xa)
+      participantService = Ck_ParticipantService(participantRepo)
+      participantAggregator = Ck_ParticipantAggregator(participantService)
+    } yield participantAggregator
+
   }
 
   "CkMockService" should {
@@ -169,7 +175,7 @@ class TestClickMockSpec[F[_]] extends Specification {
       1 mustEqual 1
     }
 
-    "Stream correctly" in {
+    "Doobie Aggregator" in {
 
       /*
       // akka graph dsl
@@ -197,10 +203,13 @@ class TestClickMockSpec[F[_]] extends Specification {
 
       }
 
-      createMockService[IO].use {
-        mock =>
-          ???
-      }
+      createDoobieService[IO].use {
+        agg =>
+          val a = agg.getParticipant(Some("10042419")).unsafeRunSync()
+
+
+          IO(println("Done"))
+      }.unsafeRunSync()
 
       1 mustEqual 1
     }

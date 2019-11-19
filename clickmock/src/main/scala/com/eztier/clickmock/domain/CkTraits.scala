@@ -35,9 +35,16 @@ trait WithNonProject {
   val ID: Option[String]
 }
 
-trait WithFindById[F[_]] {
-  def findById[A](id: Option[String]): OptionT[F, A]
+trait WithFindById {
+  def findById(id: Option[String]): Option[_]
+}
 
+trait WithFindByMrn {
+  def findByMrn(mrn: Option[String]): List[_]
+}
+
+/*
+trait WithFindById[F[_]] {
   def getNotFoundError[A]: String = {
     val typeName: String = classOf[A]
     s"${typeName} not found"
@@ -47,6 +54,7 @@ trait WithFindById[F[_]] {
 trait WithFindByMrn[F[_]] {
   def findByMrn[A](mrn: Option[String]): F[List[A]]
 }
+*/
 
 trait WithExplicitTypeName {
   def typeName: Option[String]

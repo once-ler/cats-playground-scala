@@ -3,5 +3,6 @@ package config
 
 final case class AppConfig
 (
-  soap: SoapConfig
+  soap: SoapConfig,
+  db: DatabaseConfig
 )

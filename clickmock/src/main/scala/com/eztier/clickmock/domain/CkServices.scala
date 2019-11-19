@@ -3,9 +3,10 @@ package domain
 
 import cats.Functor
 import cats.data.{EitherT, OptionT}
+import com.eztier.clickmock.infrastructure.CkXmlToTypeImplicits
 
 // Ck_PersonCustomExtension
-trait Ck_PersonCustomExtensionAlgebra[F[_]] extends WithFindById[F] {
+trait Ck_PersonCustomExtensionAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, Ck_PersonCustomExtension]
 }
 
@@ -13,7 +14,7 @@ class Ck_PersonCustomExtensionService[F[_]](repo: Ck_PersonCustomExtensionAlgebr
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_PersonCustomExtension] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_PersonCustomExtension])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_PersonCustomExtension])} not found.")
 }
 
 object Ck_PersonCustomExtensionService {
@@ -21,7 +22,7 @@ object Ck_PersonCustomExtensionService {
 }
 
 // Ck_Person
-trait CkPersonAlgebra[F[_]] extends WithFindById[F] {
+trait CkPersonAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, CkPerson]
 }
 
@@ -29,7 +30,7 @@ class CkPersonService[F[_]](repo: CkPersonAlgebra[F]) {
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, CkPerson] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[CkPerson])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkPerson])} not found.")
 }
 
 object Ck_PersonService {
@@ -37,7 +38,7 @@ object Ck_PersonService {
 }
 
 // Ck_ClickAddress
-trait Ck_ClickAddressAlgebra[F[_]] extends WithFindById[F] {
+trait Ck_ClickAddressAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, Ck_ClickAddress]
 }
 
@@ -45,7 +46,7 @@ class Ck_ClickAddressService[F[_]](repo: Ck_ClickAddressAlgebra[F]) {
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ClickAddress] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_ClickAddress])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ClickAddress])} not found.")
 }
 
 object Ck_ClickAddressService {
@@ -53,7 +54,7 @@ object Ck_ClickAddressService {
 }
 
 // Ck_ClickPartyContactInformation
-trait Ck_ClickPartyContactInformationAlgebra[F[_]] extends WithFindById[F] {
+trait Ck_ClickPartyContactInformationAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, Ck_ClickPartyContactInformation]
 }
 
@@ -61,7 +62,7 @@ class Ck_ClickPartyContactInformationService[F[_]](repo: Ck_ClickPartyContactInf
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ClickPartyContactInformation] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_ClickPartyContactInformation])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ClickPartyContactInformation])} not found.")
 }
 
 object Ck_ClickPartyContactInformationService {
@@ -69,7 +70,7 @@ object Ck_ClickPartyContactInformationService {
 }
 
 // Ck_ParticipantCustomExtension
-trait Ck_ParticipantCustomExtensionAlgebra[F[_]] extends WithFindById[F] {
+trait Ck_ParticipantCustomExtensionAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, Ck_ParticipantCustomExtension]
 }
 
@@ -77,7 +78,7 @@ class Ck_ParticipantCustomExtensionService[F[_]](repo: Ck_ParticipantCustomExten
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ParticipantCustomExtension] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_ParticipantCustomExtension])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ParticipantCustomExtension])} not found.")
 }
 
 object Ck_ParticipantCustomExtensionService {
@@ -85,15 +86,15 @@ object Ck_ParticipantCustomExtensionService {
 }
 
 // Ck_Participant
-trait Ck_ParticipantAlgebra[F[_]] extends WithFindById[F] {
-  def findById(id: Option[String]): OptionT[F, Ck_Participant]
+trait Ck_ParticipantAlgebra[F[_]] {
+  def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)]
 }
 
 class Ck_ParticipantService[F[_]](repo: Ck_ParticipantAlgebra[F]) {
-  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_Participant] =
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_Participant])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_Participant])} not found.")
 }
 
 object Ck_ParticipantService {
@@ -101,7 +102,7 @@ object Ck_ParticipantService {
 }
 
 // Ck_ClinicalTrial
-trait Ck_ClinicalTrialAlgebra[F[_]] extends WithFindById[F] {
+trait Ck_ClinicalTrialAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, Ck_ClinicalTrial]
 }
 
@@ -109,7 +110,7 @@ class Ck_ClinicalTrialService[F[_]](repo: Ck_ClinicalTrialAlgebra[F]) {
   def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ClinicalTrial] =
     repo
       .findById(id)
-      .toRight(repo.getNotFoundError[Ck_ClinicalTrial])
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ClinicalTrial])} not found.")
 }
 
 object Ck_ClinicalTrialService {
@@ -117,8 +118,8 @@ object Ck_ClinicalTrialService {
 }
 
 // Ck_Participant_CustomAttributesManager (findByMrn)
-trait Ck_Participant_CustomAttributesManagerAlgebra[F[_]] extends WithFindByMrn[F] {
-  def findByMrn(id: Option[String]): OptionT[F, Ck_Participant_CustomAttributesManager]
+trait Ck_Participant_CustomAttributesManagerAlgebra[F[_]] {
+  def findByMrn(id: Option[String]): F[List[Ck_Participant_CustomAttributesManager]]
 }
 
 class Ck_Participant_CustomAttributesManagerService[F[_]](repo: Ck_Participant_CustomAttributesManagerAlgebra[F]) {

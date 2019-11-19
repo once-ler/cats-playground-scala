@@ -187,7 +187,8 @@ lazy val clickmock = project.
       doobieH2,
       doobieScalatest,
       doobieHikari,
-      h2
+      h2,
+      mssqlJdbc
     )
   ).dependsOn(
     common
