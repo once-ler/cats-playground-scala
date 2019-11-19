@@ -168,5 +168,42 @@ class TestClickMockSpec[F[_]] extends Specification {
 
       1 mustEqual 1
     }
+
+    "Stream correctly" in {
+
+      /*
+      // akka graph dsl
+
+      bcast ~>
+      createPersonExtension ~>
+        createPerson ~>
+          getPartyContactInformation ~>
+            createPartyContactInformation ~>
+              createParty ~> zip.in0
+
+      bcast ~>
+        createParticipantCustomExtension ~> zip.in1
+
+      zip.out ~>
+        mergePersonAndParticipantExtension ~>
+          createParticipant ~> merge
+
+      merge.out ~>
+        getParticipantRecords ~>
+          createParticipantRecordContactInformation
+      */
+
+      def createPersonExtension[F[_]](mock: CkMockService[F]) = {
+
+      }
+
+      createMockService[IO].use {
+        mock =>
+          ???
+      }
+
+      1 mustEqual 1
+    }
+
   }
 }

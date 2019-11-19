@@ -3,6 +3,7 @@ package domain
 
 import java.util.Date
 
+import cats.data.OptionT
 import cats.{Applicative, Functor, Monad}
 import cats.effect.{Async, Bracket, Concurrent, ContextShift, IO, Sync}
 import fs2.Pipe
@@ -13,6 +14,8 @@ import scala.concurrent.{Await, Future}
 import scala.xml.{Elem, Node, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import fs2.Stream
+
+import infrastructure.CkXmlToTypeImplicits._
 
 trait CkBase {
   val oid: Option[String]
@@ -32,12 +35,17 @@ trait WithNonProject {
   val ID: Option[String]
 }
 
-trait WithFindById {
-  def findById(id: Option[String]): Option[_]
+trait WithFindById[F[_]] {
+  def findById[A](id: Option[String]): OptionT[F, A]
+
+  def getNotFoundError[A]: String = {
+    val typeName: String = classOf[A]
+    s"${typeName} not found"
+  }
 }
 
-trait WithFindByMrn {
-  def findByMrn(mrn: Option[String]): Option[_]
+trait WithFindByMrn[F[_]] {
+  def findByMrn[A](mrn: Option[String]): F[List[A]]
 }
 
 trait WithExplicitTypeName {

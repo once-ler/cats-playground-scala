@@ -181,7 +181,13 @@ lazy val clickmock = project.
       scalaTest,
       http4sBlazeServer,
       http4sDsl,
-      http4sTesting
+      http4sTesting,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2
     )
   ).dependsOn(
     common
