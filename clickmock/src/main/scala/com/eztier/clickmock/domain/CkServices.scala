@@ -7,11 +7,11 @@ import com.eztier.clickmock.infrastructure.CkXmlToTypeImplicits
 
 // Ck_PersonCustomExtension
 trait Ck_PersonCustomExtensionAlgebra[F[_]] {
-  def findById(id: Option[String]): OptionT[F, Ck_PersonCustomExtension]
+  def findById(id: Option[String]): OptionT[F, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)]
 }
 
 class Ck_PersonCustomExtensionService[F[_]](repo: Ck_PersonCustomExtensionAlgebra[F]) {
-  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_PersonCustomExtension] =
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
     repo
       .findById(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_PersonCustomExtension])} not found.")
@@ -23,17 +23,17 @@ object Ck_PersonCustomExtensionService {
 
 // Ck_Person
 trait CkPersonAlgebra[F[_]] {
-  def findById(id: Option[String]): OptionT[F, CkPerson]
+  def findById(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)]
 }
 
 class CkPersonService[F[_]](repo: CkPersonAlgebra[F]) {
-  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, CkPerson] =
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkPerson, CkPerson_CustomAttributesManager)] =
     repo
       .findById(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkPerson])} not found.")
 }
 
-object Ck_PersonService {
+object CkPersonService {
   def apply[F[_]](repo: CkPersonAlgebra[F]): CkPersonService[F] = new CkPersonService(repo)
 }
 

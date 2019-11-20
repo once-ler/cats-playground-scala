@@ -144,7 +144,11 @@ class TestClickMockSpec[F[_]] extends Specification {
       xa <- DatabaseConfig.dbTransactor[F](conf.db, connEc, Blocker.liftExecutionContext(txnEc))
       participantRepo = DoobieCk_ParticipantRepositoryInterpreter[F](xa)
       participantService = Ck_ParticipantService(participantRepo)
-      participantAggregator = Ck_ParticipantAggregator(participantService)
+      personRepo = DoobieCkPersonRepositoryInterpreter[F](xa)
+      personService = CkPersonService(personRepo)
+      personCustomExtensionRepo = DoobieCk_PersonCustomExtensionRepositoryInterpreter[F](xa)
+      personCustomExtensionService = Ck_PersonCustomExtensionService(personCustomExtensionRepo)
+      participantAggregator = Ck_ParticipantAggregator(participantService, personService, personCustomExtensionService)
     } yield participantAggregator
 
   }
