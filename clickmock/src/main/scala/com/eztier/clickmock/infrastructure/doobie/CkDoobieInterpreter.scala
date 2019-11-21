@@ -91,31 +91,38 @@ private object Ck_ParticipantSQL {
       )
     )(_.Poref.getOrElse(""))
 
+  val participantSqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
+    from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where """
 
   def findByIdSql[Ck_Participant](a: Option[String]): Query0[(Ck_Participant, Ck_Participant_CustomAttributesManager)] =
-    (fr"""
-      select
-      convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
-      convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
-      from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where """ ++ fr"_webrunique_id" ++ fr""" = ${a.getOrElse("")}
-    """).query
+    (participantSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
 
+  def findByOidSql[Ck_Participant](a: Option[String]): Query0[(Ck_Participant, Ck_Participant_CustomAttributesManager)] =
+    (participantSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+
+  val personSqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.employer, 2) employer, a.firstName, a.lastName, a.middleName, convert(varchar(50), a.customAttributes, 2) customAttributes, a.dateOfBirth, a.gender,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.personCustomExtension, 2) personCustomExtension
+    from _person a join _person_customattributesmanager b on b.oid = a.customattributes where """
 
   def findByIdSql[CkPerson](a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
-    (fr"""
-      select
-      convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.employer, 2) employer, a.firstName, a.lastName, a.middleName, convert(varchar(50), a.customAttributes, 2) customAttributes, a.dateOfBirth, a.gender,
-      convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.personCustomExtension, 2) personCustomExtension
-      from _person a join _person_customattributesmanager b on b.oid = a.customattributes where """ ++ fr"convert(varchar(50), a.oid, 2)" ++ fr""" = ${a.getOrElse("")}
-    """).query
+    (personSqlFragment ++ fr"id = ${a.getOrElse("")}").query
 
-  def findByIdSql[Ck_PersonCustomExtension](a: Option[String]): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
-    (fr"""
-      select
-      convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
-      convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.gender, 2) gender
-      from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where """ ++  fr"convert(varchar(50), a.oid, 2)" ++ fr""" = ${a.getOrElse("")}
-    """).query
+  def findByOidSql[CkPerson](a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
+    (personSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+
+  val personCustomExtensionFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.gender, 2) gender
+    from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where """
+
+  def findByIdSql[Ck_PersonCustomExtension](a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
+    (personCustomExtensionFragment ++ fr"id = ${a.getOrElse("")}").query
+
+  def findByOidSql[Ck_PersonCustomExtension](a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
+    (personCustomExtensionFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
 
 }
 
@@ -126,6 +133,9 @@ class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](
 
   override def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
+
+  override def findByOid(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
+    OptionT(findByOidSql(id).option.transact(xa))
 }
 
 object DoobieCk_ParticipantRepositoryInterpreter {
@@ -140,6 +150,9 @@ class DoobieCkPersonRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa
 
   override def findById(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
+
+  override def findByOid(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)] =
+    OptionT(findByOidSql(id).option.transact(xa))
 }
 
 object DoobieCkPersonRepositoryInterpreter {
@@ -154,6 +167,9 @@ class DoobieCk_PersonCustomExtensionRepositoryInterpreter[F[_]: Bracket[?[_], Th
 
   override def findById(id: Option[String]): OptionT[F, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
+
+  override def findByOid(id: Option[String]): OptionT[F, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
+    OptionT(findByOidSql(id).option.transact(xa))
 }
 
 object DoobieCk_PersonCustomExtensionRepositoryInterpreter {
