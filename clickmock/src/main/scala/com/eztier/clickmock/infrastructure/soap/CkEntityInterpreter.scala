@@ -1,10 +1,9 @@
 package com.eztier.clickmock
-package infrastructure
+package infrastructure.soap
 
 import cats.{Applicative, Monad}
 import cats.effect.Async
 import fs2.Pipe
-
 import scala.xml.{Elem, Node, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
@@ -67,33 +66,6 @@ class CkEntityInterpreter[F[_]: Async] {
     val fa = Monad[F].flatMap(cf.tryCreateEntity(Some(inner.toCkTypeName), Some(inner.toXml.toString)))(d => cf.tryParseXML(d.createEntityResult))
     Monad[F].flatMap(fa)(x => processInnerResultImpl(outer)(cf)(x))
   }
-
-  def maybeMerge[A <: CkBase](fromCa: A, fromCk: A, fromCaCm: A) = {
-
-    fromCa match {
-      case a: CkPerson => fromCa.asInstanceOf[CkPerson].merge(fromCk).merge(fromCaCm)
-      case a: Ck_Participant => fromCa.asInstanceOf[Ck_Participant].merge(fromCk).merge(fromCaCm)
-      case a: Ck_ClickAddress => fromCa.asInstanceOf[Ck_ClickAddress].merge(fromCk).merge(fromCaCm)
-      case a: Ck_ClickPartyContactInformation => fromCa.asInstanceOf[Ck_ClickPartyContactInformation].merge(fromCk).merge(fromCaCm)
-      case a: Ck_PersonCustomExtension => fromCa.asInstanceOf[Ck_PersonCustomExtension].merge(fromCk).merge(fromCaCm)
-      case a: Ck_ParticipantCustomExtension => fromCa.asInstanceOf[Ck_ParticipantCustomExtension].merge(fromCk).merge(fromCaCm)
-      case _ => fromCa
-    }
-  }
-
-  def maybeMerge[A <: CkBase](fromCaCm: A, fromCkCm: A) = {
-    fromCaCm match {
-      case a: CkPerson_CustomAttributesManager => fromCaCm.asInstanceOf[CkPerson_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_Participant_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_Participant_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_ParticipantRecord_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_ParticipantRecord_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_ClickAddress_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_ClickAddress_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_ClickPartyContactInformation_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_ClickPartyContactInformation_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_PersonCustomExtension_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_PersonCustomExtension_CustomAttributesManager].merge(fromCkCm)
-      case a: Ck_ParticipantCustomExtension_CustomAttributesManager => fromCaCm.asInstanceOf[Ck_ParticipantCustomExtension_CustomAttributesManager].merge(fromCkCm)
-      case _ => fromCaCm
-    }
-  }
-
 
   /*
     mrn -> Empty means just create new

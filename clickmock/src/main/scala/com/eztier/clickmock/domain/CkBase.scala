@@ -9,7 +9,7 @@ import cats.data.{EitherT, OptionT}
 
 import scala.xml.NodeSeq
 import cats.syntax.option._
-import com.eztier.clickmock.infrastructure.CkXmlToTypeImplicits
+import com.eztier.clickmock.infrastructure.soap.CkXmlToTypeImplicits
 
 // com.webridge.entity.Entity:
 case class EntityReference[A <: Any](Poref: Option[String] = None, Type: Option[String] = None)

@@ -1,5 +1,5 @@
 package com.eztier.clickmock
-package infrastructure
+package infrastructure.soap
 
 import java.net.URI
 import java.util.Date
@@ -12,11 +12,13 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 import scala.xml.{Node, NodeSeq, XML}
 
-import soap.entity._
-import soap.entityset._
 import config._
 import domain._
+
+// `infrastructure.soap` package
 import CkXmlToTypeImplicits._
+import entity._
+import entityset._
 
 class CkMockService[F[_]: Async](conf: AppConfig, blockingThreadPool: Resource[F, ExecutionContext]) {
 

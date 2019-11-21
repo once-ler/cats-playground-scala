@@ -1,5 +1,5 @@
 package com.eztier.clickmock
-package infrastructure
+package infrastructure.soap
 
 import cats.syntax.option._
 import scala.reflect.runtime.universe._

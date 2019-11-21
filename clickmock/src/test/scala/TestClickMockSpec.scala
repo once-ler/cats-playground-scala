@@ -9,6 +9,8 @@ import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.config.{parser => ConfigParser}
 import cats.effect._
+import com.eztier.clickmock.infrastructure.doobie.{DoobieCkPersonRepositoryInterpreter, DoobieCk_ParticipantRepositoryInterpreter, DoobieCk_PersonCustomExtensionRepositoryInterpreter}
+import com.eztier.clickmock.infrastructure.soap.CkMockService
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
@@ -17,9 +19,6 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import fs2.Stream
 import doobie.util.ExecutionContexts
-
-import soap._
-import soap.entity._
 import domain._
 import infrastructure._
 import config._

@@ -3,7 +3,7 @@ package domain
 
 import cats.Functor
 import cats.data.{EitherT, OptionT}
-import com.eztier.clickmock.infrastructure.CkXmlToTypeImplicits
+import com.eztier.clickmock.infrastructure.soap.CkXmlToTypeImplicits
 
 // Ck_PersonCustomExtension
 trait Ck_PersonCustomExtensionAlgebra[F[_]] {

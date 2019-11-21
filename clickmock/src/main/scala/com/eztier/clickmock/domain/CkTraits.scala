@@ -15,7 +15,7 @@ import scala.xml.{Elem, Node, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import fs2.Stream
 
-import infrastructure.CkXmlToTypeImplicits._
+import com.eztier.clickmock.infrastructure.soap.CkXmlToTypeImplicits._
 
 trait CkBase {
   val oid: Option[String]

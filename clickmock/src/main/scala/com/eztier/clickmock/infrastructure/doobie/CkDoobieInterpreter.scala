@@ -1,5 +1,5 @@
 package com.eztier.clickmock
-package infrastructure
+package infrastructure.doobie
 
 import doobie._
 import doobie.implicits._
@@ -93,29 +93,29 @@ private object Ck_ParticipantSQL {
 
 
   def findByIdSql[Ck_Participant](a: Option[String]): Query0[(Ck_Participant, Ck_Participant_CustomAttributesManager)] =
-    sql"""
+    (fr"""
       select
       convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
       convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
-      from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where _webrunique_id = ${a.getOrElse("")}
-    """.query
+      from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where """ ++ fr"_webrunique_id" ++ fr""" = ${a.getOrElse("")}
+    """).query
 
 
   def findByIdSql[CkPerson](a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
-    sql"""
+    (fr"""
       select
       convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.employer, 2) employer, a.firstName, a.lastName, a.middleName, convert(varchar(50), a.customAttributes, 2) customAttributes, a.dateOfBirth, a.gender,
       convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.personCustomExtension, 2) personCustomExtension
-      from _person a join _person_customattributesmanager b on b.oid = a.customattributes where convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}
-    """.query
+      from _person a join _person_customattributesmanager b on b.oid = a.customattributes where """ ++ fr"convert(varchar(50), a.oid, 2)" ++ fr""" = ${a.getOrElse("")}
+    """).query
 
   def findByIdSql[Ck_PersonCustomExtension](a: Option[String]): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
-    sql"""
+    (fr"""
       select
       convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
       convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.gender, 2) gender
-      from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}
-    """.query
+      from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where """ ++  fr"convert(varchar(50), a.oid, 2)" ++ fr""" = ${a.getOrElse("")}
+    """).query
 
 }
 
