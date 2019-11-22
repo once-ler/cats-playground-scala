@@ -9,8 +9,8 @@ import io.circe.Decoder
 import io.circe.generic.semiauto._
 import io.circe.config.{parser => ConfigParser}
 import cats.effect._
-import com.eztier.clickmock.infrastructure.doobie.{DoobieCkPersonRepositoryInterpreter, DoobieCk_ParticipantRepositoryInterpreter, DoobieCk_PersonCustomExtensionRepositoryInterpreter}
-import com.eztier.clickmock.infrastructure.soap.CkMockService
+import com.eztier.clickmock.infrastructure.doobie.{DoobieCkPartyRepositoryInterpreter, DoobieCkPersonRepositoryInterpreter, DoobieCkResourceRepositoryInterpreter, DoobieCk_ParticipantCustomExtensionRepositoryInterpreter, DoobieCk_ParticipantRepositoryInterpreter, DoobieCk_PersonCustomExtensionRepositoryInterpreter}
+import com.eztier.clickmock.infrastructure.soap.{CkEntityInterpreter, CkMockService}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
@@ -20,7 +20,8 @@ import org.http4s.server.Router
 import fs2.Stream
 import doobie.util.ExecutionContexts
 import domain._
-import infrastructure._
+import infrastructure.soap._
+import infrastructure.soap.entity._
 import config._
 
 object FauxWeb {
@@ -50,7 +51,7 @@ object FauxWeb {
             soapAction match {
               case "Login" =>
                 val obj = LoginResponse(Some("abc123"))
-                val loginResponse = scalaxb.toXML[LoginResponse](obj, "LoginResponse", com.eztier.clickmock.soap.entity.defaultScope)
+                val loginResponse = scalaxb.toXML[LoginResponse](obj, "LoginResponse", com.eztier.clickmock.infrastructure.soap.entity.defaultScope)
                 loginResponse.toString()
               case "getEntityByID" =>
                 val obj = GetEntityByIDResponse(Some("<mainspan />"))
@@ -141,13 +142,23 @@ class TestClickMockSpec[F[_]] extends Specification {
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf.db, connEc, Blocker.liftExecutionContext(txnEc))
+      b = blockingThreadPool[F]
+      ms = CkMockService(conf, b)
+      entityRepo = CkEntityInterpreter[F](ms)
+      entityService = CkEntityService(entityRepo)
       participantRepo = DoobieCk_ParticipantRepositoryInterpreter[F](xa)
       participantService = Ck_ParticipantService(participantRepo)
+      participantCustomExtensionRepo = DoobieCk_ParticipantCustomExtensionRepositoryInterpreter[F](xa)
+      participantCustomExtensionService = Ck_ParticipantCustomExtensionService(participantCustomExtensionRepo)
       personRepo = DoobieCkPersonRepositoryInterpreter[F](xa)
       personService = CkPersonService(personRepo)
       personCustomExtensionRepo = DoobieCk_PersonCustomExtensionRepositoryInterpreter[F](xa)
       personCustomExtensionService = Ck_PersonCustomExtensionService(personCustomExtensionRepo)
-      participantAggregator = Ck_ParticipantAggregator(participantService, personService, personCustomExtensionService)
+      partyRepo = DoobieCkPartyRepositoryInterpreter[F](xa)
+      partyService = CkPartyService(partyRepo)
+      resourceRepo = DoobieCkResourceRepositoryInterpreter[F](xa)
+      resourceService = CkResourceService(resourceRepo)
+      participantAggregator = Ck_ParticipantAggregator(entityService, participantService, participantCustomExtensionService, personService, personCustomExtensionService, partyService, resourceService)
     } yield participantAggregator
 
   }

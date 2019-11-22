@@ -197,6 +197,28 @@ object CkPartyService {
   def apply[F[_]](repo: CkPartyAlgebra[F]): CkPartyService[F] = new CkPartyService(repo)
 }
 
+// CkResource
+trait CkResourceAlgebra[F[_]] {
+  def findById(id: Option[String]): OptionT[F, CkResource]
+  def findByOid(id: Option[String]): OptionT[F, CkResource]
+}
+
+class CkResourceService[F[_]](repo: CkResourceAlgebra[F]) {
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, CkResource] =
+    repo
+      .findById(id)
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkResource])} not found.")
+
+  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, CkResource] =
+    repo
+      .findByOid(id)
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkResource])} not found.")
+}
+
+object CkResourceService {
+  def apply[F[_]](repo: CkResourceAlgebra[F]): CkResourceService[F] = new CkResourceService(repo)
+}
+
 // Soap service
 trait CkEntityAlgebra[F[_]] {
   // Get Entity

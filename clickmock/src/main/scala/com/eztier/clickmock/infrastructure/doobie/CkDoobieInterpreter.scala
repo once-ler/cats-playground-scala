@@ -146,6 +146,15 @@ private object Ck_ParticipantSQL {
   def findByOidSql[Ck_PersonCustomExtension](a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
     (personCustomExtensionFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
 
+  val resourceFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, dateadd(ss, .001*a.dateModified, '1970-01-01') dateModified, , dateadd(ss, .001*a.dateCreated, '1970-01-01') dateCreated where """
+
+  def findByIdSql[CkResource](a: Option[String], isOid: Boolean = false): Query0[CkResource] =
+    (resourceFragment ++ fr"id = ${a.getOrElse("")}").query
+
+  def findByOidSql[CkResource](a: Option[String], isOid: Boolean = false): Query0[CkResource] =
+    (resourceFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+
 }
 
 // Ck_Participant
@@ -231,4 +240,21 @@ class DoobieCkPartyRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa:
 object DoobieCkPartyRepositoryInterpreter {
   def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieCkPartyRepositoryInterpreter[F] =
     new DoobieCkPartyRepositoryInterpreter(xa)
+}
+
+// CkResource
+class DoobieCkResourceRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
+  extends CkResourceAlgebra[F] {
+  import Ck_ParticipantSQL._
+
+  override def findById(id: Option[String]): OptionT[F, CkResource] =
+    OptionT(findByIdSql(id).option.transact(xa))
+
+  override def findByOid(id: Option[String]): OptionT[F, CkResource] =
+    OptionT(findByOidSql(id).option.transact(xa))
+}
+
+object DoobieCkResourceRepositoryInterpreter {
+  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieCkResourceRepositoryInterpreter[F] =
+    new DoobieCkResourceRepositoryInterpreter(xa)
 }

@@ -6,7 +6,7 @@ import cats.effect.{Async, Concurrent}
 import fs2.Pipe
 
 import scala.xml.NodeSeq
-import cats.data.{EitherT, Reader, ReaderT}
+import cats.data.EitherT
 import CkMergeTypeImplicits._
 import cats.implicits._
 
@@ -16,7 +16,8 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
   participantCustomExtensionService: Ck_ParticipantCustomExtensionService[F],
   personService: CkPersonService[F],
   personCustomExtensionService: Ck_PersonCustomExtensionService[F],
-  partyService: CkPartyService[F]) {
+  partyService: CkPartyService[F],
+  resourceService: CkResourceService[F]) {
 
   def getParticipant(id: Option[String]): F[CkParticipantAggregate] =
     for {
@@ -35,6 +36,9 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
       pt <- partyService
         .findByOid(pe._1.oid)
         .fold(e => (CkParty(), CkPartyContactInformation(), CkPhoneContactInformation(), CkEmailContactInformation(), CkPostalContactInformation()), a => a)
+      r <- resourceService
+        .findByOid(pa._1.oid)
+        .fold(e => CkResource(), a => a)
     } yield CkParticipantAggregate(
       participant = Some(pa._1),
       participantCm = Some(pa._2),
@@ -48,7 +52,8 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
       partyContactInformation = Some(pt._2),
       phoneContactInformation = Some(pt._3),
       emailContactInformation = Some(pt._4),
-      postalContactInformation = Some(pt._5)
+      postalContactInformation = Some(pt._5),
+      resource = Some(r)
     )
 
   private def addOrUpdateImpl[A <: CkBase with WithCustomAttributes with WithEncoder with WithFindById, B <: CkBase with WithEncoder](mrn: String = "", fromCk: A, fromCa: A, fromCkCm: B, fromCaCm: B): F[NodeSeq] = {
@@ -58,10 +63,10 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
         val e: EitherT[F, String, Nothing] = EitherT.leftT("Not found")
 
         val fa = fromCk.toCkTypeName match {
-          case a if a == "Person" => personService.findById(Some(mrn))
-          case a if a == "_PersonCustomExtension" => personCustomExtensionService.findById(Some(mrn))
           case a if a == "_Participant" => participantService.findById(Some(mrn))
           case a if a == "_ParticipantCustomExtension" => participantCustomExtensionService.findById(Some(mrn))
+          case a if a == "Person" => personService.findById(Some(mrn))
+          case a if a == "_PersonCustomExtension" => personCustomExtensionService.findById(Some(mrn))
           case _ => e
         }
 
@@ -119,6 +124,7 @@ object Ck_ParticipantAggregator {
     participantCustomExtensionService: Ck_ParticipantCustomExtensionService[F],
     personService: CkPersonService[F],
     personCustomExtensionService: Ck_PersonCustomExtensionService[F],
-    partyService: CkPartyService[F]): Ck_ParticipantAggregator[F] =
-    new Ck_ParticipantAggregator[F](entityService, participantService, participantCustomExtensionService, personService, personCustomExtensionService, partyService)
+    partyService: CkPartyService[F],
+    resourceService: CkResourceService[F]): Ck_ParticipantAggregator[F] =
+    new Ck_ParticipantAggregator[F](entityService, participantService, participantCustomExtensionService, personService, personCustomExtensionService, partyService, resourceService)
 }
