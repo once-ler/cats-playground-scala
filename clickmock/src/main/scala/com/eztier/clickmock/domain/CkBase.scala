@@ -372,3 +372,42 @@ object Ck_ClinicalTrial extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
 */
+
+case class CkParticipantRecordAggregate
+(
+  participantRecord: Option[Ck_ParticipantRecord] = None,
+  participantRecordCm: Option[Ck_ParticipantRecord_CustomAttributesManager] = None,
+  clickPartyContactInformation: Option[Ck_ClickPartyContactInformation] = None,
+  clickPartyContactInformationCm: Option[Ck_ClickPartyContactInformation_CustomAttributesManager] = None,
+  clickAddress: Option[Ck_ClickAddress] = None,
+  clickAddressCm: Option[Ck_ClickAddress_CustomAttributesManager] = None,
+  clinicalTrial: Option[Ck_ClinicalTrial] = None
+)
+
+case class CkParticipantAggregate
+(
+  participant: Option[Ck_Participant] = None,
+  participantCm: Option[Ck_Participant_CustomAttributesManager] = None,
+  person: Option[CkPerson] = None,
+  personCm: Option[CkPerson_CustomAttributesManager] = None,
+  personExtension: Option[Ck_PersonCustomExtension] = None,
+  personExtensionCm: Option[Ck_PersonCustomExtension_CustomAttributesManager] = None,
+  participantExtension: Option[Ck_ParticipantCustomExtension] = None,
+  participantExtensionCm: Option[Ck_ParticipantCustomExtension_CustomAttributesManager] = None,
+  party: Option[CkParty] = None,
+  partyContactInformation: Option[CkPartyContactInformation] = None,
+  postalContactInformation: Option[CkPostalContactInformation] = None,
+  emailContactInformation: Option[CkEmailContactInformation] = None,
+  phoneContactInformation: Option[CkPhoneContactInformation] = None,
+  resource: Option[CkResource] = None
+)
+
+/*
+case class CaToCkTask
+(
+  mrn: String,
+  // serialId: Long = -1,
+  ckParticipantResultSet: CkParticipantResultSet = CkParticipantResultSet(),
+  ckParticipantRecordResultSet: List[CkParticipantRecordResultSet] = List()
+)
+*/

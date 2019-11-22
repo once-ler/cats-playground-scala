@@ -6,14 +6,25 @@ import cats.effect.{Async, Concurrent}
 import fs2.Pipe
 
 import scala.xml.NodeSeq
-import cats.data.EitherT
+import cats.data.{EitherT, Reader, ReaderT}
 import CkMergeTypeImplicits._
+
+import cats.implicits._
 
 class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](entityService: CkEntityService[F], participantService: Ck_ParticipantService[F], personService: CkPersonService[F], personCustomExtensionService: Ck_PersonCustomExtensionService[F]) {
 
-  def getParticipant(id: Option[String]) =
-    participantService
-      .findById(id).fold(e => (Ck_Participant(), Ck_Participant_CustomAttributesManager()), a => a)
+  def getParticipant(id: Option[String]): F[CkParticipantAggregate] =
+    for {
+      pa <- participantService
+        .findById(id)
+        .fold(e => (Ck_Participant(), Ck_Participant_CustomAttributesManager()), a => a)
+      pe <- personService
+        .findByOid(pa._2.person.getOrElse(EntityReference[CkPerson]()).Poref)
+        .fold(e => (CkPerson(), CkPerson_CustomAttributesManager()), a => a)
+      pec <- personCustomExtensionService
+        .findByOid(pe._2.personCustomExtension.getOrElse(EntityReference[Ck_PersonCustomExtension]()).Poref)
+        .fold(e => (Ck_PersonCustomExtension(), Ck_PersonCustomExtension_CustomAttributesManager()), a => a)
+    } yield CkParticipantAggregate(participant = Some(pa._1), participantCm = Some(pa._2), person = Some(pe._1), personCm = Some(pe._2), personExtension = Some(pec._1), personExtensionCm = Some(pec._2))
 
   private def addOrUpdateImpl[A <: CkBase with WithCustomAttributes with WithEncoder with WithFindById, B <: CkBase with WithEncoder](mrn: String = "", fromCk: A, fromCa: A, fromCkCm: B, fromCaCm: B): F[NodeSeq] = {
     fromCk.oid match {
