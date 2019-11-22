@@ -3,7 +3,9 @@ package domain
 
 import cats.Functor
 import cats.data.{EitherT, OptionT}
-import com.eztier.clickmock.infrastructure.soap.CkXmlToTypeImplicits
+import scala.xml.NodeSeq
+
+import infrastructure.soap.CkXmlToTypeImplicits
 
 // Ck_PersonCustomExtension
 trait Ck_PersonCustomExtensionAlgebra[F[_]] {
@@ -172,4 +174,38 @@ class Ck_Participant_CustomAttributesManagerService[F[_]](repo: Ck_Participant_C
 
 object Ck_Participant_CustomAttributesManagerService {
   def apply[F[_]](repo: Ck_Participant_CustomAttributesManagerAlgebra[F]): Ck_Participant_CustomAttributesManagerService[F] = new Ck_Participant_CustomAttributesManagerService(repo)
+}
+
+// Soap service
+trait CkEntityAlgebra[F[_]] {
+  // Get Entity
+  def getEntity(oid: String): F[NodeSeq]
+
+  // Redefine Entity
+  def redefineEntity(oid: String, xmlString: String): F[NodeSeq]
+
+  def redefineEntity[A <: CkBase with WithEncoder](in: A): F[NodeSeq]
+
+  def redefineCompleteEntity[A <: CkBase with WithCustomAttributes with WithEncoder, B <: CkBase with WithEncoder](root: A, child: B): F[NodeSeq]
+
+  // Create Entity
+  def createEntity(typeName: String, xmlString: String): F[NodeSeq]
+
+  def createEntity[A <: CkBase with WithEncoder with WithExplicitTypeName](in: A): F[NodeSeq]
+
+  def createCompleteEntity[A <: WithEncoder, B <: WithEncoder](inner: A, outer: B): F[NodeSeq]
+}
+
+class CkEntityService[F[_]](repo: CkEntityAlgebra[F]) {
+  def getEntity(oid: String): F[NodeSeq] = repo.getEntity(oid)
+  def redefineEntity(oid: String, xmlString: String): F[NodeSeq] = repo.redefineEntity(oid, xmlString)
+  def redefineEntity[A <: CkBase with WithEncoder](in: A): F[NodeSeq] = repo.redefineEntity(in)
+  def redefineCompleteEntity[A <: CkBase with WithCustomAttributes with WithEncoder, B <: CkBase with WithEncoder](root: A, child: B): F[NodeSeq] = redefineCompleteEntity(root, child)
+  def createEntity(typeName: String, xmlString: String): F[NodeSeq] = repo.createEntity(typeName, xmlString)
+  def createEntity[A <: CkBase with WithEncoder with WithExplicitTypeName](in: A): F[NodeSeq] = repo.createEntity(in)
+  def createCompleteEntity[A <: WithEncoder, B <: WithEncoder](inner: A, outer: B): F[NodeSeq] = repo.createCompleteEntity(inner, outer)
+}
+
+object CkEntityService {
+  def apply[F[_]](repo: CkEntityAlgebra[F]): CkEntityService[F] = new CkEntityService(repo)
 }

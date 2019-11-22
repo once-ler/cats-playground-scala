@@ -90,11 +90,13 @@ case class Ck_PersonCustomExtension(
   extent: Option[String] = None,
   ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_PersonCustomExtension_CustomAttributesManager]] = EntityReference[Ck_PersonCustomExtension_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById
 
+/*
 object Ck_PersonCustomExtension extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class CkCompany
 (
@@ -124,11 +126,13 @@ case class CkPerson(
   customAttributes: Option[EntityReference[CkPerson_CustomAttributesManager]] = EntityReference[CkPerson_CustomAttributesManager]().some,
   dateOfBirth: Option[Date] = Some(new Date()),
   gender: Option[String] = "Male".some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById
 
+/*
 object CkPerson extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class CkState
 (
@@ -156,11 +160,13 @@ case class Ck_ClickAddress
   extent: Option[String] = None,
   ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_ClickAddress_CustomAttributesManager]] = EntityReference[Ck_ClickAddress_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById
 
+/*
 object Ck_ClickAddress extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class Ck_ClickPartyContactInformation_CustomAttributesManager
 (
@@ -179,11 +185,13 @@ case class Ck_ClickPartyContactInformation
   extent: Option[String] = None,
   ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager]] = EntityReference[Ck_ClickPartyContactInformation_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById
 
+/*
 object Ck_ClickPartyContactInformation extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class CkCountry
 (
@@ -292,11 +300,13 @@ case class Ck_ParticipantCustomExtension
   extent: Option[String] = None,
   ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager]] = EntityReference[Ck_ParticipantCustomExtension_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject with WithFindById
 
+/*
 object Ck_ParticipantCustomExtension extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class Ck_Participant_CustomAttributesManager
 (
@@ -314,11 +324,13 @@ case class Ck_Participant(
   extent: Option[String] = None,
   _webrUnique_ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_Participant_CustomAttributesManager]] = EntityReference[Ck_Participant_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithProject with WithFindById
 
+/*
 object Ck_Participant extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
 
 case class Ck_ParticipantRecord_CustomAttributesManager(
   oid: Option[String] = None,
@@ -353,8 +365,10 @@ case class Ck_ClinicalTrial(
   extent: Option[String] = None,
   _webrUnique_ID: Option[String] = None,
   customAttributes: Option[EntityReference[Ck_ClinicalTrial_CustomAttributesManager]] = EntityReference[Ck_ClinicalTrial_CustomAttributesManager]().some
-) extends CkBase with WithEncoder with WithCustomAttributes with WithProject
+) extends CkBase with WithEncoder with WithCustomAttributes with WithProject with WithFindById
 
+/*
 object Ck_ClinicalTrial extends WithFindById {
   override def findById(id: Option[String]): Option[_] = ???
 }
+*/
