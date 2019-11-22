@@ -55,12 +55,14 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
     fromCk.oid match {
       case null | Some("") =>
         // Does root object with mrn exist?
-        
-        val fa: EitherT[F, String, A] = fromCk.toCkTypeName match {
+        val e: EitherT[F, String, Nothing] = EitherT.leftT("Not found")
+
+        val fa = fromCk.toCkTypeName match {
           case a if a == "Person" => personService.findById(Some(mrn))
           case a if a == "_PersonCustomExtension" => personCustomExtensionService.findById(Some(mrn))
           case a if a == "_Participant" => participantService.findById(Some(mrn))
-          case _ => EitherT.leftT("Not found")
+          case a if a == "_ParticipantCustomExtension" => participantCustomExtensionService.findById(Some(mrn))
+          case _ => e
         }
 
         val fb = fa.fold(
