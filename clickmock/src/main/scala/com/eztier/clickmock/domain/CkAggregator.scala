@@ -1,37 +1,62 @@
 package com.eztier.clickmock
 package domain
 
-import cats.{Applicative, Monad}
+import cats.{Applicative, Functor, Monad}
 import cats.effect.{Async, Concurrent}
 import fs2.Pipe
 
 import scala.xml.NodeSeq
 import cats.data.{EitherT, Reader, ReaderT}
 import CkMergeTypeImplicits._
-
 import cats.implicits._
 
-class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](entityService: CkEntityService[F], participantService: Ck_ParticipantService[F], personService: CkPersonService[F], personCustomExtensionService: Ck_PersonCustomExtensionService[F]) {
+class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
+  entityService: CkEntityService[F],
+  participantService: Ck_ParticipantService[F],
+  participantCustomExtensionService: Ck_ParticipantCustomExtensionService[F],
+  personService: CkPersonService[F],
+  personCustomExtensionService: Ck_PersonCustomExtensionService[F],
+  partyService: CkPartyService[F]) {
 
   def getParticipant(id: Option[String]): F[CkParticipantAggregate] =
     for {
       pa <- participantService
         .findById(id)
         .fold(e => (Ck_Participant(), Ck_Participant_CustomAttributesManager()), a => a)
+      pac <- participantCustomExtensionService
+        .findByOid(pa._2.participantCustomExtension.getOrElse(EntityReference[Ck_ParticipantCustomExtension]()).Poref)
+        .fold(e => (Ck_ParticipantCustomExtension(), Ck_ParticipantCustomExtension_CustomAttributesManager()), a => a)
       pe <- personService
         .findByOid(pa._2.person.getOrElse(EntityReference[CkPerson]()).Poref)
         .fold(e => (CkPerson(), CkPerson_CustomAttributesManager()), a => a)
       pec <- personCustomExtensionService
         .findByOid(pe._2.personCustomExtension.getOrElse(EntityReference[Ck_PersonCustomExtension]()).Poref)
         .fold(e => (Ck_PersonCustomExtension(), Ck_PersonCustomExtension_CustomAttributesManager()), a => a)
-    } yield CkParticipantAggregate(participant = Some(pa._1), participantCm = Some(pa._2), person = Some(pe._1), personCm = Some(pe._2), personExtension = Some(pec._1), personExtensionCm = Some(pec._2))
+      pt <- partyService
+        .findByOid(pe._1.oid)
+        .fold(e => (CkParty(), CkPartyContactInformation(), CkPhoneContactInformation(), CkEmailContactInformation(), CkPostalContactInformation()), a => a)
+    } yield CkParticipantAggregate(
+      participant = Some(pa._1),
+      participantCm = Some(pa._2),
+      participantExtension = Some(pac._1),
+      participantExtensionCm = Some(pac._2),
+      person = Some(pe._1),
+      personCm = Some(pe._2),
+      personExtension = Some(pec._1),
+      personExtensionCm = Some(pec._2),
+      party = Some(pt._1),
+      partyContactInformation = Some(pt._2),
+      phoneContactInformation = Some(pt._3),
+      emailContactInformation = Some(pt._4),
+      postalContactInformation = Some(pt._5)
+    )
 
   private def addOrUpdateImpl[A <: CkBase with WithCustomAttributes with WithEncoder with WithFindById, B <: CkBase with WithEncoder](mrn: String = "", fromCk: A, fromCa: A, fromCkCm: B, fromCaCm: B): F[NodeSeq] = {
     fromCk.oid match {
       case null | Some("") =>
         // Does root object with mrn exist?
-
-        val fa = fromCk.toCkTypeName match {
+        
+        val fa: EitherT[F, String, A] = fromCk.toCkTypeName match {
           case a if a == "Person" => personService.findById(Some(mrn))
           case a if a == "_PersonCustomExtension" => personCustomExtensionService.findById(Some(mrn))
           case a if a == "_Participant" => participantService.findById(Some(mrn))
@@ -86,6 +111,12 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](entityServi
 }
 
 object Ck_ParticipantAggregator {
-  def apply[F[_]: Applicative: Async: Concurrent](entityService: CkEntityService[F], participantService: Ck_ParticipantService[F], personService: CkPersonService[F], personCustomExtensionService: Ck_PersonCustomExtensionService[F]): Ck_ParticipantAggregator[F] =
-    new Ck_ParticipantAggregator[F](entityService, participantService, personService, personCustomExtensionService)
+  def apply[F[_]: Applicative: Async: Concurrent](
+    entityService: CkEntityService[F],
+    participantService: Ck_ParticipantService[F],
+    participantCustomExtensionService: Ck_ParticipantCustomExtensionService[F],
+    personService: CkPersonService[F],
+    personCustomExtensionService: Ck_PersonCustomExtensionService[F],
+    partyService: CkPartyService[F]): Ck_ParticipantAggregator[F] =
+    new Ck_ParticipantAggregator[F](entityService, participantService, participantCustomExtensionService, personService, personCustomExtensionService, partyService)
 }

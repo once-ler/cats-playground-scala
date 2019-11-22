@@ -29,7 +29,7 @@ object Ck_PersonCustomExtensionService {
   def apply[F[_]](repo: Ck_PersonCustomExtensionAlgebra[F]): Ck_PersonCustomExtensionService[F] = new Ck_PersonCustomExtensionService(repo)
 }
 
-// Ck_Person
+// CkPerson
 trait CkPersonAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)]
   def findByOid(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)]
@@ -97,17 +97,17 @@ object Ck_ClickPartyContactInformationService {
 
 // Ck_ParticipantCustomExtension
 trait Ck_ParticipantCustomExtensionAlgebra[F[_]] {
-  def findById(id: Option[String]): OptionT[F, Ck_ParticipantCustomExtension]
-  def findByOid(id: Option[String]): OptionT[F, Ck_ParticipantCustomExtension]
+  def findById(id: Option[String]): OptionT[F, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)]
+  def findByOid(id: Option[String]): OptionT[F, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)]
 }
 
 class Ck_ParticipantCustomExtensionService[F[_]](repo: Ck_ParticipantCustomExtensionAlgebra[F]) {
-  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ParticipantCustomExtension] =
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
     repo
       .findById(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ParticipantCustomExtension])} not found.")
 
-  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, Ck_ParticipantCustomExtension] =
+  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
     repo
       .findByOid(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_ParticipantCustomExtension])} not found.")
@@ -174,6 +174,27 @@ class Ck_Participant_CustomAttributesManagerService[F[_]](repo: Ck_Participant_C
 
 object Ck_Participant_CustomAttributesManagerService {
   def apply[F[_]](repo: Ck_Participant_CustomAttributesManagerAlgebra[F]): Ck_Participant_CustomAttributesManagerService[F] = new Ck_Participant_CustomAttributesManagerService(repo)
+}
+
+// CkParty
+trait CkPartyAlgebra[F[_]] {
+  def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
+  def findByOid(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
+}
+
+class CkPartyService[F[_]](repo: CkPartyAlgebra[F]) {
+  // There is no ID field.
+  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
+    EitherT.left(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkParty])} not found.")
+
+  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
+    repo
+      .findByOid(id)
+      .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkParty])} not found.")
+}
+
+object CkPartyService {
+  def apply[F[_]](repo: CkPartyAlgebra[F]): CkPartyService[F] = new CkPartyService(repo)
 }
 
 // Soap service
