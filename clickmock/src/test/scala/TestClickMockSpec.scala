@@ -23,6 +23,7 @@ import domain._
 import infrastructure.soap._
 import infrastructure.soap.entity._
 import config._
+import doobie.util.transactor.Transactor
 
 object FauxWeb {
   case class SomeXmlResponse(xml: String)
@@ -139,6 +140,7 @@ class TestClickMockSpec[F[_]] extends Specification {
   def createDoobieService[F[_]: Async :ContextShift :ConcurrentEffect: Timer] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("clickmock"))
+      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.local)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.local.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf.db.local, connEc, Blocker.liftExecutionContext(txnEc))
@@ -163,6 +165,25 @@ class TestClickMockSpec[F[_]] extends Specification {
 
   }
 
+  // import doobie.util.ExecutionContexts
+  // implicit val cs = IO.contextShift(ExecutionContexts.synchronous)
+
+  def getTestRemoteDoobieTransactor = Transactor.fromDriverManager[IO](
+    "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+    "jdbc:sqlserver://localhost:1433;DatabaseName=test",
+    "admin",
+    "12345678",
+    Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
+  )
+
+  def getTestLocalDoobieTransactor = Transactor.fromDriverManager[IO](
+    "org.h2.Driver",
+    "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MSSQLServer",
+    "sa",
+    "",
+    Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
+  )
+
   "CkMockService" should {
     "Initialize" in {
 
@@ -184,6 +205,26 @@ class TestClickMockSpec[F[_]] extends Specification {
           val b = a.unsafeRunSync()
 
           IO(println(b))
+      }.unsafeRunSync()
+
+      1 mustEqual 1
+    }
+
+    "Doobie find" in {
+
+      val doobieResource = createDoobieService[IO]
+      val xa = getTestRemoteDoobieTransactor
+
+      doobieResource.use {
+        z =>
+
+          val doobieInterpreter = DoobieCk_ParticipantRepositoryInterpreter(xa)
+
+          val s = doobieInterpreter.findById(Some("bogus_id")).value
+
+          val r = s.unsafeRunSync()
+
+          IO(println(r))
       }.unsafeRunSync()
 
       1 mustEqual 1

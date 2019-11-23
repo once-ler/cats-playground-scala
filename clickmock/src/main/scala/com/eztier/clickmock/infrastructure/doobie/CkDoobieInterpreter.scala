@@ -1,13 +1,16 @@
 package com.eztier.clickmock
 package infrastructure.doobie
 
+// import cats._
+// import cats.data._
+// import cats.effect._
 import cats.implicits._
+
 import doobie._
 import doobie.implicits._
 import cats.data.{NonEmptyList, OptionT}
 import cats.effect.{Bracket, IO}
 import cats.kernel.Semigroup
-import cats.syntax.option._
 import shapeless._
 import domain._
 
@@ -92,6 +95,48 @@ private object CkDoobieSqlImplicits {
       )
     )(_.Poref.getOrElse(""))
 
+  implicit val CkPartyEntityReferenceMeta: Meta[EntityReference[CkParty]] =
+    Meta[String].timap(s =>
+      EntityReference[CkParty](
+        Poref = s.some,
+        Type = classOf[CkParty].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val Ck_ClickPartyContactInformationEntityReferenceMeta: Meta[EntityReference[Ck_ClickPartyContactInformation]] =
+    Meta[String].timap(s =>
+      EntityReference[Ck_ClickPartyContactInformation](
+        Poref = s.some,
+        Type = classOf[Ck_ClickPartyContactInformation].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val CkPhoneContactInformationEntityReferenceMeta: Meta[EntityReference[CkPhoneContactInformation]] =
+    Meta[String].timap(s =>
+      EntityReference[CkPhoneContactInformation](
+        Poref = s.some,
+        Type = classOf[CkPhoneContactInformation].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val CkEmailContactInformationEntityReferenceMeta: Meta[EntityReference[CkEmailContactInformation]] =
+    Meta[String].timap(s =>
+      EntityReference[CkEmailContactInformation](
+        Poref = s.some,
+        Type = classOf[CkEmailContactInformation].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val CkPostalContactInformationEntityReferenceMeta: Meta[EntityReference[CkPostalContactInformation]] =
+    Meta[String].timap(s =>
+      EntityReference[CkPostalContactInformation](
+        Poref = s.some,
+        Type = classOf[CkPostalContactInformation].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+}
+
+private object Ck_ParticipantSql {
   /*
   val participantSqlFragment = fr"""select
     convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
@@ -105,86 +150,40 @@ private object CkDoobieSqlImplicits {
     (participantSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
   */
 
-
-  val participantCustomExtensionSqlFragment = fr"""select
-    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
-    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.particpantEthnicity, 2) particpantEthnicity, convert(varchar(50), b.participantRace, 2) participantRace
-    from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where """
-
-  def findByIdSql[Ck_ParticipantCustomExtension](a: Option[String]): Query0[(Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
-    (participantCustomExtensionSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
-
-  def findByOidSql[Ck_ParticipantCustomExtension](a: Option[String]): Query0[(Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
-    (participantCustomExtensionSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
-
-  val partySqlFragment = fr"""select
-    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, convert(varchar(50), a.contactInformation, 2) contactInformation,
-    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.phoneHome, 2) phoneHome, convert(varchar(50), b.emailPreferred, 2) emailPreferred, convert(varchar(50), b.addressHome, 2) addressHome,
-    convert(varchar(50), c.oid, 2) oid3, c.class class3, convert(varchar(50), c.extent, 2) extent3, c.areaCode, c.phoneNumber, c.country,
-    convert(varchar(50), d.oid, 2) oid4, d.class class4, convert(varchar(50), d.extent, 2) extent4, d.emailaddress,
-    convert(varchar(50), e.oid, 2) oid5, e.class class5, convert(varchar(50), e.extent, 2) extent5, e.city, e.postalcode, e.address1, e.stateprovince, e.country
-    from _party a left join _partycontactinformation b on a.contactInformation = b.oid left join [_phone contact information] c on c.oid = b.phoneHome left join [_e-mail contact information] d on d.oid = b.emailPreferred left join [_postal contact information] e on e.oid = b.addressHome where """
-
-  def findByOidSql[CkParty](a: Option[String]): Query0[(CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
-    (partySqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
-
-  val personSqlFragment = fr"""select
-    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.employer, 2) employer, a.firstName, a.lastName, a.middleName, convert(varchar(50), a.customAttributes, 2) customAttributes, a.dateOfBirth, a.gender,
-    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.personCustomExtension, 2) personCustomExtension
-    from _person a join _person_customattributesmanager b on b.oid = a.customattributes where """
-
-  def findByIdSql[CkPerson](a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
-    (personSqlFragment ++ fr"id = ${a.getOrElse("")}").query
-
-  def findByOidSql[CkPerson](a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
-    (personSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
-
-  val personCustomExtensionFragment = fr"""select
-    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
-    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.gender, 2) gender
-    from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where """
-
-  def findByIdSql[Ck_PersonCustomExtension](a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
-    (personCustomExtensionFragment ++ fr"id = ${a.getOrElse("")}").query
-
-  def findByOidSql[Ck_PersonCustomExtension](a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
-    (personCustomExtensionFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
-
-  val resourceFragment = fr"""select
-    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, dateadd(ss, .001*a.dateModified, '1970-01-01') dateModified, , dateadd(ss, .001*a.dateCreated, '1970-01-01') dateCreated where """
-
-  def findByIdSql[CkResource](a: Option[String], isOid: Boolean = false): Query0[CkResource] =
-    (resourceFragment ++ fr"id = ${a.getOrElse("")}").query
-
-  def findByOidSql[CkResource](a: Option[String], isOid: Boolean = false): Query0[CkResource] =
-    (resourceFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
-
-}
-
-private object Ck_ParticipantSql {
-  val participantSqlFragment = fr"""select
+  val participantSqlFragment0 = fr"""select
     convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes
     from __participant a where """
 
-  def findByIdSql[Ck_Participant](a: Option[String]): Query0[Ck_Participant] =
+  val participantSqlFragment = fr"""select
+    a.oid, a.class, a.extent, a._webrUnique_ID, a.customAttributes
+    from __participant a where """
+
+
+  def findByIdSql(a: Option[String]): Query0[Ck_Participant] =
     (participantSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
 
-  def findByOidSql[Ck_Participant](a: Option[String]): Query0[Ck_Participant] =
+  def findByOidSql(a: Option[String]): Query0[Ck_Participant] =
     (participantSqlFragment ++ fr"a.oid = 0x" ++ Fragment.const(a.getOrElse("0"))).query
+}
 
-  val participantCmSqlFragment = fr"""select
+private object Ck_ParticipantCmSql {
+  val participantCmSqlFragment0 = fr"""select
     convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
     from __participant_customattributesmanager b where """
 
-  def findByOidSql[Ck_Participant_CustomAttributesManager](a: Option[String]): Query0[Ck_Participant_CustomAttributesManager] =
-    (participantCmSqlFragment ++ fr"b.oid = 0x" ++ Fragment.const(a.getOrElse("0"))).query
+  val participantCmSqlFragment = fr"""select
+    b.oid oid2, b.class class2, b.extent extent2, b.medicalRecordNumber, b.person person, b.participantCustomExtension participantCustomExtension
+    from __participant_customattributesmanager b where """
+
+  def findByOidSql(a: Option[String]): Query0[Ck_Participant_CustomAttributesManager] =
+    (participantCmSqlFragment ++ fr"b.oid =" ++ Fragment.const(s"0x${a.getOrElse("0")}")).query
 }
 
 // Ck_Participant
 class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_ParticipantAlgebra[F] {
   import CkDoobieSqlImplicits._
-  
+
 /*
   override def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -194,8 +193,8 @@ class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](
 */
   override def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] = {
     val d = for {
-      b <- Ck_ParticipantSql.findByIdSql[Ck_Participant](id).option
-      c <- Ck_ParticipantSql.findByOidSql[Ck_Participant_CustomAttributesManager](b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
+      b <- Ck_ParticipantSql.findByIdSql(id).option
+      c <- Ck_ParticipantCmSql.findByOidSql(b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
     } yield b.flatMap(d => c.map(e => (d, e)))
 
     OptionT(d.transact(xa))
@@ -203,8 +202,8 @@ class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](
 
   override def findByOid(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] = {
     val d = for {
-      b <- Ck_ParticipantSql.findByOidSql[Ck_Participant](id).option
-      c <- Ck_ParticipantSql.findByOidSql[Ck_Participant_CustomAttributesManager](b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
+      b <- Ck_ParticipantSql.findByOidSql(id).option
+      c <- Ck_ParticipantCmSql.findByOidSql(b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
     } yield b.flatMap(d => c.map(e => (d, e)))
 
     OptionT(d.transact(xa))
@@ -217,9 +216,23 @@ object DoobieCk_ParticipantRepositoryInterpreter {
 }
 
 // Ck_ParticipantCustomExtension
+private object Ck_ParticipantCustomExtensionSql {
+  val participantCustomExtensionSqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.particpantEthnicity, 2) particpantEthnicity, convert(varchar(50), b.participantRace, 2) participantRace
+    from __participant a join __participant_customattributesmanager b on b.oid = a.customattributes where """
+
+  def findByIdSql(a: Option[String]): Query0[(Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
+    (participantCustomExtensionSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
+
+  def findByOidSql(a: Option[String]): Query0[(Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
+    (participantCustomExtensionSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+}
+
 class DoobieCk_ParticipantCustomExtensionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_ParticipantCustomExtensionAlgebra[F] {
   import CkDoobieSqlImplicits._
+  import Ck_ParticipantCustomExtensionSql._
 
   override def findById(id: Option[String]): OptionT[F, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -234,9 +247,23 @@ object DoobieCk_ParticipantCustomExtensionRepositoryInterpreter {
 }
 
 // CkPerson
+private object CkPersonSql {
+  val personSqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.employer, 2) employer, a.firstName, a.lastName, a.middleName, convert(varchar(50), a.customAttributes, 2) customAttributes, a.dateOfBirth, a.gender,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.personCustomExtension, 2) personCustomExtension
+    from _person a join _person_customattributesmanager b on b.oid = a.customattributes where """
+
+  def findByIdSql(a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
+    (personSqlFragment ++ fr"id = ${a.getOrElse("")}").query
+
+  def findByOidSql(a: Option[String]): Query0[(CkPerson, CkPerson_CustomAttributesManager)] =
+    (personSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+}
+
 class DoobieCkPersonRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkPersonAlgebra[F] {
   import CkDoobieSqlImplicits._
+  import CkPersonSql._
 
   override def findById(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -251,9 +278,23 @@ object DoobieCkPersonRepositoryInterpreter {
 }
 
 // Ck_PersonCustomExtension
+private object Ck_PersonCustomExtensionSql {
+  val personCustomExtensionFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.gender, 2) gender
+    from __personcustomextension a join __personcustomextension_customattributesmanager b on b.oid = a.customattributes where """
+
+  def findByIdSql(a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
+    (personCustomExtensionFragment ++ fr"id = ${a.getOrElse("")}").query
+
+  def findByOidSql(a: Option[String], isOid: Boolean = false): Query0[(Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
+    (personCustomExtensionFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+}
+
 class DoobieCk_PersonCustomExtensionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_PersonCustomExtensionAlgebra[F] {
   import CkDoobieSqlImplicits._
+  import Ck_PersonCustomExtensionSql._
 
   override def findById(id: Option[String]): OptionT[F, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -268,12 +309,23 @@ object DoobieCk_PersonCustomExtensionRepositoryInterpreter {
 }
 
 // CkParty
+private object CkPartySql {
+  val partySqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, convert(varchar(50), a.contactInformation, 2) contactInformation,
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, convert(varchar(50), b.phoneHome, 2) phoneHome, convert(varchar(50), b.emailPreferred, 2) emailPreferred, convert(varchar(50), b.addressHome, 2) addressHome,
+    convert(varchar(50), c.oid, 2) oid3, c.class class3, convert(varchar(50), c.extent, 2) extent3, c.areaCode, c.phoneNumber, c.country,
+    convert(varchar(50), d.oid, 2) oid4, d.class class4, convert(varchar(50), d.extent, 2) extent4, d.emailaddress,
+    convert(varchar(50), e.oid, 2) oid5, e.class class5, convert(varchar(50), e.extent, 2) extent5, e.city, e.postalcode, e.address1, e.stateprovince, e.country
+    from _party a left join _partycontactinformation b on a.contactInformation = b.oid left join [_phone contact information] c on c.oid = b.phoneHome left join [_e-mail contact information] d on d.oid = b.emailPreferred left join [_postal contact information] e on e.oid = b.addressHome where """
+
+  def findByOidSql(a: Option[String]): Query0[(CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
+    (partySqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+}
+
 class DoobieCkPartyRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkPartyAlgebra[F] {
   import CkDoobieSqlImplicits._
-
-  override def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
-    OptionT.none
+  import CkPartySql._
 
   override def findByOid(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
     OptionT(findByOidSql(id).option.transact(xa))
@@ -285,9 +337,22 @@ object DoobieCkPartyRepositoryInterpreter {
 }
 
 // CkResource
+private object CkResourceSql {
+  import CkDoobieSqlImplicits._
+
+  val resourceFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, dateadd(ss, .001*a.dateModified, '1970-01-01') dateModified, , dateadd(ss, .001*a.dateCreated, '1970-01-01') dateCreated where """
+
+  def findByIdSql(a: Option[String], isOid: Boolean = false): Query0[CkResource] =
+    (resourceFragment ++ fr"id = ${a.getOrElse("")}").query
+
+  def findByOidSql(a: Option[String], isOid: Boolean = false): Query0[CkResource] =
+    (resourceFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+}
+
 class DoobieCkResourceRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkResourceAlgebra[F] {
-  import CkDoobieSqlImplicits._
+  import CkResourceSql._
 
   override def findById(id: Option[String]): OptionT[F, CkResource] =
     OptionT(findByIdSql(id).option.transact(xa))

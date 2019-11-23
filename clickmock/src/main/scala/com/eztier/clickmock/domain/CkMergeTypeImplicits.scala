@@ -275,7 +275,7 @@ object CkMergeTypeImplicits {
   implicit class CopyToCk_PersonCustomExtension_CustomAttributesManager(in: Ck_PersonCustomExtension_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_NYUGenderSelection => in.copy(gender = EntityReference[Ck_NYUGenderSelection](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUGenderSelection].getSimpleName.some).some)
+        case a: Ck_GenderSelection => in.copy(gender = EntityReference[Ck_GenderSelection](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_GenderSelection].getSimpleName.some).some)
         case a: Ck_PersonCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -283,7 +283,7 @@ object CkMergeTypeImplicits {
 
     def merge[T <: CkBase](diff: Option[T]): Ck_PersonCustomExtension_CustomAttributesManager = {
       diff match {
-        case Some(a) if a.getClass == classOf[Ck_NYUGenderSelection] => merge(a)
+        case Some(a) if a.getClass == classOf[Ck_GenderSelection] => merge(a)
         case Some(a) if a.getClass == classOf[Ck_PersonCustomExtension_CustomAttributesManager] => merge(a)
         case _ => in
       }
@@ -311,8 +311,8 @@ object CkMergeTypeImplicits {
   implicit class CopyToCk_ParticipantCustomExtension_CustomAttributesManager(in: Ck_ParticipantCustomExtension_CustomAttributesManager) {
     def merge[T <: CkBase](diff: T) = {
       diff match {
-        case a: Ck_NYUParticipantEthnicity => in.copy(particpantEthnicity = EntityReference[Ck_NYUParticipantEthnicity](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUParticipantEthnicity].getSimpleName.some).some)
-        case a: Ck_NYUParticipantRace => in.copy(participantRace = EntityReference[Ck_NYUParticipantRace](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_NYUParticipantRace].getSimpleName.some).some)
+        case a: Ck_ParticipantEthnicity => in.copy(particpantEthnicity = EntityReference[Ck_ParticipantEthnicity](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ParticipantEthnicity].getSimpleName.some).some)
+        case a: Ck_ParticipantRace => in.copy(participantRace = EntityReference[Ck_ParticipantRace](Poref = (a.Class.getOrElse("") + ":" + a.oid.getOrElse("")).some, Type = classOf[Ck_ParticipantRace].getSimpleName.some).some)
         case a: Ck_ParticipantCustomExtension_CustomAttributesManager if a.oid != None && a.oid.get != null && a.oid.get.length > 0 => in.copy(oid = a.oid, Class = a.Class)
         case _ => in
       }
@@ -320,8 +320,8 @@ object CkMergeTypeImplicits {
 
     def merge[T <: CkBase](diff: Option[T]): Ck_ParticipantCustomExtension_CustomAttributesManager = {
       diff match {
-        case Some(a) if a.getClass == classOf[Ck_NYUParticipantEthnicity] => merge(a)
-        case Some(a) if a.getClass == classOf[Ck_NYUParticipantRace] => merge(a)
+        case Some(a) if a.getClass == classOf[Ck_ParticipantEthnicity] => merge(a)
+        case Some(a) if a.getClass == classOf[Ck_ParticipantRace] => merge(a)
         case Some(a) if a.getClass == classOf[Ck_ParticipantCustomExtension_CustomAttributesManager] => merge(a)
         case _ => in
       }

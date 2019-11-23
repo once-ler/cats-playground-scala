@@ -1,10 +1,10 @@
 package com.eztier.clickmock
 package domain
 
-import cats.Functor
+import cats.{Applicative, Functor}
 import cats.data.{EitherT, OptionT}
-import scala.xml.NodeSeq
 
+import scala.xml.NodeSeq
 import infrastructure.soap.CkXmlToTypeImplicits
 
 // Ck_PersonCustomExtension
@@ -178,15 +178,11 @@ object Ck_Participant_CustomAttributesManagerService {
 
 // CkParty
 trait CkPartyAlgebra[F[_]] {
-  def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
+  // def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
   def findByOid(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
 }
 
 class CkPartyService[F[_]](repo: CkPartyAlgebra[F]) {
-  // There is no ID field.
-  def findById(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
-    EitherT.left(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkParty])} not found.")
-
   def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
     repo
       .findByOid(id)

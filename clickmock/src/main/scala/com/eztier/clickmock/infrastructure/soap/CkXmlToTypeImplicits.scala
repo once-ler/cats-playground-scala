@@ -161,7 +161,7 @@ object CkXmlToTypeImplicits {
     Ck_PersonCustomExtension_CustomAttributesManager(
       oid = x("oid").asInstanceOf[String].some,
       Class = x("Class").asInstanceOf[String].some,
-      gender = EntityReference[Ck_NYUGenderSelection](Poref = Some(gender("poref")), Type = Some(gender("type"))).some
+      gender = EntityReference[Ck_GenderSelection](Poref = Some(gender("poref")), Type = Some(gender("type"))).some
     )
   }
 

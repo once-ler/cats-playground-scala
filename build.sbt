@@ -188,6 +188,7 @@ lazy val clickmock = project.
       doobieScalatest,
       doobieHikari,
       h2,
+      flyway,
       mssqlJdbc
     )
   ).dependsOn(

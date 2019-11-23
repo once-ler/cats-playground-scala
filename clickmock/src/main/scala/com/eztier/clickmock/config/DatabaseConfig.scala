@@ -1,8 +1,10 @@
 package com.eztier.clickmock
 package config
 
-import cats.effect.{Async, Blocker, ContextShift, Resource}
+import cats.implicits._
+import cats.effect.{Async, Blocker, ContextShift, Resource, Sync}
 import doobie.hikari.HikariTransactor
+import org.flywaydb.core.Flyway
 
 import scala.concurrent.ExecutionContext
 
@@ -23,4 +25,16 @@ object DatabaseConfig {
   ): Resource[F, HikariTransactor[F]] =
     HikariTransactor
       .newHikariTransactor[F](dbc.driver, dbc.url, dbc.user, dbc.password, connEc, blocker)
+
+  // By default, flyway will look at ./my-project/src/main/resources/db/migration for versioned sql files.
+  def initializeDb[F[_]](cfg: DatabaseConfig)(implicit S: Sync[F]): F[Unit] =
+    S.delay {
+      val fw: Flyway = {
+        Flyway
+          .configure()
+          .dataSource(cfg.url, cfg.user, cfg.password)
+          .load()
+      }
+      fw.migrate()
+    }.as(())
 }
