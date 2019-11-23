@@ -139,9 +139,9 @@ class TestClickMockSpec[F[_]] extends Specification {
   def createDoobieService[F[_]: Async :ContextShift :ConcurrentEffect: Timer] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("clickmock"))
-      connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.connections.poolSize)
+      connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.local.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
-      xa <- DatabaseConfig.dbTransactor[F](conf.db, connEc, Blocker.liftExecutionContext(txnEc))
+      xa <- DatabaseConfig.dbTransactor[F](conf.db.local, connEc, Blocker.liftExecutionContext(txnEc))
       b = blockingThreadPool[F]
       ms = CkMockService(conf, b)
       entityRepo = CkEntityInterpreter[F](ms)

@@ -21,7 +21,7 @@ case class PersistentReference(Poref: Option[String] = None)
 case class WrappedEntityXml(xml: NodeSeq)
 case class WrappedEntitySetXml(xml: NodeSeq)
 
-case class Ck_NYUGenderSelection_CustomAttributesManager
+case class Ck_GenderSelection_CustomAttributesManager
 (
   oid: Option[String] = None,
   Class: Option[String] = None,
@@ -30,16 +30,16 @@ case class Ck_NYUGenderSelection_CustomAttributesManager
   enabled: Option[Int] = 1.some
 ) extends CkBase with WithEncoder
 
-case class Ck_NYUGenderSelection
+case class Ck_GenderSelection
 (
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: Option[EntityReference[Ck_NYUGenderSelection_CustomAttributesManager]] = EntityReference[Ck_NYUGenderSelection_CustomAttributesManager]().some
+  customAttributes: Option[EntityReference[Ck_GenderSelection_CustomAttributesManager]] = EntityReference[Ck_GenderSelection_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
-case class Ck_NYUParticipantEthnicity_CustomAttributesManager
+case class Ck_ParticipantEthnicity_CustomAttributesManager
 (
   oid: Option[String] = None,
   Class: Option[String] = None,
@@ -49,15 +49,15 @@ case class Ck_NYUParticipantEthnicity_CustomAttributesManager
   ctrpCode: Option[String] = None
 ) extends CkBase with WithEncoder
 
-case class Ck_NYUParticipantEthnicity(
+case class Ck_ParticipantEthnicity(
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: Option[EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager]] = EntityReference[Ck_NYUParticipantEthnicity_CustomAttributesManager]().some
+  customAttributes: Option[EntityReference[Ck_ParticipantEthnicity_CustomAttributesManager]] = EntityReference[Ck_ParticipantEthnicity_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
-case class Ck_NYUParticipantRace_CustomAttributesManager
+case class Ck_ParticipantRace_CustomAttributesManager
 (
   oid: Option[String] = None,
   Class: Option[String] = None,
@@ -67,13 +67,13 @@ case class Ck_NYUParticipantRace_CustomAttributesManager
   ctrpCode: Option[String] = None
 ) extends CkBase with WithEncoder
 
-case class Ck_NYUParticipantRace
+case class Ck_ParticipantRace
 (
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
   ID: Option[String] = None,
-  customAttributes: Option[EntityReference[Ck_NYUParticipantRace_CustomAttributesManager]] = EntityReference[Ck_NYUParticipantRace_CustomAttributesManager]().some
+  customAttributes: Option[EntityReference[Ck_ParticipantRace_CustomAttributesManager]] = EntityReference[Ck_ParticipantRace_CustomAttributesManager]().some
 ) extends CkBase with WithEncoder with WithCustomAttributes with WithNonProject
 
 case class Ck_PersonCustomExtension_CustomAttributesManager
@@ -81,7 +81,7 @@ case class Ck_PersonCustomExtension_CustomAttributesManager
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  gender: Option[EntityReference[Ck_NYUGenderSelection]] = EntityReference[Ck_NYUGenderSelection]().some
+  gender: Option[EntityReference[Ck_GenderSelection]] = EntityReference[Ck_GenderSelection]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_PersonCustomExtension(
@@ -289,8 +289,8 @@ case class Ck_ParticipantCustomExtension_CustomAttributesManager(
   oid: Option[String] = None,
   Class: Option[String] = None,
   extent: Option[String] = None,
-  particpantEthnicity: Option[EntityReference[Ck_NYUParticipantEthnicity]] = EntityReference[Ck_NYUParticipantEthnicity]().some,
-  participantRace: Option[EntityReference[Ck_NYUParticipantRace]] = EntityReference[Ck_NYUParticipantRace]().some
+  particpantEthnicity: Option[EntityReference[Ck_ParticipantEthnicity]] = EntityReference[Ck_ParticipantEthnicity]().some,
+  participantRace: Option[EntityReference[Ck_ParticipantRace]] = EntityReference[Ck_ParticipantRace]().some
 ) extends CkBase with WithEncoder
 
 case class Ck_ParticipantCustomExtension
