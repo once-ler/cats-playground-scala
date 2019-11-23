@@ -1,16 +1,17 @@
 package com.eztier.clickmock
 package infrastructure.doobie
 
+import cats.implicits._
 import doobie._
 import doobie.implicits._
 import cats.data.{NonEmptyList, OptionT}
 import cats.effect.{Bracket, IO}
+import cats.kernel.Semigroup
 import cats.syntax.option._
 import shapeless._
-
 import domain._
 
-private object Ck_ParticipantSQL {
+private object CkDoobieSqlImplicits {
   implicit val Ck_ParticipantEntityReferenceMeta: Meta[EntityReference[Ck_Participant]] =
     Meta[String].timap(s =>
       EntityReference[Ck_Participant](
@@ -83,14 +84,15 @@ private object Ck_ParticipantSQL {
       )
     )(_.Poref.getOrElse(""))
 
-  implicit val Ck_NYUGenderSelectionEntityReferenceMeta: Meta[EntityReference[Ck_NYUGenderSelection]] =
+  implicit val Ck_GenderSelectionEntityReferenceMeta: Meta[EntityReference[Ck_GenderSelection]] =
     Meta[String].timap(s =>
-      EntityReference[Ck_NYUGenderSelection](
+      EntityReference[Ck_GenderSelection](
         Poref = s.some,
-        Type = classOf[Ck_NYUGenderSelection].getSimpleName.replace("Ck", "").some
+        Type = classOf[Ck_GenderSelection].getSimpleName.replace("Ck", "").some
       )
     )(_.Poref.getOrElse(""))
 
+  /*
   val participantSqlFragment = fr"""select
     convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
     convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
@@ -101,6 +103,8 @@ private object Ck_ParticipantSQL {
 
   def findByOidSql[Ck_Participant](a: Option[String]): Query0[(Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     (participantSqlFragment ++ fr"convert(varchar(50), a.oid, 2) = ${a.getOrElse("")}").query
+  */
+
 
   val participantCustomExtensionSqlFragment = fr"""select
     convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a.ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
@@ -157,16 +161,54 @@ private object Ck_ParticipantSQL {
 
 }
 
+private object Ck_ParticipantSql {
+  val participantSqlFragment = fr"""select
+    convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes
+    from __participant a where """
+
+  def findByIdSql[Ck_Participant](a: Option[String]): Query0[Ck_Participant] =
+    (participantSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
+
+  def findByOidSql[Ck_Participant](a: Option[String]): Query0[Ck_Participant] =
+    (participantSqlFragment ++ fr"a.oid = 0x" ++ Fragment.const(a.getOrElse("0"))).query
+
+  val participantCmSqlFragment = fr"""select
+    convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
+    from __participant_customattributesmanager b where """
+
+  def findByOidSql[Ck_Participant_CustomAttributesManager](a: Option[String]): Query0[Ck_Participant_CustomAttributesManager] =
+    (participantCmSqlFragment ++ fr"b.oid = 0x" ++ Fragment.const(a.getOrElse("0"))).query
+}
+
 // Ck_Participant
 class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_ParticipantAlgebra[F] {
-  import Ck_ParticipantSQL._
-
+  import CkDoobieSqlImplicits._
+  
+/*
   override def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
 
   override def findByOid(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] =
     OptionT(findByOidSql(id).option.transact(xa))
+*/
+  override def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] = {
+    val d = for {
+      b <- Ck_ParticipantSql.findByIdSql[Ck_Participant](id).option
+      c <- Ck_ParticipantSql.findByOidSql[Ck_Participant_CustomAttributesManager](b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
+    } yield b.flatMap(d => c.map(e => (d, e)))
+
+    OptionT(d.transact(xa))
+  }
+
+  override def findByOid(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)] = {
+    val d = for {
+      b <- Ck_ParticipantSql.findByOidSql[Ck_Participant](id).option
+      c <- Ck_ParticipantSql.findByOidSql[Ck_Participant_CustomAttributesManager](b.getOrElse(Ck_Participant()).customAttributes.get.Poref).option
+    } yield b.flatMap(d => c.map(e => (d, e)))
+
+    OptionT(d.transact(xa))
+  }
 }
 
 object DoobieCk_ParticipantRepositoryInterpreter {
@@ -177,7 +219,7 @@ object DoobieCk_ParticipantRepositoryInterpreter {
 // Ck_ParticipantCustomExtension
 class DoobieCk_ParticipantCustomExtensionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_ParticipantCustomExtensionAlgebra[F] {
-  import Ck_ParticipantSQL._
+  import CkDoobieSqlImplicits._
 
   override def findById(id: Option[String]): OptionT[F, (Ck_ParticipantCustomExtension, Ck_ParticipantCustomExtension_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -194,7 +236,7 @@ object DoobieCk_ParticipantCustomExtensionRepositoryInterpreter {
 // CkPerson
 class DoobieCkPersonRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkPersonAlgebra[F] {
-  import Ck_ParticipantSQL._
+  import CkDoobieSqlImplicits._
 
   override def findById(id: Option[String]): OptionT[F, (CkPerson, CkPerson_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -211,7 +253,7 @@ object DoobieCkPersonRepositoryInterpreter {
 // Ck_PersonCustomExtension
 class DoobieCk_PersonCustomExtensionRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends Ck_PersonCustomExtensionAlgebra[F] {
-  import Ck_ParticipantSQL._
+  import CkDoobieSqlImplicits._
 
   override def findById(id: Option[String]): OptionT[F, (Ck_PersonCustomExtension, Ck_PersonCustomExtension_CustomAttributesManager)] =
     OptionT(findByIdSql(id).option.transact(xa))
@@ -228,7 +270,7 @@ object DoobieCk_PersonCustomExtensionRepositoryInterpreter {
 // CkParty
 class DoobieCkPartyRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkPartyAlgebra[F] {
-  import Ck_ParticipantSQL._
+  import CkDoobieSqlImplicits._
 
   override def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
     OptionT.none
@@ -245,7 +287,7 @@ object DoobieCkPartyRepositoryInterpreter {
 // CkResource
 class DoobieCkResourceRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
   extends CkResourceAlgebra[F] {
-  import Ck_ParticipantSQL._
+  import CkDoobieSqlImplicits._
 
   override def findById(id: Option[String]): OptionT[F, CkResource] =
     OptionT(findByIdSql(id).option.transact(xa))
