@@ -10,7 +10,6 @@ import doobie._
 import doobie.implicits._
 import cats.data.{NonEmptyList, OptionT}
 import cats.effect.{Bracket, IO}
-import cats.kernel.Semigroup
 import shapeless._
 import domain._
 
@@ -137,6 +136,7 @@ private object CkDoobieSqlImplicits {
 }
 
 private object Ck_ParticipantSql {
+  import CkDoobieSqlImplicits._
   /*
   val participantSqlFragment = fr"""select
     convert(varchar(50), a.oid, 2) oid, a.class, convert(varchar(50), a.extent, 2) extent, a._webrUnique_ID, convert(varchar(50), a.customAttributes, 2) customAttributes,
@@ -158,7 +158,6 @@ private object Ck_ParticipantSql {
     a.oid, a.class, a.extent, a._webrUnique_ID, a.customAttributes
     from __participant a where """
 
-
   def findByIdSql(a: Option[String]): Query0[Ck_Participant] =
     (participantSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
 
@@ -167,6 +166,8 @@ private object Ck_ParticipantSql {
 }
 
 private object Ck_ParticipantCmSql {
+  import CkDoobieSqlImplicits._
+
   val participantCmSqlFragment0 = fr"""select
     convert(varchar(50), b.oid, 2) oid2, b.class class2, convert(varchar(50), b.extent, 2) extent2, b.medicalRecordNumber, convert(varchar(50), b.person, 2) person, convert(varchar(50), b.participantCustomExtension, 2) participantCustomExtension
     from __participant_customattributesmanager b where """
@@ -176,7 +177,7 @@ private object Ck_ParticipantCmSql {
     from __participant_customattributesmanager b where """
 
   def findByOidSql(a: Option[String]): Query0[Ck_Participant_CustomAttributesManager] =
-    (participantCmSqlFragment ++ fr"b.oid =" ++ Fragment.const(s"0x${a.getOrElse("0")}")).query
+    (participantCmSqlFragment ++ fr"b.oid =" ++ Fragment.const(s"0x${a.getOrElse("0").substring(1, 16)}")).query
 }
 
 // Ck_Participant

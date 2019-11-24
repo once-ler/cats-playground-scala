@@ -213,7 +213,7 @@ class TestClickMockSpec[F[_]] extends Specification {
     "Doobie find" in {
 
       val doobieResource = createDoobieService[IO]
-      val xa = getTestRemoteDoobieTransactor
+      val xa = getTestLocalDoobieTransactor
 
       doobieResource.use {
         z =>
