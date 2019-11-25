@@ -178,12 +178,11 @@ object Ck_Participant_CustomAttributesManagerService {
 
 // CkParty
 trait CkPartyAlgebra[F[_]] {
-  // def findById(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
-  def findByOid(id: Option[String]): OptionT[F, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)]
+  def findByOid(id: Option[String]): OptionT[F, (Option[CkParty], Option[CkPartyContactInformation], Option[CkPhoneContactInformation], Option[CkEmailContactInformation], Option[CkPostalContactInformation])]
 }
 
 class CkPartyService[F[_]](repo: CkPartyAlgebra[F]) {
-  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (CkParty, CkPartyContactInformation, CkPhoneContactInformation, CkEmailContactInformation, CkPostalContactInformation)] =
+  def findByOid(id: Option[String])(implicit F: Functor[F]): EitherT[F, String, (Option[CkParty], Option[CkPartyContactInformation], Option[CkPhoneContactInformation], Option[CkEmailContactInformation], Option[CkPostalContactInformation])] =
     repo
       .findByOid(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[CkParty])} not found.")

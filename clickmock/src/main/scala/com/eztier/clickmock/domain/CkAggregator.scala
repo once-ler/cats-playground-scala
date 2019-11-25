@@ -35,7 +35,7 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
         .fold(e => (Ck_PersonCustomExtension(), Ck_PersonCustomExtension_CustomAttributesManager()), a => a)
       pt <- partyService
         .findByOid(pe._1.oid)
-        .fold(e => (CkParty(), CkPartyContactInformation(), CkPhoneContactInformation(), CkEmailContactInformation(), CkPostalContactInformation()), a => a)
+        .fold(e => (None, None, None, None, None), a => a)
       r <- resourceService
         .findByOid(pa._1.oid)
         .fold(e => CkResource(), a => a)
@@ -48,11 +48,11 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
       personCm = Some(pe._2),
       personExtension = Some(pec._1),
       personExtensionCm = Some(pec._2),
-      party = Some(pt._1),
-      partyContactInformation = Some(pt._2),
-      phoneContactInformation = Some(pt._3),
-      emailContactInformation = Some(pt._4),
-      postalContactInformation = Some(pt._5),
+      party = pt._1,
+      partyContactInformation = pt._2,
+      phoneContactInformation = pt._3,
+      emailContactInformation = pt._4,
+      postalContactInformation = pt._5,
       resource = Some(r)
     )
 

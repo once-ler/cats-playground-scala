@@ -219,12 +219,14 @@ class TestClickMockSpec[F[_]] extends Specification {
         z =>
 
           val doobieInterpreter = DoobieCk_ParticipantRepositoryInterpreter(xa)
-
           val s = doobieInterpreter.findById(Some("bogus_id")).value
-
           val r = s.unsafeRunSync()
 
-          IO(println(r))
+          val doobieInterpreter2 = DoobieCkPartyRepositoryInterpreter(xa)
+          val s2 = doobieInterpreter2.findByOid(Some("AB")).value
+          val r2 = s2.unsafeRunSync()
+
+          IO(println(r2))
       }.unsafeRunSync()
 
       1 mustEqual 1
