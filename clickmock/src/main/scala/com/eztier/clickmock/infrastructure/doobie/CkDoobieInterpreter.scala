@@ -287,6 +287,8 @@ class DoobieCkPersonRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa
       c <- CkPersonCmSql.findByOidSql(b.getOrElse(CkPerson()).customAttributes.get.Poref).option
     } yield b.flatMap(d => c.map(e => (d, e)))
 
+
+
     OptionT(d.transact(xa))
   }
 }

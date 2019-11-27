@@ -19,6 +19,7 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
   partyService: CkPartyService[F],
   resourceService: CkResourceService[F]) {
 
+  // Should log error when folding.
   def getParticipant(id: Option[String]): F[CkParticipantAggregate] =
     for {
       pa <- participantService
