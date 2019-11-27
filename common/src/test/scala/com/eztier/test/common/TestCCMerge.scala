@@ -11,14 +11,14 @@ class TestCaseClassMerge extends Specification {
   "CCMerge" should {
     "Two case classes of the same type merge" in {
 
-      case class Foo(a: Option[Int], b: List[Int], c: Option[Int])
+      case class Foo(a: Option[Int], b: List[Int], c: Option[Int], d: Option[Int])
 
-      val base = Foo(None, Nil, Some(0))
-      val update = Foo(Some(3), List(4), None)
+      val base = Foo(None, Nil, Some(0), None)
+      val update = Foo(Some(3), List(4), None, None)
 
-      val merged = base merge update // Foo(Some(3),List(4),Some(0))
+      val merged = base merge update // Foo(Some(3),List(4),Some(0).None)
 
-      merged mustEqual Foo(Some(3), List(4), Some(0))
+      merged mustEqual Foo(Some(3), List(4), Some(0), None)
     }
 
     "Vectors should be supported" in {
@@ -29,6 +29,16 @@ class TestCaseClassMerge extends Specification {
       val merged = base merge update
 
       merged mustEqual Bar(Vector(2, 1))
+    }
+
+    "Empty strings" in {
+      case class Foo(a: Option[String], b: Option[String])
+      val base = Foo(Some("First"), Some("time"))
+      val update = Foo(Some("Next"), Some(""))
+
+      val merged = base merge update
+
+      merged mustEqual Foo(Some("Next"), Some(""))
     }
 
   }

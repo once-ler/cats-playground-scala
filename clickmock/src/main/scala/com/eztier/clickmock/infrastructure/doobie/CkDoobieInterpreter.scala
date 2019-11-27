@@ -102,11 +102,11 @@ private object CkDoobieSqlImplicits {
       )
     )(_.Poref.getOrElse(""))
 
-  implicit val Ck_ClickPartyContactInformationEntityReferenceMeta: Meta[EntityReference[Ck_ClickPartyContactInformation]] =
+  implicit val CkPartyContactInformationEntityReferenceMeta: Meta[EntityReference[CkPartyContactInformation]] =
     Meta[String].timap(s =>
-      EntityReference[Ck_ClickPartyContactInformation](
+      EntityReference[CkPartyContactInformation](
         Poref = s.some,
-        Type = classOf[Ck_ClickPartyContactInformation].getSimpleName.replace("Ck", "").some
+        Type = classOf[CkPartyContactInformation].getSimpleName.replace("Ck", "").some
       )
     )(_.Poref.getOrElse(""))
 
@@ -131,6 +131,22 @@ private object CkDoobieSqlImplicits {
       EntityReference[CkPostalContactInformation](
         Poref = s.some,
         Type = classOf[CkPostalContactInformation].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val CkStateEntityReferenceMeta: Meta[EntityReference[CkState]] =
+    Meta[String].timap(s =>
+      EntityReference[CkState](
+        Poref = s.some,
+        Type = classOf[CkState].getSimpleName.replace("Ck", "").some
+      )
+    )(_.Poref.getOrElse(""))
+
+  implicit val CkCountryEntityReferenceMeta: Meta[EntityReference[CkCountry]] =
+    Meta[String].timap(s =>
+      EntityReference[CkCountry](
+        Poref = s.some,
+        Type = classOf[CkCountry].getSimpleName.replace("Ck", "").some
       )
     )(_.Poref.getOrElse(""))
 }
