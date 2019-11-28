@@ -10,32 +10,33 @@ import scala.xml.Elem
 import common.Util._
 
 object EpXmlToTypeImplicits {
+
+  import kantan.xpath._
+  import kantan.xpath.implicits._
+  import kantan.xpath.java8._ // LocalDateTime
+
+  implicit val placeDecoder: NodeDecoder[EpPatient] = NodeDecoder.decoder(
+    xp"./AdministrativeSex/text()",
+    xp"./DateTimeofBirth/text()",
+    xp"./EthnicGroup/text()",
+    xp"./PatientAddress/text()",
+    xp"./PatientName/text()",
+    xp"./PhoneNumberHome/text()",
+    xp"./Race/text()",
+    xp"./_id/text()",
+    xp"./dateCreated/text()",
+    xp"./dateLocal/text()"
+  )(EpPatient.apply)
+
   def xmlEventToEpPatientStream[F[_]: Sync : ContextShift](xmlEventReader: XMLEventReader) = {
     import com.scalawilliam.xs4s.XmlElementExtractor
     import com.scalawilliam.xs4s.Implicits._
 
-    import java.io.{File, FileInputStream}
-    import java.io.FileReader
-    import javax.xml.stream.XMLInputFactory
-
-    import kantan.xpath._
-    import kantan.xpath.implicits._
-    import kantan.xpath.java8._ // LocalDateTime
+    // import java.io.{File, FileInputStream}
+    // import java.io.FileReader
+    // import javax.xml.stream.XMLInputFactory
 
     val splitter = XmlElementExtractor.collectElements(_.last == "patient")
-
-    implicit val placeDecoder: NodeDecoder[EpPatient] = NodeDecoder.decoder(
-      xp"./AdministrativeSex/text()",
-      xp"./DateTimeofBirth/text()",
-      xp"./EthnicGroup/text()",
-      xp"./PatientAddress/text()",
-      xp"./PatientName/text()",
-      xp"./PhoneNumberHome/text()",
-      xp"./Race/text()",
-      xp"./_id/text()",
-      xp"./dateCreated/text()",
-      xp"./dateLocal/text()"
-    )(EpPatient.apply)
 
     val elemToStringPipeS: Pipe[F, Elem, String] = _.map {
       in =>

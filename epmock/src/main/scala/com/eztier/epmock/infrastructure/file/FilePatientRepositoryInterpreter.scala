@@ -8,11 +8,11 @@ import javax.xml.stream.{XMLEventReader, XMLInputFactory}
 
 import domain._
 
-class FilePatientRepositoryInterpreter[F[_]: Sync : ContextShift] {
+class FilePatientRepositoryInterpreter[F[_]: Sync : ContextShift] extends EpPatientRepositoryAlgebra[F] {
   val workingDir = System.getProperty("user.dir")
   val filePath = s"$workingDir/testxmlfs2/src/main/resources/patients.xml"
 
-  def fetchPatients: Stream[F, EpPatient] = {
+  override def fetchPatients: Stream[F, EpPatient] = {
     val inputFactory = XMLInputFactory.newInstance()
 
     def fileAsInputStream = new FileInputStream(new File(filePath))
@@ -21,4 +21,10 @@ class FilePatientRepositoryInterpreter[F[_]: Sync : ContextShift] {
 
     EpXmlToTypeImplicits.xmlEventToEpPatientStream(xmlEventReader)
   }
+
+  override def insertMany(a: List[EpPatient]): F[Int] = ???
+
+  override def list(): F[List[EpPatient]] = ???
+
+  override def truncate(): F[Int] = ???
 }
