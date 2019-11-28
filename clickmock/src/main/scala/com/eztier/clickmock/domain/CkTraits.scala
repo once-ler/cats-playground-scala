@@ -2,20 +2,7 @@ package com.eztier.clickmock
 package domain
 
 import java.util.Date
-
-import cats.data.OptionT
-import cats.{Applicative, Functor, Monad}
-import cats.effect.{Async, Bracket, Concurrent, ContextShift, IO, Sync}
-import fs2.Pipe
-
-import scala.xml.XML
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.xml.{Elem, Node, NodeSeq}
-import scala.xml.transform.{RewriteRule, RuleTransformer}
-import fs2.Stream
-
-import com.eztier.clickmock.infrastructure.soap.CkXmlToTypeImplicits._
 
 trait CkBase {
   val oid: Option[String]

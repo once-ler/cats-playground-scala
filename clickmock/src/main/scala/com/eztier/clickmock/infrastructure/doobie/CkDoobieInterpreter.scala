@@ -154,15 +154,25 @@ private object CkDoobieSqlImplicits {
 private object Ck_ParticipantSql {
   import CkDoobieSqlImplicits._
 
-  val participantSqlFragment= fr"""select
+  val participantSqlFragment = fr"""select
     a.oid, a.class, a.extent, a._webrUnique_ID, a.customAttributes
     from __participant a where """
+
+  val partipantsSqlFragment = fr"""select
+    a.oid, a.class, a.extent, a._webrUnique_ID, a.customAttributes,
+    b.oid, b.class, b.extent, b.medicalRecordNumber, b.person person, b.participantCustomExtension participantCustomExtension
+    from __participant a join __participant_customattributesmanager b on b.oid = a.customAttributes where """
 
   def findByIdSql(a: Option[String]): Query0[Ck_Participant] =
     (participantSqlFragment ++ fr"_webrunique_id = ${a.getOrElse("")}").query
 
   def findByOidSql(a: Option[String]): Query0[Ck_Participant] =
     (participantSqlFragment ++ fr"a.oid =" ++ Fragment.const(s"X'${a.getOrElse("00")}'")).query
+
+  def listByIdSql(a: List[Option[String]]): Query0[(Ck_Participant, Ck_Participant_CustomAttributesManager)] = {
+    val b = a.filter(!_.isEmpty).map(_.get)
+    (partipantsSqlFragment ++ Fragments.in(fr"medicalRecordNumber", NonEmptyList.fromListUnsafe(b))).query
+  }
 }
 
 private object Ck_ParticipantCmSql {
@@ -199,6 +209,9 @@ class DoobieCk_ParticipantRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](
 
     OptionT(d.transact(xa))
   }
+
+  override def listById(ids: List[Option[String]]): F[List[(Ck_Participant, Ck_Participant_CustomAttributesManager)]] =
+    Ck_ParticipantSql.listByIdSql(ids).to[List].transact(xa)
 }
 
 object DoobieCk_ParticipantRepositoryInterpreter {
@@ -302,8 +315,6 @@ class DoobieCkPersonRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa
       b <- CkPersonSql.findByOidSql(id).option
       c <- CkPersonCmSql.findByOidSql(b.getOrElse(CkPerson()).customAttributes.get.Poref).option
     } yield b.flatMap(d => c.map(e => (d, e)))
-
-
 
     OptionT(d.transact(xa))
   }

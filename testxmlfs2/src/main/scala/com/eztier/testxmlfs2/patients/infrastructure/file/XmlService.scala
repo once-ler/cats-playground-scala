@@ -9,6 +9,7 @@ import cats.effect.{Blocker, ContextShift, Sync}
 import com.eztier.testxmlfs2.Util.filterLeft
 import com.eztier.testxmlfs2.patients.domain.Patient
 import fs2.{Pipe, Stream, io, text}
+import javax.xml.stream.XMLEventReader
 
 import scala.xml.Elem
 
@@ -87,7 +88,7 @@ class XmlService[F[_]: Sync : ContextShift] {
     val fileReader = new FileReader(filePath)
     def fileAsInputStream = new FileInputStream(new File(filePath))
 
-    val xmlEventReader = inputFactory.createXMLEventReader(fileAsInputStream)
+    val xmlEventReader: XMLEventReader = inputFactory.createXMLEventReader(fileAsInputStream)
 
     val splitter = XmlElementExtractor.collectElements(_.last == "patient")
 

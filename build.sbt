@@ -37,6 +37,8 @@ lazy val common = project
       circeLiteral,
       circeParser,
       circeConfig,
+      fs2,
+      fs2Io,
       specs2,
       logback,
       "org.scala-lang" % "scala-reflect" % scalaVersion.value
@@ -164,6 +166,38 @@ lazy val testbadsqlmodel = project.
     )
   ).dependsOn(
   common
+)
+
+lazy val epmock = project.
+  settings(
+    name := "epmock",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      http4sBlazeClient,
+      http4sCirce,
+      fs2,
+      fs2Io,
+
+      kantanXpath,
+      kantanXpathCats,
+      kantanXPathJava8,
+      xstream,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway,
+
+      xs4s,
+
+      mssqlJdbc
+    )
+  ).dependsOn(
+  common,
+  clickmock
 )
 
 lazy val clickmock = project.

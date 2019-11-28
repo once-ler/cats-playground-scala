@@ -121,6 +121,7 @@ object Ck_ParticipantCustomExtensionService {
 trait Ck_ParticipantAlgebra[F[_]] {
   def findById(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)]
   def findByOid(id: Option[String]): OptionT[F, (Ck_Participant, Ck_Participant_CustomAttributesManager)]
+  def listById(ids: List[Option[String]]): F[List[(Ck_Participant, Ck_Participant_CustomAttributesManager)]]
 }
 
 class Ck_ParticipantService[F[_]](repo: Ck_ParticipantAlgebra[F]) {
@@ -133,6 +134,9 @@ class Ck_ParticipantService[F[_]](repo: Ck_ParticipantAlgebra[F]) {
     repo
       .findByOid(id)
       .toRight(s"${CkXmlToTypeImplicits.toCkTypeName(classOf[Ck_Participant])} not found.")
+
+  def listById(ids: List[Option[String]]): F[List[(Ck_Participant, Ck_Participant_CustomAttributesManager)]] =
+    repo.listById(ids)
 }
 
 object Ck_ParticipantService {
