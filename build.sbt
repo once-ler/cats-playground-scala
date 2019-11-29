@@ -193,7 +193,8 @@ lazy val epmock = project.
 
       xs4s,
 
-      mssqlJdbc
+      mssqlJdbc,
+      specs2
     )
   ).dependsOn(
   common,

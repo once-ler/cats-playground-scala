@@ -12,12 +12,16 @@ class FilePatientRepositoryInterpreter[F[_]: Sync : ContextShift] extends EpPati
   val workingDir = System.getProperty("user.dir")
   val filePath = s"$workingDir/testxmlfs2/src/main/resources/patients.xml"
 
-  override def fetchPatients: Stream[F, EpPatient] = {
+  def fectchXmlFile: XMLEventReader = {
     val inputFactory = XMLInputFactory.newInstance()
 
     def fileAsInputStream = new FileInputStream(new File(filePath))
 
-    val xmlEventReader: XMLEventReader = inputFactory.createXMLEventReader(fileAsInputStream)
+    inputFactory.createXMLEventReader(fileAsInputStream)
+  }
+
+  override def fetchPatients: Stream[F, EpPatient] = {
+    val xmlEventReader: XMLEventReader = fectchXmlFile
 
     EpXmlToTypeImplicits.xmlEventToEpPatientStream(xmlEventReader)
   }
@@ -27,4 +31,8 @@ class FilePatientRepositoryInterpreter[F[_]: Sync : ContextShift] extends EpPati
   override def list(): F[List[EpPatient]] = ???
 
   override def truncate(): F[Int] = ???
+}
+
+object FilePatientRepositoryInterpreter {
+  def apply[F[_]: Sync : ContextShift]: FilePatientRepositoryInterpreter[F] = new FilePatientRepositoryInterpreter()
 }
