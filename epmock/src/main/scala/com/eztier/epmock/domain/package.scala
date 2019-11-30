@@ -14,5 +14,5 @@ package object domain {
   implicit val epDateCreatedFilterEncoder: Encoder[EpDateCreatedFilter] = deriveEncoder
   implicit val epMatchEncoder: Encoder[EpMatch] = deriveEncoder
   implicit val epProjectEncoder: Encoder[EpProject] = deriveEncoder
-  implicit val epQueryEncoder: Encoder[EpQuery] = Encoder.forProduct2("match", "project")(b => (b.Match, b.project))
+  implicit val epQueryEncoder: Encoder[EpQuery] = Encoder.forProduct2("match", "project")(b => (b.Match, b.Project))
 }

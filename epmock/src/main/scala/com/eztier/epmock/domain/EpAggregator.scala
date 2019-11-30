@@ -31,6 +31,16 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
       Semigroupal[F].product(fa, fb)
   }
 
+  def toLatestPatientPipeS: Pipe[F, List[EpPatient], List[EpPatient]] = _.evalMap {
+    in =>
+      val fb = in.filter(a => a.Mrn.isDefined)
+        .groupBy(_.Mrn.get)
+        .map(d => d._2.sortBy(b => - b.dateCreated.get).head)
+        .toList
+
+      fb.pure[F]
+  }
+
   def removeNonExistentParticipants: Pipe[F, (List[EpPatient], List[(Ck_Participant, Ck_Participant_CustomAttributesManager)]), List[EpPatient]] = _.evalMap {
     in =>
       import cats.instances.string._    // for Eq
@@ -43,11 +53,12 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
       f.pure[F]
   }
 
-  def parsePatient: Pipe[F, EpPatient, EpPatient] = _.map {
+  def parsePatient: Pipe[F, EpPatient, EpPatientTyped] = _.map {
     in =>
 
       implicit val csvconf = CSVConfig(delimiter = '^')
 
+      val mrn = csvToCC(CSVConverter[List[Mrn]], in.Mrn, Mrn())
       val et = csvToCC(CSVConverter[List[Ethnicity]], in.EthnicGroup, Ethnicity())
       val pa = csvToCC(CSVConverter[List[PatientAddress]], in.PatientAddress, PatientAddress())
       val pn = csvToCC(CSVConverter[List[PatientName]], in.PatientName, PatientName())
@@ -63,10 +74,14 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
         et.ethnicity1,
         et.ethnicity2)
 
-      in
+      val mrn1 = SemigroupK[Option].combineK(mrn.mrn1, mrn.mrn2)
+
+      EpPatientTyped(
+        mrn = mrn, patientName = pn, dob = in.DateTimeofBirth, race = rc, ethnicity = et, gender = in.AdministrativeSex, patientAddress = pa, phoneNumberHome = pnh, dateCreated = in.dateCreated, dateLocal = in.dateLocal
+      )
   }
 
-  def run = {
+  def runWithH2 = {
     implicit val showPatient: Show[EpPatient] = a => s"${a.PatientName} ${a.dateCreated.toString}"
 
     Stream.eval(patientService.truncate())
@@ -81,6 +96,14 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
 
     // Stream.eval(Applicative[F].pure(()))
   }
+
+  def run =
+    Stream.eval(patientService.fetchPatients.compile.toList)
+      .through(toLatestPatientPipeS)
+      .through(fetchParticipants)
+      .through(removeNonExistentParticipants)
+      .flatMap(Stream.emits)
+      .through(parsePatient)
 }
 
 object PatientAggregator {

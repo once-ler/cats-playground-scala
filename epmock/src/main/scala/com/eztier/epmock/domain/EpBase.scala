@@ -17,6 +17,12 @@ case class EpPatient
   dateLocal: Option[String]
 )
 
+case class Mrn
+(
+  mrn1: Option[String] = None,
+  mrn2: Option[String] = None
+)
+
 case class Ethnicity
 (
   ethnicity1: Option[String] = None,
@@ -69,6 +75,20 @@ case class PhoneNumberHome
   localNumber: Option[String] = None,
   extension: Option[String] = None,
   anyText: Option[String] = None
+)
+
+case class EpPatientTyped
+(
+  mrn: Mrn = Mrn(),
+  patientName: PatientName = PatientName(),
+  dob: Option[String],
+  race: Race = Race(),
+  ethnicity: Ethnicity = Ethnicity(),
+  gender: Option[String],
+  patientAddress: PatientAddress = PatientAddress(),
+  phoneNumberHome: PhoneNumberHome = PhoneNumberHome(),
+  dateCreated: Option[Long],
+  dateLocal: Option[String]
 )
 
 // For sending json http reuqest.

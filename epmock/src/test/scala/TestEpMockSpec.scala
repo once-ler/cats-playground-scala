@@ -59,7 +59,7 @@ object FauxWeb {
 
 }
 
-class TestEpMockSpec[F[_]: ContextShift :ConcurrentEffect] extends Specification {
+class TestEpMockSpec extends Specification {
 
   val ec = scala.concurrent.ExecutionContext.global
   implicit val timer = IO.timer(ec)
@@ -73,9 +73,25 @@ class TestEpMockSpec[F[_]: ContextShift :ConcurrentEffect] extends Specification
       // Server
       val fiberThread = createHttpServer[IO].resource.use(_ => IO.never).start.unsafeRunSync()
 
-      val httpPatientRepositoryInterpreter = new HttpPatientRepositoryInterpreter[F]
+      val httpPatientRepositoryInterpreter = new HttpPatientRepositoryInterpreter[IO]
 
       val a = httpPatientRepositoryInterpreter.fetchPatients()
+
+      1 mustEqual 1
+    }
+  }
+
+  "List[EpPatient]" should {
+    "Should sort in desc order" in {
+
+      val s = new FilePatientRepositoryInterpreter[IO]
+
+      val s1 = s.fetchPatients.compile.toList.unsafeRunSync()
+
+      val s2 = s1
+        .filter(a => a.Mrn.isDefined)
+        .groupBy(_.Mrn.get)
+        .map(d => d._2.sortBy(b => - b.dateCreated.get).head)
 
       1 mustEqual 1
     }
