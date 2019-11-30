@@ -98,15 +98,6 @@ case class EpProject
 case class EpQuery
 (
   Match: EpMatch = EpMatch(),
-  project: EpProject = EpProject()
+  Project: EpProject = EpProject()
 )
 
-object EpQuery {
-  // EpQuery: change field "Match" to "match".
-  implicit val config: Configuration = Configuration.default.copy(
-    transformMemberNames = {
-      case "Match" => "match"
-      case other => other
-    }
-  )
-}

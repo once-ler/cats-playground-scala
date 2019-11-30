@@ -12,6 +12,7 @@ import org.http4s.server.Router
 import fs2.{Pipe, Stream}
 import org.specs2.mutable._
 import infrastructure.file.FilePatientRepositoryInterpreter
+import infrastructure.http.HttpPatientRepositoryInterpreter
 import io.circe.generic.extras.Configuration
 import javax.xml.stream.XMLEventReader
 
@@ -58,7 +59,7 @@ object FauxWeb {
 
 }
 
-class TestEpMockSpec[F[_]] extends Specification {
+class TestEpMockSpec[F[_]: ContextShift :ConcurrentEffect] extends Specification {
 
   val ec = scala.concurrent.ExecutionContext.global
   implicit val timer = IO.timer(ec)
@@ -71,6 +72,10 @@ class TestEpMockSpec[F[_]] extends Specification {
 
       // Server
       val fiberThread = createHttpServer[IO].resource.use(_ => IO.never).start.unsafeRunSync()
+
+      val httpPatientRepositoryInterpreter = new HttpPatientRepositoryInterpreter[F]
+
+      val a = httpPatientRepositoryInterpreter.fetchPatients()
 
       1 mustEqual 1
     }
