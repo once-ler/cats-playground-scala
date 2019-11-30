@@ -11,7 +11,7 @@ import clickmock.domain.{Ck_ParticipantService, Ck_Participant, Ck_Participant_C
 import common._
 import common.Util._
 
-class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: EpPatientService[F], participantService: Ck_ParticipantService[F]) {
+class EpPatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: EpPatientService[F], participantService: Ck_ParticipantService[F]) {
   val fetchXmlPatients = (in: Stream[F, Int]) => Stream.eval(patientService.fetchPatients.compile.toList)
 
   def persistRuntimePatients: Pipe[F, List[EpPatient], List[Int]] = _.evalMap {
@@ -82,7 +82,8 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
   }
 
   def runWithH2 = {
-    implicit val showPatient: Show[EpPatient] = a => s"${a.PatientName} ${a.dateCreated.toString}"
+    // implicit val showPatient: Show[EpPatient] = a => s"${a.PatientName} ${a.dateCreated.toString}"
+    implicit val showPatient: Show[EpPatientTyped] = a => s"${a.patientName.lastName} ${a.dateCreated.get.toString}"
 
     Stream.eval(patientService.truncate())
       .through(fetchXmlPatients)
@@ -106,7 +107,7 @@ class PatientAggregator[F[_]: Applicative: Async: Concurrent](patientService: Ep
       .through(parsePatient)
 }
 
-object PatientAggregator {
-  def apply[F[_]: Applicative: Async: Concurrent](patientService: EpPatientService[F], participantService: Ck_ParticipantService[F]): PatientAggregator[F] =
-    new PatientAggregator[F](patientService, participantService)
+object EpPatientAggregator {
+  def apply[F[_]: Applicative: Async: Concurrent](patientService: EpPatientService[F], participantService: Ck_ParticipantService[F]): EpPatientAggregator[F] =
+    new EpPatientAggregator[F](patientService, participantService)
 }

@@ -1,8 +1,13 @@
 package com.eztier.epmock
 package test
 
-import cats.Applicative
-import cats.effect.{ConcurrentEffect, ContextShift, Effect, IO, Sync, Timer}
+import cats.{Applicative, Show}
+import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Effect, IO, Sync, Timer}
+import com.eztier.clickmock.domain.Ck_ParticipantService
+import com.eztier.clickmock.infrastructure.doobie.DoobieCk_ParticipantRepositoryInterpreter
+import com.eztier.epmock.domain.{EpPatientAggregator, EpPatientService, EpPatientTyped}
+import doobie.util.ExecutionContexts
+import doobie.util.transactor.Transactor
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Type`
@@ -59,11 +64,38 @@ object FauxWeb {
 
 }
 
-class TestEpMockSpec extends Specification {
-
+object TestUtil {
   val ec = scala.concurrent.ExecutionContext.global
   implicit val timer = IO.timer(ec)
   implicit val cs = IO.contextShift(ec)  // Need cats.effect.ContextShift[cats.effect.IO] because not inside of IOApp
+
+  def getTestRemoteDoobieTransactor = Transactor.fromDriverManager[IO](
+    "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+    "jdbc:sqlserver://localhost:1433;DatabaseName=test",
+    "admin",
+    "12345678",
+    Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
+  )
+
+  def getTestLocalDoobieTransactor = Transactor.fromDriverManager[IO](
+    "org.h2.Driver",
+    "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MSSQLServer",
+    "sa",
+    "",
+    Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
+  )
+}
+
+class TestEpMockSpec extends Specification {
+
+  import TestUtil._
+
+  /*
+  val ec = scala.concurrent.ExecutionContext.global
+  implicit val timer = IO.timer(ec)
+  implicit val cs = IO.contextShift(ec)  // Need cats.effect.ContextShift[cats.effect.IO] because not inside of IOApp
+  */
+
 
   "EpMockService" should {
     "Create faux web" in {
@@ -82,7 +114,7 @@ class TestEpMockSpec extends Specification {
   }
 
   "List[EpPatient]" should {
-    "Should sort in desc order" in {
+    "Sort in desc order" in {
 
       val s = new FilePatientRepositoryInterpreter[IO]
 
@@ -92,6 +124,27 @@ class TestEpMockSpec extends Specification {
         .filter(a => a.Mrn.isDefined)
         .groupBy(_.Mrn.get)
         .map(d => d._2.sortBy(b => - b.dateCreated.get).head)
+
+      1 mustEqual 1
+    }
+  }
+
+  "EpPatientAggregator" should {
+    "Can run participant aggregator" in {
+
+      implicit val showPatient: Show[EpPatientTyped] = a => s"${a.patientName.lastName} ${a.dateCreated.get.toString}"
+
+      val xa = getTestLocalDoobieTransactor
+
+      val patientRepo = new FilePatientRepositoryInterpreter[IO]
+      val patientService = EpPatientService(patientRepo)
+
+      val participantRepo = DoobieCk_ParticipantRepositoryInterpreter(xa)
+      val participantService = Ck_ParticipantService(participantRepo)
+
+      val agg = EpPatientAggregator[IO](patientService, participantService)
+
+      agg.run.showLinesStdOut.compile.drain.unsafeRunSync()
 
       1 mustEqual 1
     }

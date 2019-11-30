@@ -19,6 +19,8 @@ class Ck_ParticipantAggregator[F[_]: Applicative: Async: Concurrent](
   partyService: CkPartyService[F],
   resourceService: CkResourceService[F]) {
 
+  val getParticipantService: Ck_ParticipantService[F] = participantService
+
   // Should log error when folding.
   def getParticipant(id: Option[String]): F[CkParticipantAggregate] =
     for {

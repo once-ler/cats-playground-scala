@@ -116,7 +116,7 @@ soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding"><soap:Body>$body</s
 
 }
 
-class TestClickMockSpec[F[_]] extends Specification {
+object TestUtil {
   val ec = scala.concurrent.ExecutionContext.global
   implicit val timer = IO.timer(ec)
   implicit val cs = IO.contextShift(ec)  // Need cats.effect.ContextShift[cats.effect.IO] because not inside of IOApp
@@ -183,6 +183,10 @@ class TestClickMockSpec[F[_]] extends Specification {
     "",
     Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
   )
+}
+
+class TestClickMockSpec[F[_]] extends Specification {
+  import TestUtil._
 
   "CkMockService" should {
     "Initialize" in {
