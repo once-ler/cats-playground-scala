@@ -1,6 +1,8 @@
 package com.eztier.epmock
 package domain
 
+import io.circe.generic.extras.Configuration
+
 case class EpPatient
 (
   AdministrativeSex: Option[String],
@@ -68,3 +70,43 @@ case class PhoneNumberHome
   extension: Option[String] = None,
   anyText: Option[String] = None
 )
+
+// For sending json http reuqest.
+case class EpDateCreatedFilter
+(
+  $gte: String = ""
+)
+
+case class EpMatch
+(
+  dateCreated: EpDateCreatedFilter = EpDateCreatedFilter()
+)
+
+case class EpProject
+(
+  dateCreated: Int = 1,
+  dateLocal: Int = 1,
+  Race: Int = 1,
+  EthnicGroup: Int = 1,
+  PatientName: Int = 1,
+  DateTimeofBirth: Int = 1,
+  AdministrativeSex: Int = 1,
+  PatientAddress: Int = 1,
+  PhoneNumberHome: Int = 1
+)
+
+case class EpQuery
+(
+  Match: EpMatch = EpMatch(),
+  project: EpProject = EpProject()
+)
+
+object EpQuery {
+  // EpQuery: change field "Match" to "match".
+  implicit val config: Configuration = Configuration.default.copy(
+    transformMemberNames = {
+      case "Match" => "match"
+      case other => other
+    }
+  )
+}
