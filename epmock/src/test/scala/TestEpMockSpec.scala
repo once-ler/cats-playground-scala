@@ -2,10 +2,7 @@ package com.eztier.epmock
 package test
 
 import cats.{Applicative, Show}
-import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Effect, IO, Sync, Timer}
-import com.eztier.clickmock.domain.Ck_ParticipantService
-import com.eztier.clickmock.infrastructure.doobie.DoobieCk_ParticipantRepositoryInterpreter
-import com.eztier.epmock.domain.{EpPatientAggregator, EpPatientService, EpPatientTyped}
+import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Effect, IO, Resource, Sync, Timer}
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import org.http4s._
@@ -22,6 +19,12 @@ import io.circe.generic.extras.Configuration
 import javax.xml.stream.XMLEventReader
 
 import scala.xml.Elem
+
+import io.circe.config.{parser => ConfigParser}
+import com.eztier.clickmock.domain.Ck_ParticipantService
+import com.eztier.clickmock.infrastructure.doobie.DoobieCk_ParticipantRepositoryInterpreter
+import domain._
+import config._
 
 object FauxWeb {
 
@@ -84,7 +87,12 @@ object TestUtil {
     "",
     Blocker.liftExecutionContext(ExecutionContexts.synchronous) // just for testing
   )
-}
+
+  def initializeLocalDatabase[F[_]: Sync :Applicative] = for {
+      conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("epmock"))
+      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.local)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
+    } yield ()
+  }
 
 class TestEpMockSpec extends Specification {
 
@@ -134,11 +142,17 @@ class TestEpMockSpec extends Specification {
 
       implicit val showPatient: Show[EpPatientTyped] = a => s"${a.patientName.lastName} ${a.dateCreated.get.toString}"
 
-      val xa = getTestLocalDoobieTransactor
+      initializeLocalDatabase[IO].use {
+        z =>
+          IO(println("Done"))
+      }.unsafeRunSync()
 
+      // Patient
       val patientRepo = new FilePatientRepositoryInterpreter[IO]
       val patientService = EpPatientService(patientRepo)
 
+      // Participant
+      val xa = getTestLocalDoobieTransactor
       val participantRepo = DoobieCk_ParticipantRepositoryInterpreter(xa)
       val participantService = Ck_ParticipantService(participantRepo)
 
