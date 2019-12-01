@@ -3,3 +3,5 @@
 **/.bloop
 **/.idea
 **/production
+**/clickmock
+**/epmock
