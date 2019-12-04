@@ -46,5 +46,15 @@ object Util {
       .fold(e => List[A](), s => s)
       .headOption.fold(default)(a => a)
   }
+  
+  private val defaultDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
+  def stringToInstant(dateTimeString: String, dateTimePattern: Option[String] = None) = {
+    val dateTimeFormatter = dateTimePattern.fold(defaultDateTimeFormatter)(a => DateTimeFormatter.ofPattern(a))
+
+    val maybeLocalDateTime = scala.util.Try(LocalDateTime.parse(dateTimeString, dateTimeFormatter)).fold(e => LocalDateTime.now(), a => a)
+
+    val zoneOffset = OffsetDateTime.now().getOffset
+    maybeLocalDateTime.toInstant(zoneOffset)
+  }
 }
