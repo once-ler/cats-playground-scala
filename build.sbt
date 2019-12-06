@@ -168,67 +168,18 @@ lazy val testbadsqlmodel = project.
   common
 )
 
-lazy val epmock = project.
+lazy val testhl7 = project.
   settings(
-    name := "epmock",
+    name := "test-hl7",
     settings,
     assemblySettings,
     libraryDependencies ++= Seq(
-      http4sBlazeClient,
-      http4sCirce,
       fs2,
-      fs2Io,
-
-      kantanXpath,
-      kantanXpathCats,
-      kantanXPathJava8,
-      xstream,
-
-      doobie,
-      doobieH2,
-      doobieScalatest,
-      doobieHikari,
-      h2,
-      flyway,
-
-      xs4s,
-
-      mssqlJdbc,
-      specs2
+      hapiV231
     )
   ).dependsOn(
-  common,
-  clickmock
+  common
 )
-
-lazy val clickmock = project.
-  settings(
-    name := "clickmock",
-    settings,
-    assemblySettings,
-    libraryDependencies ++= Seq(
-      scalaXml,
-      scalaParser,
-      dispatchHttp,
-      fs2,
-
-      specs2,
-      scalaTest,
-      http4sBlazeServer,
-      http4sDsl,
-      http4sTesting,
-
-      doobie,
-      doobieH2,
-      doobieScalatest,
-      doobieHikari,
-      h2,
-      flyway,
-      mssqlJdbc
-    )
-  ).dependsOn(
-    common
-  )
 
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
