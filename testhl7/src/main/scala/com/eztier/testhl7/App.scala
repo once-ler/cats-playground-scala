@@ -1,11 +1,14 @@
 package com.eztier
 package testhl7
 
-import ca.uhn.hl7v2.DefaultHapiContext
+import ca.uhn.hl7v2.{DefaultHapiContext, HL7Exception}
 import ca.uhn.hl7v2.model.Message
+import ca.uhn.hl7v2.model.v231.segment.{PID, PV1}
 import ca.uhn.hl7v2.parser.CanonicalModelClassFactory
 import ca.uhn.hl7v2.validation.impl.NoValidation
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.data.{EitherT, Validated}
+
 import cats.implicits._
 
 object Data {
@@ -25,6 +28,8 @@ object Data {
     "NTE|6||6 months of full dose anti-coagulation."
 }
 
+case class PatientVisitFromTo(postalCode: String, facility: String)
+
 object App extends IOApp {
 
   val hapiContext = new DefaultHapiContext()
@@ -32,7 +37,23 @@ object App extends IOApp {
   hapiContext.setValidationContext(new NoValidation)
   val p = hapiContext.getPipeParser()
 
-  val hpiMsgMaybe: Option[Message] = scala.util.Try(p.parse(Data.msg0)).fold(e => None, a => a.some)
+  val hpiMsgMaybe = Either.catchOnly[HL7Exception](p.parse(Data.msg0))
+
+  val hpiMsgMaybe2 = Validated.catchOnly[HL7Exception](p.parse(Data.msg0))
+
+  val cartesianPostalAndFacility = for {
+    x <- Either.catchOnly[HL7Exception](p.parse(Data.msg0))
+    pid = x.get("PID").asInstanceOf[PID]
+    pv1 = x.get("PV1").asInstanceOf[PV1]
+    y = pid.getPatientAddress.map(_.getZipOrPostalCode.getValueOrEmpty)
+    z = pv1.getAssignedPatientLocation.getFacility.getUniversalID.getValueOrEmpty
+  } yield (y.toList, List(z)).tupled
+
+  val trainingData: List[PatientVisitFromTo] = cartesianPostalAndFacility match {
+    case Right(l) =>
+      l.map(a => PatientVisitFromTo(a._1, a._2))
+    case Left(_) => List()
+  }
 
   override def run(args: List[String]): IO[ExitCode] = ???
 }
