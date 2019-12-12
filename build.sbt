@@ -41,7 +41,12 @@ lazy val common = project
       fs2Io,
       specs2,
       logback,
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      monocleCore,
+      monocleMacro,
+      monocleLaw,
+      log4catsCore,
+      log4catsSlf4j
     )
   )
   
@@ -202,6 +207,8 @@ val DispatchHttpVerison = "0.14.1"
 val ScalaXmlVersion = "1.0.6"
 val ScalaParserVersion = "1.0.6"
 val ScalaTestVersion = "3.2.0-M1"
+val MonocleVersion = "2.0.0"
+val Log4CatsVersion = "1.0.1"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 
@@ -253,6 +260,13 @@ val scalaXml = "org.scala-lang.modules" %% "scala-xml" % ScalaXmlVersion
 val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % ScalaParserVersion
 
 val scalaTest = "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
+
+val monocleCore = "com.github.julien-truffaut" %%  "monocle-core"  % MonocleVersion
+val monocleMacro = "com.github.julien-truffaut" %%  "monocle-macro" % MonocleVersion
+val monocleLaw = "com.github.julien-truffaut" %%  "monocle-law"   % MonocleVersion % "test"
+
+val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % Log4CatsVersion
+val log4catsSlf4j = "io.chrisdavenport" %% "log4cats-slf4j" % Log4CatsVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
