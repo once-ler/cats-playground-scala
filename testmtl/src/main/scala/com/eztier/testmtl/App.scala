@@ -1,13 +1,17 @@
 package com.eztier.testmtl
 
+import cats.{Functor, Monad}
+import cats.data.{Chain, EitherT, OptionT, ReaderWriterStateT, Writer}
 import cats.implicits._
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
+import cats.mtl.FunctorTell
 import doobie._
 import doobie.hikari._
 import doobie.implicits._
 import doobie.util.ExecutionContexts
 import fs2.Stream
 import org.flywaydb.core.Flyway
+
 import scala.concurrent.ExecutionContext
 
 case class DatabaseConnectionsConfig(poolSize: Int)
@@ -44,16 +48,73 @@ object DatabaseConfig {
     }.as(())
 }
 
-class Miner[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F]) {
+object Domain {
 
+  case class VariableGeneralItem
+  (
+    id: Long = -1,
+    quantity: Int = 0,
+    sponsorCost: Double = 0.00
+  )
+
+  trait VariableGeneralItemRepositoryAlgebra[F[_]] {
+    def get(id: Long): OptionT[F, VariableGeneralItem]
+
+    def getF(id: Long): F[Option[VariableGeneralItem]]
+  }
+
+  class VariableGeneralItemService[F[_]](
+    repository: VariableGeneralItemRepositoryAlgebra[F]
+  ) {
+    def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, VariableGeneralItem] =
+      repository.get(id).toRight("Variable procedure item not found.")
+
+    def getWithLog[F[_]](id: Long)(implicit F: Monad[F], W: FunctorTell[F, Chain[String]]) = {
+      for {
+        _ <- W.tell(Chain.one(s"Processing ${id}"))
+        result <- repository.getF(id)
+      } yield result
+    }
+  }
+
+  object VariableGeneralItemService {
+    def apply[F[_]](
+      repository: VariableGeneralItemRepositoryAlgebra[F]
+    ): VariableGeneralItemService[F] =
+      new VariableGeneralItemService[F](repository)
+  }
 }
 
-object Miner {
-  def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): Miner[F] = new Miner(xa)
+object Infrastucture {
+  import Domain._
+
+  private object VariableGeneralItemSql {
+    def get(id: Long): Query0[VariableGeneralItem] = sql"""
+    SELECT id, quantity, sponsor_cost
+    FROM variable_general_item
+    WHERE id = $id
+  """.query
+  }
+
+  class DoobieVariableGeneralItemRepositoryInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])
+    extends VariableGeneralItemRepositoryAlgebra[F] {
+
+    override def get(id: Long): OptionT[F, VariableGeneralItem] = OptionT(VariableGeneralItemSql.get(id).option.transact(xa))
+
+    override def getF(id: Long): F[Option[VariableGeneralItem]] = VariableGeneralItemSql.get(id).option.transact(xa)
+  }
+
+  object DoobieVariableGeneralItemRepositoryInterpreter {
+    def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): DoobieVariableGeneralItemRepositoryInterpreter[F] =
+      new DoobieVariableGeneralItemRepositoryInterpreter(xa)
+  }
 }
 
 object App extends IOApp {
   val conf = DatabaseConfig(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "sa", password = "",  connections = DatabaseConnectionsConfig(10))
+
+  import Domain._
+  import Infrastucture._
 
   def getResource[F[_]: Async: ContextShift] = {
     for {
@@ -61,8 +122,26 @@ object App extends IOApp {
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf, connEc, Blocker.liftExecutionContext(txnEc)) // Creates a blocker that delegates to the supplied execution context.
-      miner = Miner(xa)
-    } yield miner
+      varianbleCostRepo = DoobieVariableGeneralItemRepositoryInterpreter(xa)
+      variableCostService = VariableGeneralItemService(varianbleCostRepo)
+    } yield variableCostService
+  }
+
+  // https://medium.com/@alexander.zaidel/readerwriterstate-monad-in-action-98c3a4561df3
+  /**
+    * Represents a stateful computation in a context `F[_]`, over state `S`, with an
+    * initial environment `E`, an accumulated log `L` and a result `A`.
+    */
+  // type ReaderWriterStateT[F[_], E, L, S, A] = IndexedReaderWriterStateT[F, E, L, S, S, A]
+
+  type RWT = ReaderWriterStateT[IO, Unit, Chain[String], Unit, ?]
+
+  getResource[IO].use {
+    a =>
+
+      // val result = a.getWithLog[Writer[Chain[String], IO.type]](1)
+
+      IO.unit
   }
 
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
