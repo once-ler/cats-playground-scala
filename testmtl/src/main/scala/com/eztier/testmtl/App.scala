@@ -1,10 +1,13 @@
 package com.eztier.testmtl
 
+import cats.implicits._
+import cats.mtl.implicits._
 import cats.{Functor, Monad}
 import cats.data.{Chain, EitherT, OptionT, ReaderWriterStateT, Writer}
 import cats.implicits._
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.mtl.FunctorTell
+import com.eztier.testmtl.Pakage.{RW}
 import doobie._
 import doobie.hikari._
 import doobie.implicits._
@@ -110,13 +113,26 @@ object Infrastucture {
   }
 }
 
+object Pakage {
+  // https://medium.com/@alexander.zaidel/readerwriterstate-monad-in-action-98c3a4561df3
+  // https://medium.com/@alexander.zaidel/the-beauty-of-final-tagless-and-cats-mtl-68abdc8d720
+  /**
+    * Represents a stateful computation in a context `F[_]`, over state `S`, with an
+    * initial environment `E`, an accumulated log `L` and a result `A`.
+    */
+  // type ReaderWriterStateT[F[_], E, L, S, A] = IndexedReaderWriterStateT[F, E, L, S, S, A]
+
+  type RW[T] = ReaderWriterStateT[IO, Int, Chain[String], Map[String, String], T]
+}
+
 object App extends IOApp {
   val conf = DatabaseConfig(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "sa", password = "",  connections = DatabaseConnectionsConfig(10))
 
+  import Package._
   import Domain._
   import Infrastucture._
 
-  def getResource[F[_]: Async: ContextShift] = {
+  def getResource[F[_]: ContextShift: Async] = {
     for {
       _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.connections.poolSize)
@@ -127,19 +143,10 @@ object App extends IOApp {
     } yield variableCostService
   }
 
-  // https://medium.com/@alexander.zaidel/readerwriterstate-monad-in-action-98c3a4561df3
-  /**
-    * Represents a stateful computation in a context `F[_]`, over state `S`, with an
-    * initial environment `E`, an accumulated log `L` and a result `A`.
-    */
-  // type ReaderWriterStateT[F[_], E, L, S, A] = IndexedReaderWriterStateT[F, E, L, S, S, A]
-
-  type RWT = ReaderWriterStateT[IO, Unit, Chain[String], Unit, ?]
-
   getResource[IO].use {
     a =>
 
-      // val result = a.getWithLog[Writer[Chain[String], IO.type]](1)
+      val result = a.getWithLog[RW](1).run(2, Map("user" -> "foo"))
 
       IO.unit
   }
