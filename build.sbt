@@ -31,6 +31,7 @@ lazy val common = project
     settings,
     libraryDependencies ++= Seq(
       cats,
+      catsMtl,
       circe,
       circeGeneric,
       circeGenericExtras,
@@ -150,9 +151,9 @@ lazy val testxmlfs2 = project.
   common
 )
 
-lazy val testbadsqlmodel = project.
+lazy val testmtl = project.
   settings(
-    name := "test-bad-sql-model",
+    name := "test-mtl",
     settings,
     assemblySettings,
     libraryDependencies ++= Seq(
@@ -186,6 +187,26 @@ lazy val testhl7 = project.
   common
 )
 
+lazy val testbadsqlmodel = project.
+  settings(
+    name := "test-bad-sql-model",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      fs2,
+      fs2Io,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
@@ -193,6 +214,7 @@ val CirceConfigVersion = "0.7.0"
 val Specs2Version = "4.7.0"
 val LogbackVersion = "1.2.3"
 val CatsVersion = "2.0.0"
+val CatsMtlVersion = "0.7.0"
 val DoobieVersion = "0.8.4"
 val H2Version = "1.4.199"
 val KindProjectorVersion = "0.10.3"
@@ -211,6 +233,7 @@ val MonocleVersion = "2.0.0"
 val Log4CatsVersion = "1.0.1"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
+val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
 
 val circe = "io.circe" %% "circe-core" % CirceVersion
 val circeGeneric = "io.circe" %% "circe-generic" % CirceVersion
