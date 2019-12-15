@@ -83,6 +83,14 @@ object Domain {
         _ <- W.tell(Chain.one(s"Completed ${id}"))
       } yield result
     }
+
+    def getWithWriter(id: Long)(implicit A: Monad[F]) = {
+      for {
+        _ <- WriterT.tell[F, List[String]]](List("Before first invocation"))
+        result <- WriterT.liftF[F, List[String], Option[VariableGeneralItem]](repository.getF(id))
+        _ <- WriterT.tell[F, List[String]](List("After first invocation"))
+      } yield result
+    }
   }
 
   object VariableGeneralItemService {
@@ -165,8 +173,10 @@ object App extends IOApp {
 
       val result = a.getWithLog[Writer[Chain[String], ?]](1).run
 
+      val result2 = a.getWithWriter(1).run.unsafeRunSync()
+
       IO(println(s"Result: ${result._2.show}"))
-      // IO(println(s"${result._1.show} ${result._2.fold("No id.")(a => a.id.toString)}"))
+      IO(println(s"Result: ${result2._1.mkString(",")}"))
   }.unsafeRunSync()
 
 
