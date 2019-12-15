@@ -1,7 +1,7 @@
 package com.eztier.testmtl
 
 import cats.implicits._
-import cats.{FlatMap, Functor, Monad}
+import cats.{Applicative, FlatMap, Functor, Monad}
 import cats.data.{Chain, EitherT, OptionT, ReaderWriterStateT, Writer}
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.mtl.FunctorTell
@@ -65,28 +65,30 @@ object Domain {
     def getF(id: Long): F[Option[VariableGeneralItem]]
   }
 
-  class VariableGeneralItemService[F[_]:Monad :FlatMap :Functor](
+  class VariableGeneralItemService[F[_]: Monad, G[_]: FunctorTell[?[_], Chain[String]]: Applicative](
     repository: VariableGeneralItemRepositoryAlgebra[F]
-  ) {
+  )(implicit logger: FunctorTell[F, G[Chain[String]]]) {
+
+    // val logger = implicitly[FunctorTell[G, Chain[String]]]
 
     def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, VariableGeneralItem] =
       repository.get(id).toRight("Variable procedure item not found.")
-
-    def getWithLog[F[_]](id: Long)(implicit logger: FunctorTell[F, Chain[String]]) = {
+// (implicit logger: FunctorTell[F, Chain[String]])
+    def getWithLog(id: Long) = {
 
       for {
-        _ <- logger.tell(Chain.one(s"Processing ${id}"))
+        _ <- logger.tell(Chain.one(s"Processing ${id}").pure[G])
         result <- repository.getF(id)
-        _ <- logger.tell(Chain.one(s"Completed ${id}"))
+        _ <- logger.tell(Chain.one(s"Completed ${id}").pure[G])
       } yield result
     }
   }
 
   object VariableGeneralItemService {
-    def apply[F[_]:Monad :FlatMap: Functor](
+    def apply[F[_]: Monad, G[_]: FunctorTell[?[_], Chain[String]]: Applicative](
       repository: VariableGeneralItemRepositoryAlgebra[F]
-    ): VariableGeneralItemService[F] =
-      new VariableGeneralItemService[F](repository)
+    )(implicit logger: FunctorTell[F, G[Chain[String]]]): VariableGeneralItemService[F, G] =
+      new VariableGeneralItemService[F, G](repository)
   }
 }
 
@@ -134,18 +136,18 @@ object App extends IOApp {
   import Domain._
   import Infrastucture._
 
-  def getResource[F[_]: ContextShift: Async] = {
+  def getResource[F[_]: ContextShift: Async, G[_]: FunctorTell[?[_], Chain[String]]: Applicative] = {
     for {
       _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf, connEc, Blocker.liftExecutionContext(txnEc)) // Creates a blocker that delegates to the supplied execution context.
       varianbleCostRepo = DoobieVariableGeneralItemRepositoryInterpreter(xa)
-      variableCostService = VariableGeneralItemService(varianbleCostRepo)
+      variableCostService = VariableGeneralItemService[F, G](varianbleCostRepo)
     } yield variableCostService
   }
 
-  getResource[IO].use {
+  getResource[IO, Writer[Chain[String], ?]].use {
     a =>
 
       // val result: (Chain[String], Map[String, String], Option[Domain.VariableGeneralItem]) =
@@ -154,12 +156,13 @@ object App extends IOApp {
       // val result: (Chain[String], Option[Domain.VariableGeneralItem]) =
       //   a.getWithLog[Writer[Chain[String], ?]](1).run
 
-      val result = a.getWithLog[Writer[Chain[String], ?]](1).run
+      val result = a.getWithLog(1).run
 
       IO(println(s"${result._1.show}"))
       // IO(println(s"${result._1.show} ${result._2.fold("No id.")(a => a.id.toString)}"))
-      // IO.unit
+      IO.unit
   }.unsafeRunSync()
+
 
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
 }
