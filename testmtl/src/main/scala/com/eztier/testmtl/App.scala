@@ -1,13 +1,11 @@
 package com.eztier.testmtl
 
 import cats.implicits._
-import cats.mtl.implicits._
-import cats.{Functor, Monad}
+import cats.{FlatMap, Functor, Monad}
 import cats.data.{Chain, EitherT, OptionT, ReaderWriterStateT, Writer}
-import cats.implicits._
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.mtl.FunctorTell
-import com.eztier.testmtl.Pakage.{RW}
+import cats.mtl.implicits._
 import doobie._
 import doobie.hikari._
 import doobie.implicits._
@@ -16,6 +14,7 @@ import fs2.Stream
 import org.flywaydb.core.Flyway
 
 import scala.concurrent.ExecutionContext
+import com.eztier.testmtl.Package.RW
 
 case class DatabaseConnectionsConfig(poolSize: Int)
 
@@ -66,22 +65,25 @@ object Domain {
     def getF(id: Long): F[Option[VariableGeneralItem]]
   }
 
-  class VariableGeneralItemService[F[_]](
+  class VariableGeneralItemService[F[_]:Monad :FlatMap :Functor](
     repository: VariableGeneralItemRepositoryAlgebra[F]
   ) {
+
     def get(id: Long)(implicit F: Functor[F]): EitherT[F, String, VariableGeneralItem] =
       repository.get(id).toRight("Variable procedure item not found.")
 
-    def getWithLog[F[_]](id: Long)(implicit F: Monad[F], W: FunctorTell[F, Chain[String]]) = {
+    def getWithLog[F[_]](id: Long)(implicit logger: FunctorTell[F, Chain[String]]) = {
+
       for {
-        _ <- W.tell(Chain.one(s"Processing ${id}"))
+        _ <- logger.tell(Chain.one(s"Processing ${id}"))
         result <- repository.getF(id)
+        _ <- logger.tell(Chain.one(s"Completed ${id}"))
       } yield result
     }
   }
 
   object VariableGeneralItemService {
-    def apply[F[_]](
+    def apply[F[_]:Monad :FlatMap: Functor](
       repository: VariableGeneralItemRepositoryAlgebra[F]
     ): VariableGeneralItemService[F] =
       new VariableGeneralItemService[F](repository)
@@ -113,7 +115,7 @@ object Infrastucture {
   }
 }
 
-object Pakage {
+object Package {
   // https://medium.com/@alexander.zaidel/readerwriterstate-monad-in-action-98c3a4561df3
   // https://medium.com/@alexander.zaidel/the-beauty-of-final-tagless-and-cats-mtl-68abdc8d720
   /**
@@ -146,10 +148,18 @@ object App extends IOApp {
   getResource[IO].use {
     a =>
 
-      val result = a.getWithLog[RW](1).run(2, Map("user" -> "foo"))
+      // val result: (Chain[String], Map[String, String], Option[Domain.VariableGeneralItem]) =
+      //   a.getWithLog[RW](1).run(2, Map("user" -> "foo")).unsafeRunSync
 
-      IO.unit
-  }
+      // val result: (Chain[String], Option[Domain.VariableGeneralItem]) =
+      //   a.getWithLog[Writer[Chain[String], ?]](1).run
+
+      val result = a.getWithLog[Writer[Chain[String], ?]](1).run
+
+      IO(println(s"${result._1.show}"))
+      // IO(println(s"${result._1.show} ${result._2.fold("No id.")(a => a.id.toString)}"))
+      // IO.unit
+  }.unsafeRunSync()
 
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
 }
