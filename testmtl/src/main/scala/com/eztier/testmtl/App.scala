@@ -84,9 +84,9 @@ object Domain {
       } yield result
     }
 
-    def getWithWriter(id: Long)(implicit A: Monad[F]) = {
+    def getWithWriter(id: Long)(implicit A: Monad[F], F: Functor[F]) = {
       for {
-        _ <- WriterT.tell[F, List[String]]](List("Before first invocation"))
+        _ <- WriterT.tell[F, List[String]](List("Before first invocation"))
         result <- WriterT.liftF[F, List[String], Option[VariableGeneralItem]](repository.getF(id))
         _ <- WriterT.tell[F, List[String]](List("After first invocation"))
       } yield result
