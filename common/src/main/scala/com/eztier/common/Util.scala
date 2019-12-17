@@ -60,4 +60,10 @@ object Util {
     val zoneOffset = OffsetDateTime.now().getOffset
     maybeLocalDateTime.toInstant(zoneOffset)
   }
+
+  def instantToString(instant: Instant, dateTimePattern: Option[String] = None) = {
+    val dateTimeFormatter = dateTimePattern.fold(defaultDateTimeFormatter)(a => DateTimeFormatter.ofPattern(a))
+
+    LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).format(dateTimeFormatter)
+  }
 }
