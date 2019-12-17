@@ -5,7 +5,9 @@ import cats.{Applicative, FlatMap, Functor, Monad}
 import cats.data.{Chain, EitherT, OptionT, ReaderWriterStateT, Writer, WriterT}
 import cats.effect.{Async, Blocker, Bracket, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import cats.mtl.FunctorTell
-import cats.mtl.implicits._
+// import cats.mtl.implicits._
+import cats.mtl.instances.all._
+import cats.mtl.syntax.all._
 import doobie._
 import doobie.hikari._
 import doobie.implicits._
@@ -86,9 +88,12 @@ object Domain {
 
     def getWithWriter(id: Long)(implicit A: Monad[F], F: Functor[F]) = {
       for {
-        _ <- WriterT.tell[F, List[String]](List("Before first invocation"))
-        result <- WriterT.liftF[F, List[String], Option[VariableGeneralItem]](repository.getF(id))
-        _ <- WriterT.tell[F, List[String]](List("After first invocation"))
+        _ <- WriterT.tell[F, Vector[String]](Vector("Before first invocation"))
+        result <- WriterT.liftF[F, Vector[String], Option[VariableGeneralItem]](repository.getF(id))
+        _ <- WriterT.tell[F, Vector[String]](Vector(s"After first invocation: ${result match {
+          case Some(a) => a.id.toString
+          case _ => "Not found"
+        }}"))
       } yield result
     }
   }
@@ -171,12 +176,12 @@ object App extends IOApp {
       // val result: (Chain[String], Option[Domain.VariableGeneralItem]) =
       //   a.getWithLog[Writer[Chain[String], ?]](1).run
 
-      val result = a.getWithLog[Writer[Chain[String], ?]](1).run
+      // val result = a.getWithLog[Writer[Chain[String], ?]](1).run
+      // IO(println(s"Result: ${result._1.mkString_(",")}"))
 
-      val result2 = a.getWithWriter(1).run.unsafeRunSync()
-
-      IO(println(s"Result: ${result._2.show}"))
-      IO(println(s"Result: ${result2._1.mkString(",")}"))
+      val result2 = a.getWithWriter(1022).run.unsafeRunSync()
+      
+      IO(println(s"Result2: ${result2._2} ${result2._1.mkString(",")}"))
   }.unsafeRunSync()
 
 
