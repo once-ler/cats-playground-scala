@@ -1,12 +1,10 @@
 package com.eztier
 package common
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 
 import fs2.{Pipe, Stream}
-import cats.syntax.option._
-
 import scala.reflect.runtime.universe._
 
 object Util {
