@@ -181,7 +181,8 @@ lazy val testhl7 = project.
     assemblySettings,
     libraryDependencies ++= Seq(
       fs2,
-      hapiV231
+      hapiV231,
+      scalaXml
     )
   ).dependsOn(
   common

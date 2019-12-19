@@ -12,5 +12,18 @@ object App extends IOApp {
 
   println(response.note)
 
+  import tagless.Domain._
+  import tagless.Infrastructure._
+
+  val soap = new CkMockService[IO]
+  val repo = new CkEntityInterpreter[IO](soap)
+  val ckService = new CkEntityService[IO](repo)
+  val ckAggregator = new CkEntityAggregator[IO](ckService)
+  val epPatientAggregator = new EpPatientAggregator[IO]
+
+  val response2 = epPatientAggregator.getOrCreateEntity(ckAggregator, Some("Foo")).unsafeRunSync()
+
+  println(response2)
+
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
 }

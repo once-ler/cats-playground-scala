@@ -8,6 +8,7 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorServic
 import scala.util.{Failure, Success}
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.xml.NodeSeq
 
 object Package {
 
