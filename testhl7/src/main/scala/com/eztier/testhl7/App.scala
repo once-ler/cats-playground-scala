@@ -8,11 +8,6 @@ import com.eztier.testhl7.Domain.SomeResponse
 
 object App extends IOApp {
 
-  /*
-  val response = new AsyncTest[IO].run.unsafeRunSync()
-  println(response.note)
-  */
-
   import tagless.Domain._
   import tagless.Infrastructure._
 

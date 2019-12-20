@@ -73,6 +73,11 @@ class AsyncTest[F[_]: Async] {
   import Domain._
   import Infrastructure._
 
+  /*
+    // Run like below:
+    val response = new AsyncTest[IO].run.unsafeRunSync()
+    println(response.note)
+  */
   def run: F[SomeResponse] = {
     blockingThreadPool.use { ec: ExecutionContext =>
 

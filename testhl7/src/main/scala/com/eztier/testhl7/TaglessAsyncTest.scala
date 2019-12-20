@@ -18,7 +18,7 @@ object Package {
 
   def blockingThreadPool[F[_]](implicit F: Sync[F]): Resource[F, ExecutionContext] =
     Resource(F.delay {
-      val executor = Executors.newCachedThreadPool()
+      val executor = Executors.newFixedThreadPool(3)
       val ec = ExecutionContext.fromExecutor(executor)
       (ec, F.delay(executor.shutdown()))
     })
@@ -179,15 +179,15 @@ object Infrastructure {
 
     override def getEntityF(oid: Option[String]) = {
       Sync[F].suspend(cf.tryGetEntityByID(oid))
-        .handleError { e =>
-          // println(e.getMessage)
-          // Logger[F].error(e.getMessage)
-
-          for {
-            _ <- logger.info(e.getMessage + "!!!!")
-          } yield ()
-
-          None
+        .attempt
+        .flatMap {
+          case Left(e) =>
+            val a: F[Option[GetEntityByIDResponse]] = for {
+              _ <- logger.error(e.getMessage)
+              y = None
+            } yield y
+            a
+          case Right(x) => x.pure[F]
         }
         .flatMap {
           d =>
@@ -199,6 +199,8 @@ object Infrastructure {
         }
 
       /*
+      // Original implementation without logging.
+
       Monad[F].flatMap{
         // handleError from cats.syntax.ApplicativeErrorOps
         cf.tryGetEntityByID(oid).handleError{
