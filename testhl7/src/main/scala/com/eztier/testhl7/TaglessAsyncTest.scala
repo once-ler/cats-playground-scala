@@ -3,14 +3,16 @@ package testhl7.tagless
 
 import java.util.concurrent.Executors
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.implicits._
-import cats.{Applicative, Monad}
+import cats.{Applicative, Functor, Monad}
 import cats.effect.{Async, Concurrent, Resource, Sync}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import scala.xml.{NodeSeq, XML}
+import common.CatsLogger._
+import io.chrisdavenport.log4cats.Logger
 
 object Package {
 
@@ -161,6 +163,8 @@ object Infrastructure {
   class CkEntityInterpreter[F[_]: Async](cf: CkMockService[F])
     extends CkEntityAlgebra[F] {
 
+    val logger = implicitly[Logger[F]]
+
     override def getEntity(oid: Option[String]): F[NodeSeq] =
       Monad[F].flatMap{
         // handleError from cats.syntax.ApplicativeErrorOps
@@ -174,6 +178,27 @@ object Infrastructure {
 
 
     override def getEntityF(oid: Option[String]) = {
+      Sync[F].suspend(cf.tryGetEntityByID(oid))
+        .handleError { e =>
+          // println(e.getMessage)
+          // Logger[F].error(e.getMessage)
+
+          for {
+            _ <- logger.info(e.getMessage + "!!!!")
+          } yield ()
+
+          None
+        }
+        .flatMap {
+          d =>
+            val e: EitherT[F, String, NodeSeq] = d match {
+              case Some(x) => EitherT.right(cf.tryParseXML(x.getEntityByIDResult))
+              case _ => EitherT.leftT("")
+            }
+            e.value
+        }
+
+      /*
       Monad[F].flatMap{
         // handleError from cats.syntax.ApplicativeErrorOps
         cf.tryGetEntityByID(oid).handleError{
@@ -182,13 +207,15 @@ object Infrastructure {
             None
         }
       } { d =>
+
         val e: EitherT[F, String, NodeSeq] = d match {
-          case Some(x) => EitherT.right(cf.tryParseXML(d.get.getEntityByIDResult))
-          case _ => EitherT.leftT("Error")
+          case Some(x) => EitherT.right(cf.tryParseXML(x.getEntityByIDResult))
+          case _ => EitherT.leftT("")
         }
 
         e.value
       }
+      */
     }
 
 
