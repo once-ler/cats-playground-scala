@@ -1,11 +1,11 @@
 package com.eztier
 package common
 
+import java.io.{PrintWriter, StringWriter}
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
-
-import fs2.{Pipe, Stream}
 import scala.reflect.runtime.universe._
+import fs2.{Pipe, Stream}
 
 object Util {
   def filterLeft[F[_], A, B]: Pipe[F, Either[A, B], B] = _.flatMap {
@@ -63,5 +63,14 @@ object Util {
     val dateTimeFormatter = dateTimePattern.fold(defaultDateTimeFormatter)(a => DateTimeFormatter.ofPattern(a))
 
     LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).format(dateTimeFormatter)
+  }
+
+  // Stack trace to string.
+  implicit class WrapThrowable[E <: Throwable](e: E) {
+    def printStackTraceAsString: String = {
+      val sw = new StringWriter
+      e.printStackTrace(new PrintWriter(sw))
+      e.getMessage.concat(sw.toString)
+    }
   }
 }
