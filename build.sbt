@@ -19,7 +19,8 @@ lazy val commonSettings = Seq(
   resolvers ++= Seq(
     Resolver.sonatypeRepo("public"),
     Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots")
+    Resolver.sonatypeRepo("snapshots"),
+    Resolver.bintrayRepo("ovotech", "maven")
   )
 )
 
@@ -47,7 +48,8 @@ lazy val common = project
       monocleMacro,
       monocleLaw,
       log4catsCore,
-      log4catsSlf4j
+      log4catsSlf4j,
+      algae
     )
   )
   
@@ -232,6 +234,7 @@ val ScalaParserVersion = "1.0.6"
 val ScalaTestVersion = "3.2.0-M1"
 val MonocleVersion = "2.0.0"
 val Log4CatsVersion = "1.0.1"
+val AlgaeVersion = "0.2.5"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -291,6 +294,8 @@ val monocleLaw = "com.github.julien-truffaut" %%  "monocle-law"   % MonocleVersi
 
 val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % Log4CatsVersion
 val log4catsSlf4j = "io.chrisdavenport" %% "log4cats-slf4j" % Log4CatsVersion
+
+val algae = "com.ovoenergy" %% "algae" % AlgaeVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

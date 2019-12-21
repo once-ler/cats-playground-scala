@@ -1,10 +1,7 @@
 package com.eztier
 package testhl7
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import cats.effect.{ExitCode, IO, IOApp}
-import Infrastructure.SomeResponseApi
-import com.eztier.testhl7.Domain.SomeResponse
 
 object App extends IOApp {
 
@@ -36,9 +33,9 @@ object App extends IOApp {
   Sorry!
   Sorry!
   Sorry!
+  Chain(Sorry!, Sorry!, Sorry!, Sorry!)
   CkParticipantAggregate(None,None,None,None)
   */
-
 
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
 }
