@@ -53,28 +53,29 @@ object Domain {
   trait CkEntityAlgebra[F[_]] {
     def getEntity(oid: Option[String]): F[NodeSeq]
 
-    def getEntityF(oid: Option[String], logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]]
+    // def getEntityF(oid: Option[String], logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]]
+    def getEntityF(oid: Option[String])(implicit logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]]
   }
 
   class CkEntityService[F[_]](repo: CkEntityAlgebra[F]) {
     def getEntity(oid: Option[String]): F[NodeSeq] =
       repo.getEntity(oid)
 
-    def getEntityF(oid: Option[String], logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
-      repo.getEntityF(oid, logs)
+    def getEntityF(oid: Option[String])(implicit logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
+      repo.getEntityF(oid)
   }
 
   class CkEntityAggregator[F[_]: Applicative: Async: Concurrent](entityService: CkEntityService[F]) {
     def getOrCreate(oid: Option[String]): F[NodeSeq] =
       entityService.getEntity(oid)
 
-    def getOrCreateF(oid: Option[String], logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
-      entityService.getEntityF(oid, logs)
+    def getOrCreateF(oid: Option[String])(implicit logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
+      entityService.getEntityF(oid)
   }
 
-  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent] {
+  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent](logs: MonadLog[F, Chain[String]]) {
 
-    import Domain._
+    implicit val logging = logs
 
     def getOrCreateEntity(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
       for {
@@ -95,29 +96,28 @@ object Domain {
 
     def getOrCreateEntityF(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
       for {
-        logs <- createMonadLog[F, Chain[String]]
-        x0 <- ckEntityAggregator.getOrCreateF(oid, logs)
+        x0 <- ckEntityAggregator.getOrCreateF(oid)
         a: Option[GetEntityByIDResponse] = x0 match {
           case Right(d) =>
             val x: GetEntityByIDResponse = WrappedEntityXml(d)
             Some(x)
           case _ => None
         }
-        x1 <- ckEntityAggregator.getOrCreateF(oid, logs)
+        x1 <- ckEntityAggregator.getOrCreateF(oid)
         b: Option[GetEntityByIDResponse] = x1 match {
           case Right(d) =>
             val x: GetEntityByIDResponse = WrappedEntityXml(d)
             Some(x)
           case _ => None
         }
-        x2 <- ckEntityAggregator.getOrCreateF(oid, logs)
+        x2 <- ckEntityAggregator.getOrCreateF(oid)
         c: Option[GetEntityByIDResponse] = x2 match {
           case Right(d) =>
             val x: GetEntityByIDResponse = WrappedEntityXml(d)
             Some(x)
           case _ => None
         }
-        x3 <- ckEntityAggregator.getOrCreateF(oid, logs)
+        x3 <- ckEntityAggregator.getOrCreateF(oid)
         d: Option[GetEntityByIDResponse] = x3 match {
           case Right(d) =>
             val x: GetEntityByIDResponse = WrappedEntityXml(d)
@@ -184,7 +184,7 @@ object Infrastructure {
       } (d => cf.tryParseXML(d.get.getEntityByIDResult))
 
 
-    override def getEntityF(oid: Option[String], logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
+    override def getEntityF(oid: Option[String])(implicit logs: MonadLog[F, Chain[String]]): F[Either[String, NodeSeq]] =
       Sync[F].suspend(cf.tryGetEntityByID(oid))
         .attempt
         .flatMap {
