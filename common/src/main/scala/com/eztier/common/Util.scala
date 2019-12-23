@@ -70,7 +70,10 @@ object Util {
     def printStackTraceAsString: String = {
       val sw = new StringWriter
       e.printStackTrace(new PrintWriter(sw))
-      e.getMessage.concat(sw.toString)
+      e.getMessage match {
+        case a if a != null => a.concat(sw.toString)
+        case _ => sw.toString
+      }
     }
   }
 }
