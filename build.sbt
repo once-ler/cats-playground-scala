@@ -16,6 +16,7 @@ lazy val commonSettings = Seq(
   version := "0.1.1-SNAPSHOT",
   scalaVersion := "2.12.8",
   scalacOptions ++= compilerOptions,
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("public"),
     Resolver.sonatypeRepo("releases"),
