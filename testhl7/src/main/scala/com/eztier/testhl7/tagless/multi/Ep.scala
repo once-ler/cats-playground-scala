@@ -16,7 +16,6 @@ import algae.mtl.MonadLog
 import io.chrisdavenport.log4cats.Logger
 import common.CatsLogger._
 import Ck.Domain._
-import cats.kernel.Semigroup
 
 object Package {
   import Domain._
@@ -29,7 +28,8 @@ object Package {
 }
 
 object Domain {
-  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent: Monad](implicit logs: MonadLog[F, Chain[String]]) {
+  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent: Monad : MonadLog[?[_], Chain[String]]] {
+    val logs = implicitly[MonadLog[F, Chain[String]]]
 
     def getOrCreateEntity(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
       for {
@@ -79,7 +79,7 @@ object Domain {
             Some(x)
           case _ => None
         }
-        l <- logs combineK ckEntityAggregator.monadLog
+        l <- logs combineK ckEntityAggregator.logs
         // l <- logs.get
         _ <- Logger[F].error(l.show) // Write out all the accumulated errors.
       } yield CkParticipantAggregate(

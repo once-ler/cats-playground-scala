@@ -76,8 +76,8 @@ object Domain {
       repo.getEntityF(oid)
   }
 
-  class CkEntityAggregator[F[_] : Applicative : Async : Concurrent](entityService: CkEntityService[F])(implicit logs: MonadLog[F, Chain[String]]) {
-    val monadLog = implicitly[MonadLog[F, Chain[String]]]
+  class CkEntityAggregator[F[_] : Applicative : Async : Concurrent : MonadLog[?[_], Chain[String]]](entityService: CkEntityService[F]) {
+    val logs = implicitly[MonadLog[F, Chain[String]]]
 
     def getOrCreate(oid: Option[String]): F[NodeSeq] =
       entityService.getEntity(oid)
@@ -124,12 +124,13 @@ object Infrastructure {
 
   }
 
-  class CkEntityInterpreter[F[_]: Async](cf: CkMockService[F])(implicit logs: MonadLog[F, Chain[String]])
+  class CkEntityInterpreter[F[_]: Async : MonadLog[?[_], Chain[String]]](cf: CkMockService[F])
     extends CkEntityAlgebra[F] {
 
     import Domain._
 
     val logger = implicitly[Logger[F]]
+    val logs = implicitly[MonadLog[F, Chain[String]]]
 
     override def getEntity(oid: Option[String]): F[NodeSeq] =
       Monad[F].flatMap{
