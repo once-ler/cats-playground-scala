@@ -77,13 +77,15 @@ object Domain {
   }
 
   class CkEntityAggregator[F[_] : Applicative : Async : Concurrent](entityService: CkEntityService[F])(implicit logs: MonadLog[F, Chain[String]]) {
+    val monadLog = implicitly[MonadLog[F, Chain[String]]]
+
     def getOrCreate(oid: Option[String]): F[NodeSeq] =
       entityService.getEntity(oid)
 
     def getOrCreateF(oid: Option[String]): F[Either[String, NodeSeq]] =
       entityService.getEntityF(oid)
 
-    def getMonadLog: F[Chain[String]] = {
+    def getMonadLogStorage: F[Chain[String]] = {
       for {
         x <- logs.get
       } yield x

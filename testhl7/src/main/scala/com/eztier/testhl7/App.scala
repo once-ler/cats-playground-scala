@@ -69,7 +69,7 @@ object App extends IOApp {
       // The log shows nothing because the error occurred in the log of the dest domain.
       println(response4)
 
-      val destLog = dest.getMonadLog.unsafeRunSync()
+      val destLog = dest.getMonadLogStorage.unsafeRunSync()
 
       // The log belongs to the dest domain.
       println(destLog.show)

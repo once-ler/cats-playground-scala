@@ -9,13 +9,14 @@ import scala.util.{Failure, Success}
 import scala.xml.{NodeSeq, XML}
 import cats.implicits._
 import cats.data.{Chain, EitherT}
-import cats.{Applicative, Monad}
+import cats.{Applicative, Monad, SemigroupK}
 import cats.effect.{Async, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
-import algae._
+import algae.createMonadLog
 import algae.mtl.MonadLog
 import io.chrisdavenport.log4cats.Logger
 import common.CatsLogger._
 import Ck.Domain._
+import cats.kernel.Semigroup
 
 object Package {
   import Domain._
@@ -28,7 +29,7 @@ object Package {
 }
 
 object Domain {
-  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent](implicit logs: MonadLog[F, Chain[String]]) {
+  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent: Monad](implicit logs: MonadLog[F, Chain[String]]) {
 
     def getOrCreateEntity(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
       for {
@@ -47,7 +48,8 @@ object Domain {
         entityD = d.some
       )
 
-    def getOrCreateEntityF(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
+    def getOrCreateEntityF(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] = {
+
       for {
         x0 <- ckEntityAggregator.getOrCreateF(oid)
         a: Option[GetEntityByIDResponse] = x0 match {
@@ -77,7 +79,8 @@ object Domain {
             Some(x)
           case _ => None
         }
-        l <- logs.get
+        l <- logs combineK ckEntityAggregator.monadLog
+        // l <- logs.get
         _ <- Logger[F].error(l.show) // Write out all the accumulated errors.
       } yield CkParticipantAggregate(
         entityA = a,
@@ -85,5 +88,6 @@ object Domain {
         entityC = c,
         entityD = d
       )
+    }
   }
 }
