@@ -48,8 +48,7 @@ object Domain {
         entityD = d.some
       )
 
-    def getOrCreateEntityF(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] = {
-
+    def getOrCreateEntityF(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
       for {
         x0 <- ckEntityAggregator.getOrCreateF(oid)
         a: Option[GetEntityByIDResponse] = x0 match {
@@ -88,6 +87,6 @@ object Domain {
         entityC = c,
         entityD = d
       )
-    }
+
   }
 }

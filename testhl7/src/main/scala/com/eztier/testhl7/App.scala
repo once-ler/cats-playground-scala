@@ -4,6 +4,9 @@ package testhl7
 import cats.implicits._
 import cats.data.Chain
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect._
+import scala.concurrent.duration._
+import fs2.Stream
 
 object Tests {
   def taglessTest0 = {
@@ -61,6 +64,7 @@ object App extends IOApp {
     r1 <- createCkAggregatorResource[IO]
   } yield (r0, r1)
 
+  /*
   r.use {
     case (src, dest) =>
 
@@ -75,6 +79,21 @@ object App extends IOApp {
       println(destLog.show)
 
       IO(println("Done"))
+  }.unsafeRunSync()
+  */
+
+  r.use {
+    case (src, dest) =>
+
+      def repeat(io : IO[Unit]): IO[Nothing] = IO.suspend(io *> IO.delay(
+        for {
+          _ <- IO( src.getOrCreateEntityF(dest, Some("Foo")).unsafeRunSync() )
+        } yield Stream.emit(1).covary[IO].delayBy(5 seconds).compile.drain.unsafeRunSync()
+      ).unsafeRunSync() *> repeat(io))
+
+      repeat(IO.delay(println("Start"))).unsafeRunSync()
+
+      IO.unit
   }.unsafeRunSync()
 
   override def run(args: List[String]): IO[ExitCode] = IO(ExitCode.Success)
