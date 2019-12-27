@@ -185,7 +185,12 @@ lazy val testhl7 = project.
     libraryDependencies ++= Seq(
       fs2,
       hapiV231,
-      scalaXml
+      scalaXml,
+
+      http4sBlazeClient,
+      http4sCirce,
+      kantanXpath,
+      kantanXPathJava8
     )
   ).dependsOn(
   common

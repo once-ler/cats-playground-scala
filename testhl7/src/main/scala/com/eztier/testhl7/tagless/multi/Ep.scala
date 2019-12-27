@@ -2,6 +2,7 @@ package com.eztier
 package testhl7.tagless.multi
 package Ep
 
+import java.time.Instant
 import java.util.concurrent.Executors
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,26 +10,72 @@ import scala.util.{Failure, Success}
 import scala.xml.{NodeSeq, XML}
 import cats.implicits._
 import cats.data.{Chain, EitherT}
-import cats.{Applicative, Monad, SemigroupK}
+import cats.{Applicative, Functor, Monad, SemigroupK}
 import cats.effect.{Async, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
+import fs2.{Pipe, Stream}
+import fs2.text.{utf8DecodeC, utf8Encode}
 import algae.createMonadLog
 import algae.mtl.MonadLog
 import io.chrisdavenport.log4cats.Logger
+import kantan.xpath._
+import kantan.xpath.implicits._
+import org.http4s.client.blaze.BlazeClientBuilder
+import org.http4s.{EntityBody, Header, Headers, Method, Request, Uri}
+
 import common.CatsLogger._
+import common.Util._
 import Ck.Domain._
 
 object Package {
   import Domain._
+  import Infrastucture._
 
   def createEpPatientAggregatorResource[F[_]: Async :ContextShift :ConcurrentEffect: Timer] =
     for {
       implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
-      epPatientAggregator = new EpPatientAggregator[F]
+      patientRepo = HttpPatientRepositoryInterpreter[F]
+      patientService = EpPatientService(patientRepo)
+      epPatientAggregator = new EpPatientAggregator[F](patientService)
     } yield epPatientAggregator
 }
 
+object EpXmlToTypeImplicits {
+
+  import Domain._
+  import kantan.xpath._
+  import kantan.xpath.implicits._
+  import kantan.xpath.java8._ // LocalDateTime
+
+  implicit val placeDecoder: NodeDecoder[EpPatient] = NodeDecoder.decoder(
+    xp"./AdministrativeSex/text()",
+    xp"./DateTimeofBirth/text()",
+    xp"./EthnicGroup/text()",
+    xp"./PatientAddress/text()",
+    xp"./PatientName/text()",
+    xp"./PhoneNumberHome/text()",
+    xp"./Race/text()",
+    xp"./_id/text()",
+    xp"./dateCreated/text()",
+    xp"./dateLocal/text()"
+  )(EpPatient.apply)
+}
+
 object Domain {
-  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent: Monad : MonadLog[?[_], Chain[String]]] {
+  case class EpPatient
+  (
+    AdministrativeSex: Option[String] = None,
+    DateTimeofBirth: Option[String] = None,
+    EthnicGroup: Option[String] = None,
+    PatientAddress: Option[String] = None,
+    PatientName: Option[String] = None,
+    PhoneNumberHome: Option[String] = None,
+    Race: Option[String] = None,
+    Mrn: Option[String] = None,
+    dateCreated: Option[Long] = None,
+    dateLocal: Option[String] = None
+  )
+
+  class EpPatientAggregator[F[_]: Applicative: Async: Concurrent: Monad : MonadLog[?[_], Chain[String]]](patientService: EpPatientService[F]) {
     val logs = implicitly[MonadLog[F, Chain[String]]]
 
     def getOrCreateEntity(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]): F[CkParticipantAggregate] =
@@ -88,5 +135,120 @@ object Domain {
         entityD = d
       )
 
+    def getMaxDateProcessed: F[Instant] =
+      Instant.now().pure[F]
+
+    def toHttpRequestPipeS: Pipe[F, Instant, List[EpPatient]] = _.evalMap {
+      in =>
+        patientService.fetchPatients(in.some).compile.toList
+    }
+
+    def run =
+      Stream.eval(getMaxDateProcessed)
+        .through(toHttpRequestPipeS)
   }
+
+  trait EpPatientRepositoryAlgebra[F[_]] {
+    def fetchPatients(maxDateProcessed: Option[Instant] = None): Stream[F, EpPatient]
+  }
+
+  class EpPatientService[F[_]: Functor](repository: EpPatientRepositoryAlgebra[F]) {
+    def fetchPatients(maxDateProcessed: Option[Instant] = None): Stream[F, EpPatient] =
+      repository.fetchPatients(maxDateProcessed)
+  }
+
+  object EpPatientService {
+    def apply[F[_]: Functor](repository: EpPatientRepositoryAlgebra[F]): EpPatientService[F] =
+      new EpPatientService[F](repository)
+  }
+}
+
+object Infrastucture {
+  import Domain._
+  import EpXmlToTypeImplicits._
+
+  abstract class WithBlockingEcStream[F[_]: ConcurrentEffect] {
+
+    // Don't block the main thread
+    def blockingEcStream: Stream[F, ExecutionContext] =
+      Stream.bracket(Sync[F].delay(Executors.newFixedThreadPool(4)))(pool =>
+        Sync[F].delay(pool.shutdown()))
+        .map(ExecutionContext.fromExecutorService)
+  }
+
+  class HttpPatientRepositoryInterpreter[F[_]: Functor: ConcurrentEffect: ContextShift[?[_]] : MonadLog[?[_], Chain[String]]]
+    extends WithBlockingEcStream with EpPatientRepositoryAlgebra[F] {
+
+    val logs = implicitly[MonadLog[F, Chain[String]]]
+
+    val headers = Headers.of(Header("Accept", "*/*"))
+
+    def getBody(body: EntityBody[F]): F[Vector[Byte]] = body.compile.toVector
+
+    def strBody(body: String): EntityBody[F] = fs2.Stream(body).through(utf8Encode)
+
+    val moreHeaders = headers.put(Header("Content-Type", "text/xml"))
+
+    def createRequest(lastDateProcessed: Option[Instant] = None): Request[F] =
+      Request[F](
+        method = Method.POST,
+        uri = Uri.unsafeFromString("https://www.w3schools.com/xml/tempconvert.asmx"),
+        headers = moreHeaders,
+        body = strBody(
+          """<?xml version="1.0" encoding="utf-8"?>
+            |<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            |  <soap:Body>
+            |    <FahrenheitToCelsius xmlns="https://www.w3schools.com/xml/">
+            |      <Fahrenheit>75</Fahrenheit>
+            |    </FahrenheitToCelsius>
+            |  </soap:Body>
+            |</soap:Envelope>
+          """.stripMargin)
+      )
+
+    def clientBodyStream(lastDateProcessed: Option[Instant] = None): Stream[F, String] =
+      blockingEcStream.flatMap {
+        ec =>
+          for {
+            client <- BlazeClientBuilder[F](ec).stream
+            plainRequest <- Stream.eval[F, Request[F]](Applicative[F].pure[Request[F]](createRequest(lastDateProcessed)))
+            entityBody <- client.stream(plainRequest).flatMap(_.body.chunks).through(utf8DecodeC) // def utf8DecodeC[F[_]]: Pipe[F, Chunk[Byte], String]
+          } yield entityBody
+      }.handleErrorWith {
+        e =>
+          val ex = WrapThrowable(e).printStackTraceAsString
+          Stream.eval(logs.log(Chain.one(s"${ex}")))
+            .flatMap(a => Stream.emit(ex))
+      }
+
+    private def toDumpResponsePipeS[F[_]: Applicative: Logger]: Pipe[F, String, String] = _.evalMap {
+      str =>
+        Logger[F].error(str) *> Applicative[F].pure(str)
+    }
+
+    def patientPipeS[F[_]]: Pipe[F, String, Either[XPathError, List[EpPatient]]] = _.map {
+      str =>
+        val result: kantan.xpath.XPathResult[List[EpPatient]] = str.evalXPath[List[EpPatient]](xp"//patient")
+        result
+    }
+
+    override def fetchPatients(maxDateProcessed: Option[Instant]): Stream[F, EpPatient] = {
+      val fa = clientBodyStream(maxDateProcessed)
+        .filter(_.length > 0)
+        .through(toDumpResponsePipeS)
+        .compile
+        .toVector
+        .flatMap(b => s"<patients>${b.mkString("")}</patients>".pure[F])
+
+      Stream.eval(fa)
+        .through(patientPipeS)
+        .through(filterLeft)
+        .flatMap(Stream.emits)
+    }
+  }
+
+  object HttpPatientRepositoryInterpreter {
+    def apply[F[_]: Functor: ConcurrentEffect: ContextShift[?[_]] : MonadLog[?[_], Chain[String]]]: HttpPatientRepositoryInterpreter[F] = new HttpPatientRepositoryInterpreter[F]
+  }
+
 }

@@ -88,6 +88,7 @@ object App extends IOApp {
       def repeat(io : IO[Unit]): IO[Nothing] = IO.suspend(io *> IO.delay(
         for {
           _ <- IO( src.getOrCreateEntityF(dest, Some("Foo")).unsafeRunSync() )
+          _ <- IO( src.run.compile.drain.unsafeRunSync() )
         } yield Stream.emit(1).covary[IO].delayBy(5 seconds).compile.drain.unsafeRunSync()
       ).unsafeRunSync() *> repeat(io))
 
