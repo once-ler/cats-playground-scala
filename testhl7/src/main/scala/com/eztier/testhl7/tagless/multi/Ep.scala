@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.concurrent.Executors
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.xml.{NodeSeq, XML}
 import cats.implicits._
 import cats.data.{Chain, EitherT}
@@ -21,7 +21,6 @@ import kantan.xpath._
 import kantan.xpath.implicits._
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.{EntityBody, Header, Headers, Method, Request, Uri}
-
 import common.CatsLogger._
 import common.Util._
 import Ck.Domain._
@@ -143,22 +142,36 @@ object Domain {
         patientService.fetchPatients(in.some).compile.toList
     }
 
+    def toDumpMonadLogPipeS: Pipe[F, List[EpPatient], List[EpPatient]] = _.evalMap {
+      in =>
+        for {
+          l <- logs combineK patientService.logs
+          _ <- Logger[F].error(l.show)
+        } yield in
+    }
+
     def run =
       Stream.eval(getMaxDateProcessed)
         .through(toHttpRequestPipeS)
+        .through(toDumpMonadLogPipeS)
+
+    def runUnprocessed(ckEntityAggregator: CkEntityAggregator[F], oid: Option[String]) =
+      Stream.eval(getOrCreateEntityF(ckEntityAggregator, oid))
   }
 
   trait EpPatientRepositoryAlgebra[F[_]] {
     def fetchPatients(maxDateProcessed: Option[Instant] = None): Stream[F, EpPatient]
   }
 
-  class EpPatientService[F[_]: Functor](repository: EpPatientRepositoryAlgebra[F]) {
+  class EpPatientService[F[_]: Functor: Monad : MonadLog[?[_], Chain[String]]](repository: EpPatientRepositoryAlgebra[F]) {
+    val logs = implicitly[MonadLog[F, Chain[String]]]
+
     def fetchPatients(maxDateProcessed: Option[Instant] = None): Stream[F, EpPatient] =
       repository.fetchPatients(maxDateProcessed)
   }
 
   object EpPatientService {
-    def apply[F[_]: Functor](repository: EpPatientRepositoryAlgebra[F]): EpPatientService[F] =
+    def apply[F[_]: Functor: Monad : MonadLog[?[_], Chain[String]]](repository: EpPatientRepositoryAlgebra[F]): EpPatientService[F] =
       new EpPatientService[F](repository)
   }
 }
@@ -226,10 +239,22 @@ object Infrastucture {
         Logger[F].error(str) *> Applicative[F].pure(str)
     }
 
-    def patientPipeS[F[_]]: Pipe[F, String, Either[XPathError, List[EpPatient]]] = _.map {
+    def patientPipeS[F[_]: Applicative: Monad: Sync]: Pipe[F, String, Either[XPathError, List[EpPatient]]] = _.evalMap {
       str =>
         val result: kantan.xpath.XPathResult[List[EpPatient]] = str.evalXPath[List[EpPatient]](xp"//patient")
-        result
+
+        // val z: F[kantan.xpath.XPathResult[List[EpPatient]]] = result match {
+        val z: F[Either[XPathError, List[EpPatient]]] = result match {
+          case Left(e) =>
+            val ex = WrapThrowable(e).printStackTraceAsString
+            val r1: Either[XPathError, List[EpPatient]] = Left(e)
+            Sync[F].delay(logs.log(Chain.one(ex)).map(_ => r1)).flatMap(_ => r1.pure[F])
+          case Right(a) =>
+            val r1: Either[XPathError, List[EpPatient]] = Right(a)
+            r1.pure[F]
+        }
+
+        z
     }
 
     override def fetchPatients(maxDateProcessed: Option[Instant]): Stream[F, EpPatient] = {

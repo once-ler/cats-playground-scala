@@ -85,11 +85,13 @@ object App extends IOApp {
   r.use {
     case (src, dest) =>
 
+      def pause[F[_]: Timer](d: FiniteDuration) = Stream.emit(1).covary[F].delayBy(d)
+
       def repeat(io : IO[Unit]): IO[Nothing] = IO.suspend(io *> IO.delay(
         for {
-          _ <- IO( src.getOrCreateEntityF(dest, Some("Foo")).unsafeRunSync() )
+          _ <- IO( src.runUnprocessed(dest, Some("Foo")).compile.drain.unsafeRunSync() )
           _ <- IO( src.run.compile.drain.unsafeRunSync() )
-        } yield Stream.emit(1).covary[IO].delayBy(5 seconds).compile.drain.unsafeRunSync()
+        } yield pause(5 seconds).compile.drain.unsafeRunSync()
       ).unsafeRunSync() *> repeat(io))
 
       repeat(IO.delay(println("Start"))).unsafeRunSync()
