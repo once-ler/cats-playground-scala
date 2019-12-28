@@ -145,7 +145,7 @@ object Domain {
     def toDumpMonadLogPipeS: Pipe[F, List[EpPatient], List[EpPatient]] = _.evalMap {
       in =>
         for {
-          l <- logs combineK patientService.logs
+          l <- logs.get
           _ <- Logger[F].error(l.show)
         } yield in
     }
@@ -239,22 +239,23 @@ object Infrastucture {
         Logger[F].error(str) *> Applicative[F].pure(str)
     }
 
-    def patientPipeS[F[_]: Applicative: Monad: Sync]: Pipe[F, String, Either[XPathError, List[EpPatient]]] = _.evalMap {
+    def patientPipeS: Pipe[F, String, Either[XPathError, List[EpPatient]]] = _.evalMap {
       str =>
         val result: kantan.xpath.XPathResult[List[EpPatient]] = str.evalXPath[List[EpPatient]](xp"//patient")
 
-        // val z: F[kantan.xpath.XPathResult[List[EpPatient]]] = result match {
-        val z: F[Either[XPathError, List[EpPatient]]] = result match {
+        result match {
           case Left(e) =>
             val ex = WrapThrowable(e).printStackTraceAsString
-            val r1: Either[XPathError, List[EpPatient]] = Left(e)
-            Sync[F].delay(logs.log(Chain.one(ex)).map(_ => r1)).flatMap(_ => r1.pure[F])
+            val a: F[Either[XPathError, List[EpPatient]]] = for {
+              _ <- logs.log(Chain(ex))
+              r1: Either[XPathError, List[EpPatient]] = Left(e)
+            } yield r1
+            a
+
           case Right(a) =>
             val r1: Either[XPathError, List[EpPatient]] = Right(a)
             r1.pure[F]
         }
-
-        z
     }
 
     override def fetchPatients(maxDateProcessed: Option[Instant]): Stream[F, EpPatient] = {
