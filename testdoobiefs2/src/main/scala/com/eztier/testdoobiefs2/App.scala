@@ -10,37 +10,7 @@ import fs2.Stream
 import org.flywaydb.core.Flyway
 import scala.concurrent.ExecutionContext
 
-case class DatabaseConnectionsConfig(poolSize: Int)
-
-case class DatabaseConfig(
-  url: String,
-  driver: String,
-  user: String,
-  password: String,
-  connections: DatabaseConnectionsConfig
-)
-
-object DatabaseConfig {
-  def dbTransactor[F[_] : Async : ContextShift](
-    dbc: DatabaseConfig,
-    connEc: ExecutionContext,
-    blocker: Blocker,
-    ): Resource[F, HikariTransactor[F]] =
-    HikariTransactor
-      .newHikariTransactor[F](dbc.driver, dbc.url, dbc.user, dbc.password, connEc, blocker)
-
-  // By default, flyway will look at ./my-project/src/main/resources/db/migration for versioned sql files.
-  def initializeDb[F[_]](cfg: DatabaseConfig)(implicit S: Sync[F]): F[Unit] =
-    S.delay {
-      val fw: Flyway = {
-        Flyway
-          .configure()
-          .dataSource(cfg.url, cfg.user, cfg.password)
-          .load()
-      }
-      fw.migrate()
-    }.as(())
-}
+import config._
 
 object Domain {
   case class Author(
@@ -77,6 +47,7 @@ object Miner {
   def apply[F[_]: Bracket[?[_], Throwable]](xa: Transactor[F]): Miner[F] = new Miner(xa)
 }
 
+/*
 object App extends IOApp {
   val conf = DatabaseConfig(url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "sa", password = "",  connections = DatabaseConnectionsConfig(10))
 
@@ -98,4 +69,20 @@ object App extends IOApp {
     .compile.drain)
 
   override def run(args: List[String]): IO[ExitCode] = stream1.as(ExitCode.Success)
+}
+*/
+
+object App extends IOApp {
+
+  SolrApp.createSolrClientAggregator[IO].use {
+    case svc =>
+
+      val l = svc.fetchPatients.compile.toList.unsafeRunSync()
+
+      l.foreach(a => println(a.mrn))
+
+      IO.unit
+  }.unsafeRunSync()
+
+  override def run(args: List[String]): IO[ExitCode] = IO.unit.as(ExitCode.Success)
 }
