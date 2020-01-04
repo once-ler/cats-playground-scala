@@ -11,6 +11,7 @@ import org.flywaydb.core.Flyway
 import scala.concurrent.ExecutionContext
 
 import config._
+import domain._
 
 object Domain {
   case class Author(
@@ -76,6 +77,12 @@ object App extends IOApp {
 
   SolrApp.createSolrClientAggregator[IO].use {
     case svc =>
+
+      val r = svc.insertManyPatients(List(
+        Patient(mrn = Some("135769"), firstName = Some("Mickey"), lastName = Some("Mouse"), fullName = Some("Mouse, Mickey"))
+      )).unsafeRunSync()
+
+      println(r)
 
       val l = svc.fetchPatients.compile.toList.unsafeRunSync()
 

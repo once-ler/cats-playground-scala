@@ -17,7 +17,8 @@ object SolrApp {
       // _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.solr)) // Lifts an applicative into a resource. Resource[Tuple1, Nothing[Unit]]
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.solr.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
-      xa <- DatabaseConfig.dbTransactor(conf.solr, connEc, Blocker.liftExecutionContext(txnEc))
+      // xa <- DatabaseConfig.dbTransactor(conf.solr, connEc, Blocker.liftExecutionContext(txnEc))
+      xa <- DatabaseConfig.dbDriver(conf.solr, connEc, Blocker.liftExecutionContext(txnEc))
       patientRepo = DoobiePatientInterpreter[F](xa)
       patientService = PatientService(patientRepo)
     } yield patientService
