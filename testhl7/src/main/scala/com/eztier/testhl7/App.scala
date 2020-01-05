@@ -58,11 +58,13 @@ object Tests {
 object App extends IOApp {
   import tagless.multi.Ck.Package.createCkAggregatorResource
   import tagless.multi.Ep.Package.createEpPatientAggregatorResource
+  import tagless.multi.Solr.Package.createSolrResource
 
   val r = for {
     r0 <- createEpPatientAggregatorResource[IO]
     r1 <- createCkAggregatorResource[IO]
-  } yield (r0, r1)
+    r2 <- createSolrResource[IO]
+  } yield (r0, r1, r2)
 
   /*
   r.use {
@@ -82,8 +84,9 @@ object App extends IOApp {
   }.unsafeRunSync()
   */
 
+  /*
   r.use {
-    case (src, dest) =>
+    case (src, dest, solr) =>
 
       def pause[F[_]: Timer](d: FiniteDuration) = Stream.emit(1).covary[F].delayBy(d)
 
@@ -95,6 +98,19 @@ object App extends IOApp {
       ).unsafeRunSync() *> repeat(io))
 
       repeat(IO.delay(println("Start"))).unsafeRunSync()
+
+      IO.unit
+  }.unsafeRunSync()
+  */
+
+  r.use {
+    case (src, dest, solr) =>
+
+      val res = solr.search(collection = "gettingstarted", query = "name:*", fields = List("id", "name")).unsafeRunSync()
+
+      res.get.getResults.forEach(a => println(a.jsonStr()))
+
+      solr.shutdown
 
       IO.unit
   }.unsafeRunSync()
