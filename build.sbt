@@ -191,7 +191,9 @@ lazy val testhl7 = project.
       http4sBlazeClient,
       http4sCirce,
       kantanXpath,
-      kantanXPathJava8
+      kantanXPathJava8,
+
+      solrs
     )
   ).dependsOn(
   common
@@ -243,6 +245,7 @@ val MonocleVersion = "2.0.0"
 val Log4CatsVersion = "1.0.1"
 val AlgaeVersion = "0.2.5"
 val SolrJVersion = "8.4.0"
+val SolrsVersion = "2.4.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -306,6 +309,7 @@ val log4catsSlf4j = "io.chrisdavenport" %% "log4cats-slf4j" % Log4CatsVersion
 val algae = "com.ovoenergy" %% "algae" % AlgaeVersion
 
 val solrJ = "org.apache.solr" % "solr-solrj" % SolrJVersion
+val solrs = "io.ino" %% "solrs" % SolrsVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
