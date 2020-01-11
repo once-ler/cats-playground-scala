@@ -2,6 +2,7 @@ package com.eztier
 package testhl7.tagless.multi
 package Solr
 
+import java.io.File
 import java.util.concurrent.Executors
 
 import io.ino.solrs.future.ScalaFutureFactory.Implicit
@@ -26,10 +27,12 @@ import io.circe.generic.semiauto._
 import io.circe.config.{parser => ConfigParser}
 import io.ino.solrs.{AsyncSolrClient, CloudSolrServers, RequestInterceptor, RetryPolicy, RoundRobinLB, SolrServer, future}
 import org.apache.solr.client.solrj.SolrRequest.METHOD.GET
-import org.apache.solr.client.solrj.request.QueryRequest
+import org.apache.solr.client.solrj.request.{ContentStreamUpdateRequest, QueryRequest}
 import org.apache.solr.client.solrj.{SolrQuery, SolrRequest, SolrResponse, StreamingResponseCallback}
-import org.apache.solr.client.solrj.response.QueryResponse
+import org.apache.solr.client.solrj.response.{QueryResponse, UpdateResponse}
+import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.params.{ModifiableSolrParams, SolrParams}
+// import org.apache.solr.handler.extraction
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig, Realm}
 
 object Package {
@@ -78,7 +81,7 @@ object Domain {
   trait SolrAlgebra[F[_]] {
     def search(collection: String, query: String, fields: List[String]): F[Option[QueryResponse]]
 
-    def insert(oid: Option[String]): F[Either[String, NodeSeq]]
+    def insert(oid: Option[String]): F[Either[String, Unit]]
 
     def shutdown: Unit
   }
@@ -166,7 +169,46 @@ object Infrastructure {
       }
     }
 
-    override def insert(oid: Option[String]): F[Either[String, NodeSeq]] = ???
+    override def insert(oid: Option[String]) =
+      blockingThreadPool.use { ec: ExecutionContext =>
+        Async[F].async {
+          (cb: Either[Throwable, Unit] => Unit) =>
+            implicit val cs = ec
+
+            val doc1 = new SolrInputDocument()
+            doc1.addField("id", "id1")
+            doc1.addField("name", "doc1")
+
+            val f = for {
+              _ <- solr.addDocs(docs = Iterable(doc1))
+              _ <- solr.commit()
+            } yield ()
+
+            f.onComplete {
+              case _ => cb()
+            }
+        }
+      }
+
+    def insertRichDoc(): F[UpdateResponse] =
+      blockingThreadPool.use { ec: ExecutionContext =>
+        Async[F].async {
+          (cb: Either[Throwable, UpdateResponse] => Unit) =>
+
+            implicit val cx = ec
+
+            val req = new ContentStreamUpdateRequest("/update/extract")
+            req.addFile(new File("my-file.pdf"), null)
+            // req.setParam("extractOnly", "true")
+
+            val f = solr.execute(req)
+
+            f.onComplete {
+              case Success(s) => cb(Right(s))
+              case Failure(e) => cb(Left(e))
+            }
+        }
+      }
 
     override def shutdown: Unit = solr.shutdown()
 
