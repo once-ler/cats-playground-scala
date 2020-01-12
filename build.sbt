@@ -219,6 +219,28 @@ lazy val testbadsqlmodel = project.
   common
 )
 
+lazy val testfs2cassandra = project.
+  settings(
+    name := "test-fs2-cassandra",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      fs2,
+      fs2Io,
+
+      doobie,
+      doobieH2,
+      doobieScalatest,
+      doobieHikari,
+      h2,
+      flyway,
+
+      tikaParsers
+    )
+  ).dependsOn(
+  common
+)
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
@@ -246,6 +268,7 @@ val Log4CatsVersion = "1.0.1"
 val AlgaeVersion = "0.2.5"
 val SolrJVersion = "8.4.0"
 val SolrsVersion = "2.4.0"
+val TikaVersion = "1.23"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -310,6 +333,8 @@ val algae = "com.ovoenergy" %% "algae" % AlgaeVersion
 
 val solrJ = "org.apache.solr" % "solr-solrj" % SolrJVersion
 val solrs = "io.ino" %% "solrs" % SolrsVersion
+
+val tikaParsers = "org.apache.tika" % "tika-parsers" % TikaVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
