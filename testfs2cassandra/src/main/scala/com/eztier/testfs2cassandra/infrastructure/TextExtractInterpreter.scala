@@ -15,11 +15,7 @@ import domain.Extracted
 
 import scala.collection.mutable.ArrayBuffer
 
-class PoolWorker extends Thread {
-  override def run(): Unit = super.run()
-}
-
-class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](s: Semaphore[F]) {
+class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F]) {
 
   private implicit val ec = ExecutionContext
     .fromExecutorService(
@@ -38,18 +34,19 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](s: Sem
   private implicit val blocker = Blocker.liftExecutionContext(ec)
 
   // private val textExtractor = TextExtractor()
+  // private val busy = scala.collection.mutable.Queue.empty[TextExtractor]
 
-  private val busy = scala.collection.mutable.Queue.empty[TextExtractor]
   private val available = scala.collection.mutable.Queue.empty[TextExtractor]
 
-  def initialize(workerCount: Int) = {
+  def initialize = {
     // available ++= ArrayBuffer(TextExtractor(), TextExtractor(), TextExtractor())
-    (1 to workerCount).foreach(l => available += TextExtractor())
+    (1 to concurrency).foreach(l => available += TextExtractor())
     this
   }
 
   private def processFile(filePath: String) = {
     println(Thread.currentThread().getName())
+
     for {
       x <- s.available
       _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
@@ -94,10 +91,10 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](s: Sem
       case None => "Nothing"
     })
 
-    val concurrency = 5
+    // val concurrency = 5
 
     src
-      .mapAsyncUnordered(concurrency)(extract)
+      .mapAsyncUnordered(concurrency) (extract)
       // .through(toExtractPipeS)
       .covary[F]
       .showLinesStdOut

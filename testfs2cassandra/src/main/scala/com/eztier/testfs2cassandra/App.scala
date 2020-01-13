@@ -23,12 +23,14 @@ object App extends IOApp {
 
   val src = Stream.emits(files)
 
+  val concurrency = 5
+
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      s <- Semaphore[IO](5)
-      tx = new TextExtractInterpreter[IO](s)
+      s <- Semaphore[IO](concurrency)
+      tx = new TextExtractInterpreter[IO](concurrency, s)
     } yield tx)
       .unsafeRunSync()
-      .initialize(5)
+      .initialize
       .aggregate(src).compile.drain.as(ExitCode.Success)
 }
