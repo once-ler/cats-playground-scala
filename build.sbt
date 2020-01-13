@@ -235,7 +235,11 @@ lazy val testfs2cassandra = project.
       h2,
       flyway,
 
-      tikaParsers
+      tikaCore,
+      tikaParsers,
+      imageIO,
+      jbig2,
+      jpeg2000
     )
   ).dependsOn(
   common
@@ -269,6 +273,9 @@ val AlgaeVersion = "0.2.5"
 val SolrJVersion = "8.4.0"
 val SolrsVersion = "2.4.0"
 val TikaVersion = "1.23"
+val ImageIOVersion = "1.4.0"
+val Jbig2Version = "3.0.3"
+val Jpeg2000Version = "1.3.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -334,7 +341,11 @@ val algae = "com.ovoenergy" %% "algae" % AlgaeVersion
 val solrJ = "org.apache.solr" % "solr-solrj" % SolrJVersion
 val solrs = "io.ino" %% "solrs" % SolrsVersion
 
+val tikaCore = "org.apache.tika" % "tika-core" % TikaVersion
 val tikaParsers = "org.apache.tika" % "tika-parsers" % TikaVersion
+val imageIO = "com.github.jai-imageio" % "jai-imageio-core" % ImageIOVersion
+val jbig2 = "org.apache.pdfbox" % "jbig2-imageio" % Jbig2Version
+val jpeg2000 = "com.github.jai-imageio" % "jai-imageio-jpeg2000" % Jpeg2000Version
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

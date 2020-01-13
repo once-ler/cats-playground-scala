@@ -13,14 +13,16 @@ import org.apache.tika.parser.audio.AudioParser
 import org.apache.tika.parser.html.HtmlParser
 import org.apache.tika.parser.image.ImageParser
 import org.apache.tika.parser.microsoft.OfficeParser
-import org.apache.tika.parser.opendocument.OpenOfficeParser
+import org.apache.tika.parser.odf.OpenDocumentParser
 import org.apache.tika.parser.pdf.PDFParser
 import org.apache.tika.parser.rtf.RTFParser
 import org.apache.tika.parser.txt.TXTParser
 import org.apache.tika.parser.xml.XMLParser
 import org.apache.tika.sax.{BodyContentHandler, WriteOutContentHandler}
-
+import org.xml.sax.helpers.DefaultHandler
 import domain.Extracted
+import org.apache.tika.config.TikaConfig
+import org.apache.tika.parser.ocr.TesseractOCRConfig
 
 sealed trait FileType {
   def getParser: Parser
@@ -41,7 +43,7 @@ class Rtf extends FileType {
   override def getParser = new RTFParser()
 }
 class OOText extends FileType {
-  override def getParser = new OpenOfficeParser()
+  override def getParser = new OpenDocumentParser()
 }
 class MsExcel extends FileType {
   override def getParser = new OfficeParser()
@@ -77,6 +79,8 @@ class Auto extends FileType {
 */
 class TextExtractor {
   private val dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
+  private val parserContext = new ParseContext()
 
   private val parsers = Map[String, FileType](
     "text" -> new Text(),
@@ -116,14 +120,17 @@ class TextExtractor {
       val file = new File(filePath)
       val istream = new FileInputStream(file)
       // val handler = new WriteOutContentHandler(-1)
-      val handler = new BodyContentHandler()
+      val handler = new BodyContentHandler(-1)
+      // val handler = new DefaultHandler()
       val metadata = new Metadata()
       val maybeParser = if (userAutoParser) Some(parsers("auto")) else detectFileType(file)
 
       maybeParser match {
         case Some(parser) =>
-          val ctx = new ParseContext()
-          parser.getParser.parse(istream, handler, metadata, ctx)
+          // val tessearactConfig = new TesseractOCRConfig()
+          // parserContext.set(classOf[TesseractOCRConfig], tessearactConfig)
+
+          parser.getParser.parse(istream, handler, metadata, parserContext)
 
           Some(
             Extracted(
