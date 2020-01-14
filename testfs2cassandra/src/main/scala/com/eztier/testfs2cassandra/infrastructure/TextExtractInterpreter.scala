@@ -8,14 +8,23 @@ import cats.implicits._
 import cats.Show
 import cats.effect.concurrent.Semaphore
 import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync}
-import fs2.{Pipe, Stream}
+import fs2.{Chunk, Pipe, Stream}
 
 import scala.concurrent.ExecutionContext
+
+import shapeless.LabelledGeneric
+
 import domain.Extracted
 
-import scala.collection.mutable.ArrayBuffer
-
 class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F]) {
+
+  implicit val showPerson: Show[Option[Extracted]] = Show.show(d => d match {
+    case Some(o) => s"${o.content}"
+    case None => "Nothing"
+  })
+
+  // Subset of cassandra case class used for persistence.
+  private val genericExtractedSubset = LabelledGeneric[Extracted]
 
   private implicit val ec = ExecutionContext
     .fromExecutorService(
@@ -33,29 +42,25 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private implicit val blocker = Blocker.liftExecutionContext(ec)
 
-  // private val textExtractor = TextExtractor()
-  // private val busy = scala.collection.mutable.Queue.empty[TextExtractor]
-
-  private val available = scala.collection.mutable.Queue.empty[TextExtractor]
+  private val workers = scala.collection.mutable.Queue.empty[TextExtractor]
 
   def initialize = {
-    // available ++= ArrayBuffer(TextExtractor(), TextExtractor(), TextExtractor())
-    (1 to concurrency).foreach(l => available += TextExtractor())
+    // workers ++= ArrayBuffer(TextExtractor(), TextExtractor(), TextExtractor())
+    (1 to concurrency).foreach(l => workers += TextExtractor())
     this
   }
 
   private def processFile(filePath: String) = {
-    println(Thread.currentThread().getName())
-
     for {
       x <- s.available
       _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
       _ <- s.acquire
       y <- s.available
       _ <- Sync[F].delay(println(s"$filePath >> Started | Availability: $y"))
-      textExtractor = available.dequeue()
+      _ <- Sync[F].delay(println(Thread.currentThread().getName()))
+      textExtractor = workers.dequeue()
       r <- Sync[F].delay(textExtractor.extract(filePath))
-      _ <- Sync[F].delay(available.enqueue(textExtractor))
+      _ <- Sync[F].delay(workers.enqueue(textExtractor))
       _ <- s.release
       z <- s.available
       _ <- Sync[F].delay(println(s"$filePath >> Done | Availability: $z"))
@@ -69,53 +74,37 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
         .suspend(processFile(in._2))
         .map { e =>
           e match {
-            case Some(o) => Some(o.copy(id = in._1))
+            case Some(o) => Some(o.copy(docId = in._1))
             case _ => None
           }
         }
   }
 
-  def extract = (in: (String, String)) =>
+  private def extract = (in: (String, String)) =>
     Sync[F]
       .suspend(processFile(in._2))
       .map { e =>
         e match {
-          case Some(o) => Some(o.copy(id = in._1))
+          case Some(o) => Some(o.copy(docId = in._1))
           case _ => None
         }
       }
 
-  def aggregate(src: Stream[F, (String, String)]) = {
-    implicit val showPerson: Show[Option[Extracted]] = Show.show(d => d match {
-      case Some(o) => s"${o.content}"
-      case None => "Nothing"
-    })
+  private def persist(chunk: Chunk[Option[Extracted]]): F[Unit] =
+    Async[F].async { callback =>
+      println(s"Writing batch of ${chunk.size} to database by ${Thread.currentThread().getName}")
+      callback(Right(()))
+    }
 
-    // val concurrency = 5
+  def aggregate(src: Stream[F, (String, String)]) = {
 
     src
-      .mapAsyncUnordered(concurrency) (extract)
+      .mapAsyncUnordered(concurrency)(extract)
+      .chunkN(100)
+      .parEvalMapUnordered(100)(persist)
       // .through(toExtractPipeS)
       .covary[F]
       .showLinesStdOut
   }
 
-  /*
-  def compute(files: List[Tuple2[String, String]]): Stream[F, Option[Extracted]] = {
-    val src = Stream.emits(files)
-    val concurrency = 4
-
-    src.evalMap{
-      row =>
-        Sync[F].delay {
-          val r = for {
-            e <- processFile(row._2)
-          } yield e.copy(id = row._1)
-
-          Stream.emit(r)
-        }
-      }
-      .parJoin(concurrency)
-  }
-  */
 }
