@@ -241,9 +241,11 @@ lazy val testfs2cassandra = project.
       jbig2,
       jpeg2000,
 
-      guava,
       cassandraCore,
       fs2Cassandra
+    ),
+    dependencyOverrides ++= Seq(
+      guava
     )
   ).dependsOn(
   common
@@ -281,7 +283,7 @@ val ImageIOVersion = "1.4.0"
 val Jbig2Version = "3.0.3"
 val Jpeg2000Version = "1.3.0"
 val Fs2CassandraVersion = "0.4.0"
-val CassandraCoreVersion = "3.5.0"
+val CassandraCoreVersion = "3.8.0"
 val GuavaVersion = "19.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion

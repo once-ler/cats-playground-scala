@@ -53,13 +53,21 @@ object App extends IOApp {
   val ct = CassandraCluster.impl.create[IO](c).unsafeRunSync()
   val cs = ct.session
 
-  override def run(args: List[String]): IO[ExitCode] =
-    (for {
+  override def run(args: List[String]): IO[ExitCode] = {
+    val r = (for {
       s <- Semaphore[IO](concurrency)
       ci = CassandraInterpreter(cs)
       tx = new TextExtractInterpreter[IO](concurrency, s, ci)
-    } yield tx)
+    } yield (ci, tx))
       .unsafeRunSync()
-      .initialize
-      .aggregate(src).compile.drain.as(ExitCode.Success)
+
+    r._1.createTest.compile.drain.as(ExitCode.Success)
+
+    /*
+      r._2
+        .initialize
+        .aggregate(src).compile.drain.as(ExitCode.Success)
+
+   */
+  }
 }

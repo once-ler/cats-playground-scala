@@ -98,9 +98,6 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   def aggregate(src: Stream[F, Extracted]) = {
 
-    cassandraInterpreter.createTest
-
-    /*
     src
       .mapAsyncUnordered(concurrency)(extract)
       .chunkN(100)
@@ -108,7 +105,6 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
       // .through(toExtractPipeS)
       .covary[F]
       .showLinesStdOut
-     */
   }
 
 }
