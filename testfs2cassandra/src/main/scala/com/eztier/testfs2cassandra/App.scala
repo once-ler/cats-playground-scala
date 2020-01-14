@@ -6,29 +6,58 @@ import java.util.concurrent.Executors
 import cats.effect.concurrent.Semaphore
 import cats.implicits._
 import cats.effect.{Blocker, Concurrent, ExitCode, IO, IOApp, Sync}
+import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.policies.ConstantReconnectionPolicy
 import fs2.{Stream, io}
 
 import scala.concurrent.ExecutionContext
+import domain._
 import infrastructure._
+import spinoco.fs2.cassandra.CassandraCluster
 
 object App extends IOApp {
 
-  val files = List(
-    ("doc1", "/home/htao/tmp/fourth-grade-spelling-words.pdf"),
-    ("doc2", "/home/htao/tmp/sparkcontext-examples.pdf"),
-    ("doc3", "/home/htao/Pictures/chat-demo-split-view.png"),
-    ("doc4", "/home/htao/Pictures/username-already-used.png"),
-    ("doc5", "/home/htao/Pictures/robotics-20191031.jpeg")
+  val filesK = List(
+    Extracted(domain="domain1".some, root_type="A".some, root_id="1234".some,
+      doc_id="doc1".some,
+      doc_file_path="/home/htao/tmp/fourth-grade-spelling-words.pdf".some),
+    Extracted(domain="domain1".some, root_type="A".some, root_id="1234".some,
+      doc_id="doc2".some,
+      doc_file_path="/home/htao/tmp/sparkcontext-examples.pdf".some),
+    Extracted(domain="domain2".some, root_type="A".some, root_id="abcd".some,
+      doc_id="doc3".some,
+      doc_file_path="/home/htao/tmp/fourth-grade-spelling-words.pdf".some),
+    Extracted(domain="domain2".some, root_type="A".some, root_id="abcd".some,
+      doc_id="doc4".some,
+      doc_file_path="/home/htao/tmp/fourth-grade-spelling-words.pdf".some),
+    Extracted(domain="domain2".some, root_type="A".some, root_id="abcd".some,
+      doc_id="doc5".some,
+      doc_file_path="/home/htao/tmp/fourth-grade-spelling-words.pdf".some)
   )
 
-  val src = Stream.emits(files)
+  val src = Stream.emits(filesK)
 
   val concurrency = 5
+
+  val cqlPort: Int = 9042
+  val user = "cassandra"
+  val pass = "cassandra"
+
+  val c = Cluster.builder()
+      .addContactPoint(s"127.0.0.1")
+      .withPort(cqlPort)
+      .withCredentials(user, pass)
+      .withReconnectionPolicy(new ConstantReconnectionPolicy(5000))
+      .build()
+
+  val ct = CassandraCluster.impl.create[IO](c).unsafeRunSync()
+  val cs = ct.session
 
   override def run(args: List[String]): IO[ExitCode] =
     (for {
       s <- Semaphore[IO](concurrency)
-      tx = new TextExtractInterpreter[IO](concurrency, s)
+      ci = CassandraInterpreter(cs)
+      tx = new TextExtractInterpreter[IO](concurrency, s, ci)
     } yield tx)
       .unsafeRunSync()
       .initialize

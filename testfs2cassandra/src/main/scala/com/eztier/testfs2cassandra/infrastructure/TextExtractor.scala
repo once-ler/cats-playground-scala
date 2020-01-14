@@ -3,11 +3,11 @@ package infrastructure
 
 import java.util.Date
 import java.text.SimpleDateFormat
-import java.io.{ByteArrayOutputStream, File, FileInputStream, FileWriter, InputStream, PrintWriter}
+import java.io.{ByteArrayOutputStream, File, FileInputStream}
 
-import org.apache.commons.io.{FilenameUtils, IOUtils}
+import org.apache.commons.io.{FilenameUtils}
 import org.apache.tika.exception.TikaException
-import org.apache.tika.metadata.{Metadata, Property}
+import org.apache.tika.metadata.{Metadata}
 import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser}
 import org.apache.tika.parser.audio.AudioParser
 import org.apache.tika.parser.html.HtmlParser
@@ -18,11 +18,12 @@ import org.apache.tika.parser.pdf.PDFParser
 import org.apache.tika.parser.rtf.RTFParser
 import org.apache.tika.parser.txt.TXTParser
 import org.apache.tika.parser.xml.XMLParser
-import org.apache.tika.sax.{BodyContentHandler, WriteOutContentHandler}
-import org.xml.sax.helpers.DefaultHandler
+import org.apache.tika.sax.{BodyContentHandler}
+// import org.xml.sax.helpers.DefaultHandler
+
+import collection.JavaConverters._
+
 import domain.Extracted
-import org.apache.tika.config.TikaConfig
-import org.apache.tika.parser.ocr.TesseractOCRConfig
 
 sealed trait FileType {
   def getParser: Parser
@@ -115,6 +116,12 @@ class TextExtractor {
     // ops.toByteArray()
   }
 
+  private def aggregateMetadata(metadata: Metadata) =
+    metadata.names().foldLeft(Map[String, String]()) {
+      (a, n) =>
+        a + (n -> metadata.getValues(n).mkString("|"))
+    }
+
   def extract(filePath: String, userAutoParser: Boolean = true): Option[Extracted] = {
     try {
       val file = new File(filePath)
@@ -132,10 +139,13 @@ class TextExtractor {
 
           parser.getParser.parse(istream, handler, metadata, parserContext)
 
+          val aggMeta = aggregateMetadata(metadata)
+
           Some(
             Extracted(
-              filePath = filePath,
-              content = handler.toString()
+              doc_file_path = Some(filePath),
+              content = Some(handler.toString()),
+              metadata = Some(aggMeta)
             )
           )
         case _ => None

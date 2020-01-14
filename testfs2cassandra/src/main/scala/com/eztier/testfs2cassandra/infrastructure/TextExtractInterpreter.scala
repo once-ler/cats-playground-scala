@@ -16,7 +16,7 @@ import shapeless.LabelledGeneric
 
 import domain.Extracted
 
-class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F]) {
+class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], cassandraInterpreter: CassandraInterpreter[F]) {
 
   implicit val showPerson: Show[Option[Extracted]] = Show.show(d => d match {
     case Some(o) => s"${o.content}"
@@ -74,18 +74,18 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
         .suspend(processFile(in._2))
         .map { e =>
           e match {
-            case Some(o) => Some(o.copy(docId = in._1))
+            case Some(o) => Some(o.copy(doc_id = Some(in._1)))
             case _ => None
           }
         }
   }
 
-  private def extract = (in: (String, String)) =>
+  private def extract = (in: Extracted) =>
     Sync[F]
-      .suspend(processFile(in._2))
+      .suspend(processFile(in.doc_file_path.get))
       .map { e =>
         e match {
-          case Some(o) => Some(o.copy(docId = in._1))
+          case Some(o) => Some(o.copy(doc_id = in.doc_id))
           case _ => None
         }
       }
@@ -96,8 +96,11 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
       callback(Right(()))
     }
 
-  def aggregate(src: Stream[F, (String, String)]) = {
+  def aggregate(src: Stream[F, Extracted]) = {
 
+    cassandraInterpreter.createTest
+
+    /*
     src
       .mapAsyncUnordered(concurrency)(extract)
       .chunkN(100)
@@ -105,6 +108,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
       // .through(toExtractPipeS)
       .covary[F]
       .showLinesStdOut
+     */
   }
 
 }

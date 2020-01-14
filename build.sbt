@@ -241,6 +241,8 @@ lazy val testfs2cassandra = project.
       jbig2,
       jpeg2000,
 
+      guava,
+      cassandraCore,
       fs2Cassandra
     )
   ).dependsOn(
@@ -279,6 +281,8 @@ val ImageIOVersion = "1.4.0"
 val Jbig2Version = "3.0.3"
 val Jpeg2000Version = "1.3.0"
 val Fs2CassandraVersion = "0.4.0"
+val CassandraCoreVersion = "3.5.0"
+val GuavaVersion = "19.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -351,6 +355,10 @@ val jbig2 = "org.apache.pdfbox" % "jbig2-imageio" % Jbig2Version
 val jpeg2000 = "com.github.jai-imageio" % "jai-imageio-jpeg2000" % Jpeg2000Version
 
 val fs2Cassandra = "com.spinoco" %% "fs2-cassandra" % Fs2CassandraVersion
+val cassandraCore = "com.datastax.cassandra" % "cassandra-driver-core" % CassandraCoreVersion
+val guava = "com.google.guava" % "guava" % GuavaVersion
+
+
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
