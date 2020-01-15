@@ -1,7 +1,6 @@
 package com.eztier.datasource
 package infrastructure
 
-import cats.implicits._
 import cats.effect.{Async, Resource, Sync}
 import fs2.Chunk
 
@@ -122,16 +121,27 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
     in: AnyRef,
     filterFunc: java.lang.reflect.Field => Boolean = (_) => true,
     formatFunc: Any => Any = a => a
-   ): (Array[String], Array[AnyRef]) = {
+   ): (Array[String], Array[AnyRef]) =
       ((Array[String](), Array[AnyRef]()) /: in.getClass.getDeclaredFields.filter(filterFunc)) {
         (a, f) =>
           f.setAccessible(true)
-          a._1 :+ formatFunc(f.getName)
-          a._2 :+ formatFunc(f.get(in))
+          val k = a._1 :+ formatFunc(f.getName).asInstanceOf[String]
 
-          a
+          val v = a._2 :+
+            (formatFunc(f.get(in)) match {
+              case Some(o) =>
+                o match {
+                  case a: Map[_, _] => a.asJava
+                  case a: List[_] => a.asJava
+                  case a: Vector[_] => a.asJava
+                  case a: Seq[_] => a.asJava
+                  case _ => o
+                }
+              case _ => null
+            }).asInstanceOf[AnyRef]
+
+          (k, v)
       }
-    }
 
   def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = "") =
     session.use { s =>

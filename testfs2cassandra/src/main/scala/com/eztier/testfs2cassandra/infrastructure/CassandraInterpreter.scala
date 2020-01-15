@@ -12,9 +12,20 @@ import testfs2cassandra.domain._
 class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) {
   def runTest = {
 
+    val a = Extracted(
+      domain = "test".some,
+      root_type = "Foo".some,
+      root_id = "1234".some,
+      doc_id = "doc333".some,
+      doc_file_path = "/some/path/file".some,
+      content = "bizz buzz".some,
+      metadata = Map("no" -> "way").some
+    )
+
     val f = for {
-      a <- client.execAsync(new SimpleStatement("select count(*) from dwh.ca_document_extracted"))
-      s = a.one()
+      // a <- client.execAsync(new SimpleStatement("select count(*) from dwh.ca_document_extracted"))
+      b <- client.insertManyAsync(Chunk.vector(Vector(a)), "dwh", "ca_document_extracted")
+      s = b.one()
     } yield s
 
     Stream.eval(f)
