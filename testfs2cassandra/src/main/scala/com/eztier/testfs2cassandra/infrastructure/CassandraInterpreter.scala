@@ -1,42 +1,27 @@
-package com.eztier.testfs2cassandra
-package infrastructure
+package com.eztier
+package testfs2cassandra.infrastructure
 
+import cats.implicits._
 import cats.effect.{Async, Concurrent, Resource}
-import shapeless.{HList, Witness}
-import spinoco.fs2.cassandra.{CassandraSession, KeySpace, Table}
 import fs2._
 import Stream._
-import domain._
+import com.datastax.driver.core.{SimpleStatement, Statement}
+import datasource.infrastructure.CassandraClient
+import testfs2cassandra.domain._
 
-class CassandraInterpreter[F[_]: Async: Concurrent](session: Resource[F, CassandraSession[F]]) {
+class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) {
+  def runTest = {
 
-  def createTest = {
-    val ks = new KeySpace("dwh")
-    val t1 = {
-      ks.table[DocumentExtracted]
-        .partition('domain)
-        .partition('root_type)
-        .partition('root_id)
-        .cluster('doc_id)
-        .build("ca_document_extracted")
-    }
+    val f = for {
+      a <- client.execAsync(new SimpleStatement("select count(*) from dwh.ca_document_extracted"))
+      s = a.one()
+    } yield s
 
-    Stream.resource(session).flatMap {
-      cs =>
-        Stream.eval(cs.create(t1))
-    }
-  }
-
-  def insertMany = {
-
-    val b0 = {
-
-    }
+    Stream.eval(f)
 
   }
-
 }
 
 object CassandraInterpreter {
-  def apply[F[_]: Async: Concurrent](session: Resource[F, CassandraSession[F]]): CassandraInterpreter[F] = new CassandraInterpreter[F](session)
+  def apply[F[_]: Async: Concurrent](client: CassandraClient[F]): CassandraInterpreter[F] = new CassandraInterpreter[F](client)
 }

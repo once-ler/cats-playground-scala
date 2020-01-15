@@ -1,4 +1,5 @@
-package com.eztier.testfs2cassandra
+package com.eztier
+package testfs2cassandra
 
 import java.io.FileInputStream
 import java.util.concurrent.Executors
@@ -11,9 +12,9 @@ import com.datastax.driver.core.policies.ConstantReconnectionPolicy
 import fs2.{Stream, io}
 
 import scala.concurrent.ExecutionContext
+import datasource.infrastructure.{CassandraClient, CassandraSession}
 import domain._
 import infrastructure._
-import spinoco.fs2.cassandra.CassandraCluster
 
 object App extends IOApp {
 
@@ -39,6 +40,7 @@ object App extends IOApp {
 
   val concurrency = 5
 
+  val cqlEndpoints = "127.0.0.1"
   val cqlPort: Int = 9042
   val user = "cassandra"
   val pass = "cassandra"
@@ -50,24 +52,23 @@ object App extends IOApp {
       .withReconnectionPolicy(new ConstantReconnectionPolicy(5000))
       .build()
 
-  val ct = CassandraCluster.impl.create[IO](c).unsafeRunSync()
-  val cs = ct.session
-
   override def run(args: List[String]): IO[ExitCode] = {
     val r = (for {
       s <- Semaphore[IO](concurrency)
-      ci = CassandraInterpreter(cs)
+      cs = CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession
+      cl = CassandraClient(cs)
+      ci = CassandraInterpreter(cl)
       tx = new TextExtractInterpreter[IO](concurrency, s, ci)
     } yield (ci, tx))
       .unsafeRunSync()
 
-    r._1.createTest.compile.drain.as(ExitCode.Success)
+      r._1.runTest.compile.drain.as(ExitCode.Success)
 
-    /*
+/*
       r._2
         .initialize
         .aggregate(src).compile.drain.as(ExitCode.Success)
 
-   */
+*/
   }
 }
