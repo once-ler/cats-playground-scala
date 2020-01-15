@@ -283,6 +283,7 @@ val Jbig2Version = "3.0.3"
 val Jpeg2000Version = "1.3.0"
 val CassandraCoreVersion = "3.8.0"
 val GuavaVersion = "19.0"
+val ShapelessVersion = "2.3.3"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -357,7 +358,7 @@ val jpeg2000 = "com.github.jai-imageio" % "jai-imageio-jpeg2000" % Jpeg2000Versi
 val cassandraCore = "com.datastax.cassandra" % "cassandra-driver-core" % CassandraCoreVersion
 val guava = "com.google.guava" % "guava" % GuavaVersion
 
-
+val shapeless = "com.chuusai" %% "shapeless" % ShapelessVersion
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

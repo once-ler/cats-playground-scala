@@ -7,8 +7,9 @@ import java.util.concurrent.Executors
 import cats.effect.concurrent.Semaphore
 import cats.implicits._
 import cats.effect.{Blocker, Concurrent, ExitCode, IO, IOApp, Sync}
-import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy
+import com.datastax.driver.core.querybuilder.{Insert, QueryBuilder}
 import fs2.{Stream, io}
 
 import scala.concurrent.ExecutionContext

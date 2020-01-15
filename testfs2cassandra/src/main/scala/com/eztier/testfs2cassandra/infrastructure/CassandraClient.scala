@@ -3,7 +3,11 @@ package infrastructure
 
 import cats.implicits._
 import cats.effect.{Async, Resource, Sync}
-import com.datastax.driver.core.{BoundStatement, Cluster, ResultSet, ResultSetFuture, Session, Statement}
+import fs2.Chunk
+
+import com.datastax.driver.core.{BatchStatement, Cluster, ResultSet, ResultSetFuture, Session, Statement}
+import com.datastax.driver.core.policies.ConstantReconnectionPolicy
+import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -11,8 +15,6 @@ import scala.util.{Failure, Success}
 import scala.collection.JavaConverters._
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-
-import com.datastax.driver.core.policies.ConstantReconnectionPolicy
 
 trait WithBlockingThreadPool {
   def blockingThreadPool[F[_]: Sync]: Resource[F, ExecutionContext] =
@@ -69,7 +71,7 @@ class CassandraSession[F[_]: Async : Sync](endpoints: String, port: Int, user: O
     clusterBuilder.build()
   }
 
-  def getSession =
+  def getSession: Resource[F, Session] =
     Resource.liftF {
       blockingThreadPool.use { ec: ExecutionContext =>
         implicit val cs = ec
@@ -114,6 +116,50 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
               }
           }
         }
+    }
+
+  private def zipKV(
+    in: AnyRef,
+    filterFunc: java.lang.reflect.Field => Boolean = (_) => true,
+    formatFunc: Any => Any = a => a
+   ): (Array[String], Array[AnyRef]) = {
+      ((Array[String](), Array[AnyRef]()) /: in.getClass.getDeclaredFields.filter(filterFunc)) {
+        (a, f) =>
+          f.setAccessible(true)
+          a._1 :+ formatFunc(f.getName)
+          a._2 :+ formatFunc(f.get(in))
+
+          a
+      }
+    }
+
+  def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = "") =
+    session.use { s =>
+
+      blockingThreadPool.use { ec: ExecutionContext =>
+        implicit val cs = ec
+
+        Async[F].async {
+          (cb: Either[Throwable, ResultSet] => Unit) =>
+
+            val batch = records.map {
+              c =>
+                val (keys, values) = zipKV(c)
+
+                QueryBuilder.insertInto(keySpace, tableName).values(keys, values)
+            }.toVector
+
+            val batchStatement = new BatchStatement(BatchStatement.Type.UNLOGGED)
+              .addAll(batch.asJava)
+
+            val f:Future[ResultSet] = s.executeAsync(batchStatement)
+
+            f.onComplete {
+              case Success(s) => cb(Right(s))
+              case Failure(e) => cb(Left(e))
+            }
+        }
+      }
     }
 
 }
