@@ -5,7 +5,6 @@ import java.util.Date
 
 import com.datastax.driver.core.SimpleStatement
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 trait WithCreateStatementBuilder {
@@ -35,7 +34,7 @@ trait WithCreateStatementBuilder {
             case a if a =:= typeOf[Short] => "smallint"
             case a if a =:= typeOf[Byte] => "tinyint"
             case a if a =:= typeOf[Boolean] => "boolean"
-            case a if (a =:= typeOf[Seq[String]] || a =:= typeOf[List[String]] || a =:= typeOf[Vector[String]]) => "list<text>"
+            case a if (a =:= typeOf[Seq[String]] || a =:= typeOf[Vector[String]]) => "list<text>"
             case a if a =:= typeOf[Seq[Date]] => "list<timestamp>"
             case a if a =:= typeOf[Seq[BigDecimal]] => "list<decimal>"
             case a if a =:= typeOf[Seq[Double]] => "list<double>"
@@ -55,21 +54,20 @@ trait WithCreateStatementBuilder {
     m
   }
 
-  def getCreateStmt[T](implicit typeTag: TypeTag[T]): Seq[String] = {
+  private def getCreateStmt[T](implicit typeTag: TypeTag[T]): Seq[String] = {
     val o = typeTag.tpe.resultType
 
     val m = toCaType[T]
 
-    val f = (ArrayBuffer[String]() /: m) {
+    val f = (Array[String]() /: m) {
       (a, n) =>
-        a += n._1 + " " + n._2
-        a
+        a :+ (n._1 + " " + n._2)
     }
 
     Seq(s"create table if not exists ${o.typeSymbol.name.toString} (${f.mkString(",")});")
   }
 
-  def getCreateStmt[T: TypeTag](partitionKeys: String*)(clusteringKeys: String*)(orderBy: Option[String] = None, direction: Option[Int] = None): Seq[String] = {
+  def getCreateStmt[T: TypeTag](partitionKeys: String*)(clusteringKeys: String*)(orderBy: Option[String] = None, direction: Option[Int] = None): SimpleStatement = {
 
     val t: Seq[String] = getCreateStmt[T]
 
@@ -101,12 +99,12 @@ trait WithCreateStatementBuilder {
     val t0 = t(0)
     val trim = t0.substring(0, t0.length - 2)
 
-    {
+    new SimpleStatement(
       trim +
         s", primary key ((${pk})" +
         (if (ck.length > 0) s", ${ck}))" else "))") +
-        sb + ";\n"
-    }.split('\n')
+        sb + ";"
+    )
 
   }
 

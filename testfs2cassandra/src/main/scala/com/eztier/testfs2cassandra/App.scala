@@ -62,7 +62,7 @@ object App extends IOApp {
     } yield (ci, tx))
       .unsafeRunSync()
 
-      r._1.runTest.compile.drain.as(ExitCode.Success)
+      r._1.runCreateTest.compile.drain.as(ExitCode.Success)
 
 /*
       r._2

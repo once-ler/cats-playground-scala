@@ -46,7 +46,7 @@ case class DocumentExtracted
   root_id: Option[String] = None,
   root_type: Option[String] = None,
   root_owner: Option[String] = None,
-  root_associates: Option[String] = None,
+  root_associates: Option[List[String]] = None,
   root_company: Option[String] = None,
   root_status: Option[String] = None,
   root_display: Option[String] = None,
