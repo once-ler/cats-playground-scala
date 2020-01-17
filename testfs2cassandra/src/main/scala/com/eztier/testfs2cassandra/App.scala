@@ -9,13 +9,12 @@ import cats.implicits._
 import cats.effect.{Blocker, Concurrent, ExitCode, IO, IOApp, Sync}
 import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy
-import com.datastax.driver.core.querybuilder.{Insert, QueryBuilder}
-import fs2.{Stream, io}
+import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
+import fs2.{Stream}
 
-import scala.concurrent.ExecutionContext
-import datasource.infrastructure.{CassandraClient, CassandraSession}
 import domain._
 import infrastructure._
+import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
 
 object App extends IOApp {
 

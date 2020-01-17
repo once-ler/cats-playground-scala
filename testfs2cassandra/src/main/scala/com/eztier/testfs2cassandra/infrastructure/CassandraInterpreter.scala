@@ -6,7 +6,7 @@ import cats.effect.{Async, Concurrent, Resource}
 import fs2._
 import Stream._
 import com.datastax.driver.core.{SimpleStatement, Statement}
-import datasource.infrastructure.CassandraClient
+import com.eztier.datasource.infrastructure.cassandra.CassandraClient
 import testfs2cassandra.domain._
 
 class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) {
