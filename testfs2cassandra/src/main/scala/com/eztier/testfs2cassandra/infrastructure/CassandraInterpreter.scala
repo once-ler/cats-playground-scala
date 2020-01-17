@@ -12,7 +12,7 @@ import domain._
 class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) {
   def runCreateTest =
     Stream.eval{
-      client.createAsync[DocumentExtracted]("domain", "root_type", "root_id")("doc_id")(Some("doc_id"), Some(1))
+      client.createAsync[DocumentExtracted]("dwh", Some("ca_document_extracted"))("domain", "root_type", "root_id")("doc_id")(Some("doc_id"), Some(1))
     }
 
   def runInsertTest: Stream[F, Row] = {

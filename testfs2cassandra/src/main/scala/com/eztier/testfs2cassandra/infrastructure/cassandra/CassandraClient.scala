@@ -55,7 +55,7 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
       }
     }
 
-  def createAsync[A: TypeTag](partitionKeys: String*)(clusteringKeys: String*)(orderBy: Option[String] = None, direction: Option[Int] = None): F[ResultSet] =
+  def createAsync[A: TypeTag](keySpace: String, tableName: Option[String] = None)(partitionKeys: String*)(clusteringKeys: String*)(orderBy: Option[String] = None, direction: Option[Int] = None): F[ResultSet] =
     session.use { s =>
 
       blockingThreadPool.use { ec: ExecutionContext =>
@@ -64,9 +64,7 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
         Async[F].async {
           (cb: Either[Throwable, ResultSet] => Unit) =>
 
-            val simpleStatement = getCreateStmt(partitionKeys:_*)(clusteringKeys:_*)(orderBy, direction)
-
-            val sq = s.executeAsync(simpleStatement)
+            val simpleStatement = getCreateStmt(keySpace, tableName)(partitionKeys:_*)(clusteringKeys:_*)(orderBy, direction)
 
             val f:Future[ResultSet] = s.executeAsync(simpleStatement)
 
