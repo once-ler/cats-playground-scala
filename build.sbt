@@ -241,7 +241,10 @@ lazy val testfs2cassandra = project.
       jbig2,
       jpeg2000,
 
-      cassandraCore
+      cassandraCore,
+
+      http4sBlazeClient,
+      http4sCirce
     ),
     dependencyOverrides ++= Seq(
       guava

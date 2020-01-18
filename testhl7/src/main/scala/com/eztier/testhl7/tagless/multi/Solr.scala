@@ -90,7 +90,7 @@ object Domain {
     def search(collection: String, query: String, fields: List[String]): F[Option[QueryResponse]] =
       repo.search(collection, query, fields )
 
-    def insert(oid: Option[String]): F[Either[String, NodeSeq]] =
+    def insert(oid: Option[String]): F[Either[String, Unit]] =
       repo.insert(oid)
 
     def shutdown = repo.shutdown

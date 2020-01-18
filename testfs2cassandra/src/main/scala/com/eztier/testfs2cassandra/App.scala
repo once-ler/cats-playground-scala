@@ -37,6 +37,7 @@ object App extends IOApp {
   )
 
   val src = Stream.emits(filesK)
+  val src2 = Stream.emits(1 to 10)
 
   val concurrency = 5
 
@@ -59,10 +60,20 @@ object App extends IOApp {
       cl = CassandraClient(cs)
       ci = CassandraInterpreter(cl)
       tx = new TextExtractInterpreter[IO](concurrency, s, ci)
-    } yield (ci, tx))
+      hi = new HttpInterpreter[IO]()
+    } yield (ci, tx, hi))
       .unsafeRunSync()
 
-      r._1.runCreateTest.compile.drain.as(ExitCode.Success)
+      r._3.runConcurrentTest(src2)
+      .handleErrorWith { e =>
+        println(e.getMessage())
+
+        println("Onwards... ")
+        Stream.eval(().pure[IO])
+      }
+      .compile.drain.as(ExitCode.Success)
+
+      // r._1.runCreateTest.compile.drain.as(ExitCode.Success)
 
 /*
       r._2
