@@ -31,6 +31,7 @@ case class DocumentMetadata
   root_display: Option[String],
   root_display_long: Option[String],
   doc_id: Option[String] = None,
+  doc_other_id: Option[String] = None,
   doc_file_path: Option[String] = None,
   doc_object_path: Option[String] = None,
   doc_category: Option[String] = None,
@@ -52,6 +53,7 @@ case class DocumentExtracted
   root_display: Option[String] = None,
   root_display_long: Option[String] = None,
   doc_id: Option[String] = None,
+  doc_other_id: Option[String] = None,
   doc_file_path: Option[String] = None,
   doc_object_path: Option[String] = None,
   doc_category: Option[String] = None,
@@ -60,4 +62,10 @@ case class DocumentExtracted
   doc_year_created: Option[Int] = None,
   content: Option[String] = None,
   metadata: Option[Map[String, String]] = None
+)
+
+case class Document
+(
+  doc_other_id: Option[String] = None,
+  doc_xml: Option[String] = None
 )

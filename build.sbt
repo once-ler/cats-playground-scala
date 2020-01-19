@@ -232,6 +232,7 @@ lazy val testfs2cassandra = project.
       doobieH2,
       doobieScalatest,
       doobieHikari,
+      doobiePostgres,
       h2,
       flyway,
 
@@ -309,6 +310,7 @@ val doobie = "org.tpolecat" %% "doobie-core" % DoobieVersion
 val doobieH2 ="org.tpolecat" %% "doobie-h2" % DoobieVersion
 val doobieScalatest ="org.tpolecat" %% "doobie-scalatest" % DoobieVersion
 val doobieHikari ="org.tpolecat" %% "doobie-hikari" % DoobieVersion
+val doobiePostgres = "org.tpolecat" %% "doobie-postgres"  % DoobieVersion
 
 val h2 = "com.h2database" % "h2" % H2Version
 

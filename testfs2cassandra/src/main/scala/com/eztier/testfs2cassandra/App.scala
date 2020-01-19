@@ -4,17 +4,20 @@ package testfs2cassandra
 import java.io.FileInputStream
 import java.util.concurrent.Executors
 
+import cats.Applicative
+import io.circe.config.{parser => ConfigParser}
 import cats.effect.concurrent.Semaphore
 import cats.implicits._
-import cats.effect.{Blocker, Concurrent, ExitCode, IO, IOApp, Sync}
+import cats.effect.{Async, Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy
 import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
-import fs2.{Stream}
-
+import fs2.Stream
 import domain._
 import infrastructure._
+import config._
 import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
+import doobie.util.ExecutionContexts
 
 object App extends IOApp {
 
@@ -53,7 +56,22 @@ object App extends IOApp {
       .withReconnectionPolicy(new ConstantReconnectionPolicy(5000))
       .build()
 
+  def initializeDbResource[F[_]: Async : Applicative: ContextShift] = {
+    for {
+      conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
+      connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.eventstore.connections.poolSize)
+      txnEc <- ExecutionContexts.cachedThreadPool[F]
+      xa <- DatabaseConfig.dbTransactor[F](conf.db.local, connEc, Blocker.liftExecutionContext(txnEc))
+      documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa)
+      documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
+      documentRepo = new DoobieDocumentInterpreter[F](xa)
+      documentService = new DocumentService[F](documentRepo)
+    } yield (documentMetadataService, documentService)
+  }
+
   override def run(args: List[String]): IO[ExitCode] = {
+    val db = initializeDbResource[IO]
+
     val r = (for {
       s <- Semaphore[IO](concurrency)
       cs = CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession
