@@ -74,6 +74,7 @@ object App extends IOApp {
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
+
     val db = initializeDbResource[IO].use {
       case (documentMetadataService, documentService) =>
         println("Connected")
@@ -82,7 +83,9 @@ object App extends IOApp {
 
     db.unsafeRunSync()
 
+
     IO(ExitCode.Success)
+
 
 /*
     val r = (for {

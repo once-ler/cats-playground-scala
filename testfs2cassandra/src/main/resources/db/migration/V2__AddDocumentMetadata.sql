@@ -10,4 +10,7 @@ values
 ('foo', 'bar', 'E', 'doc7', 'A700'),
 ('foo', 'bar', 'E', 'doc8', 'A800'),
 ('foo', 'bar', 'F', 'doc9', 'A900')
+on conflict on constraint irb_document_metadata_cluster_idx
+do update
+set doc_other_id = excluded.doc_other_id
 ;

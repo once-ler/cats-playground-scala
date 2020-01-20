@@ -16,7 +16,8 @@ create table if not exists irb.document_metadata(
   doc_category varchar(120),
   doc_name varchar(255),
   doc_date_created varchar(50),
-  doc_year_created int
+  doc_year_created int,
+  constraint irb_document_metadata_cluster_idx unique (domain, root_type, root_id, doc_id)
 )
 WITH (
   OIDS=FALSE
