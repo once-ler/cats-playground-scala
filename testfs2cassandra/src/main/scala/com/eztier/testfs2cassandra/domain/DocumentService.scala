@@ -4,11 +4,11 @@ package domain
 import fs2.Stream
 
 trait DocumentMetadataRepo[F[_]] {
-  def list(): Stream[F, String]
+  def list(): Stream[F, (String, String)]
 }
 
 class DocumentMetadataService[F[_]](repo: DocumentMetadataRepo[F]) {
-  def list(): Stream[F, String] =
+  def list(): Stream[F, (String, String)] =
     repo.list()
 }
 

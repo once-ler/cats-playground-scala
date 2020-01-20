@@ -3,5 +3,5 @@ package config
 
 case class HttpInstanceConfig
 (
-  patient: HttpConfig
+  entity: HttpConfig
 )

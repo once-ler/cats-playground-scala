@@ -235,6 +235,7 @@ lazy val testfs2cassandra = project.
       doobiePostgres,
       h2,
       flyway,
+      postgreSQLJdbc,
 
       tikaCore,
       tikaParsers,
@@ -288,6 +289,7 @@ val Jpeg2000Version = "1.3.0"
 val CassandraCoreVersion = "3.8.0"
 val GuavaVersion = "19.0"
 val ShapelessVersion = "2.3.3"
+val PostgreSQLJdbcVersion = "42.2.9"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -364,6 +366,9 @@ val cassandraCore = "com.datastax.cassandra" % "cassandra-driver-core" % Cassand
 val guava = "com.google.guava" % "guava" % GuavaVersion
 
 val shapeless = "com.chuusai" %% "shapeless" % ShapelessVersion
+
+val postgreSQLJdbc = "org.postgresql" % "postgresql" % PostgreSQLJdbcVersion
+
 
 // Filter out compiler flags to make the repl experience functional...
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")

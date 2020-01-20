@@ -49,19 +49,23 @@ object App extends IOApp {
   val user = "cassandra"
   val pass = "cassandra"
 
+  /*
   val c = Cluster.builder()
       .addContactPoint(s"127.0.0.1")
       .withPort(cqlPort)
       .withCredentials(user, pass)
       .withReconnectionPolicy(new ConstantReconnectionPolicy(5000))
       .build()
+  */
+
 
   def initializeDbResource[F[_]: Async : Applicative: ContextShift] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
+      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.eventstore.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
-      xa <- DatabaseConfig.dbTransactor[F](conf.db.local, connEc, Blocker.liftExecutionContext(txnEc))
+      xa <- DatabaseConfig.dbTransactor[F](conf.db.eventstore, connEc, Blocker.liftExecutionContext(txnEc))
       documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa)
       documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
       documentRepo = new DoobieDocumentInterpreter[F](xa)
@@ -70,8 +74,17 @@ object App extends IOApp {
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val db = initializeDbResource[IO]
+    val db = initializeDbResource[IO].use {
+      case (documentMetadataService, documentService) =>
+        println("Connected")
+        IO.unit
+    }
 
+    db.unsafeRunSync()
+
+    IO(ExitCode.Success)
+
+/*
     val r = (for {
       s <- Semaphore[IO](concurrency)
       cs = CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession
@@ -90,7 +103,7 @@ object App extends IOApp {
         Stream.eval(().pure[IO])
       }
       .compile.drain.as(ExitCode.Success)
-
+*/
       // r._1.runCreateTest.compile.drain.as(ExitCode.Success)
 
 /*

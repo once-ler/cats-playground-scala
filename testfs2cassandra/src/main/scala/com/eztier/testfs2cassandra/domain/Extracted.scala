@@ -66,6 +66,7 @@ case class DocumentExtracted
 
 case class Document
 (
+  doc_id: Option[String] = None,
   doc_other_id: Option[String] = None,
   doc_xml: Option[String] = None
 )

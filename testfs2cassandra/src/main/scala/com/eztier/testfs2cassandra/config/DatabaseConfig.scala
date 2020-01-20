@@ -39,7 +39,7 @@ object DatabaseConfig {
         val fw: Flyway = {
           Flyway
             .configure()
-            .locations(cfg.locations.getOrElse(""))
+            .locations(cfg.locations.getOrElse("classpath:db/migration"))
             .dataSource(cfg.url, cfg.user, cfg.password)
             .load()
         }
