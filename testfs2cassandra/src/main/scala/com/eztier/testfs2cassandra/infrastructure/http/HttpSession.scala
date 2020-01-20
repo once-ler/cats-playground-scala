@@ -9,7 +9,7 @@ import fs2.Stream
 import fs2.text.{utf8DecodeC, utf8Encode}
 import cats.implicits._
 import cats.effect.{ConcurrentEffect, IO}
-import org.http4s.{Charset, EntityBody, Method, Request, Uri, UrlForm}
+import org.http4s.{Charset, EntityBody, Headers, Method, Request, Uri, UrlForm}
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.Status.Successful
 
@@ -26,9 +26,10 @@ class HttpSession[F[_]: ConcurrentEffect] extends WithBlockingStream {
 
   private def strBody(body: String): EntityBody[F] = Stream(body).through(utf8Encode)
 
-  def postWithBody(uri: String, body: String): EitherT[F, String, String] = {
+  def postWithBody(uri: String, body: String, headers: Headers = Headers.empty): EitherT[F, String, String] = {
     val req = Request[F](
       method = Method.POST,
+      headers = headers,
       uri = Uri.unsafeFromString(uri),
       body = strBody(body)
     )
