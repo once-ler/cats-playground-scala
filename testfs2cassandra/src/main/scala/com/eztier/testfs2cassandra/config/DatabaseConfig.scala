@@ -46,7 +46,9 @@ object DatabaseConfig {
         fw.migrate()
       } match {
         case Failure(e) =>
-          Logger[F].error(WrapThrowable(e).printStackTraceAsString)
+          val ex = WrapThrowable(e).printStackTraceAsString
+          println(ex)
+          Logger[F].error(ex)
         case Success(_) => ()
       }
     }.as(())

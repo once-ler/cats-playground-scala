@@ -8,7 +8,7 @@ import cats.Applicative
 import io.circe.config.{parser => ConfigParser}
 import cats.effect.concurrent.Semaphore
 import cats.implicits._
-import cats.effect.{Async, Blocker, Concurrent, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
+import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
 import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy
 import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
@@ -59,7 +59,7 @@ object App extends IOApp {
   */
 
 
-  def initializeDbResource[F[_]: Async : Applicative: ContextShift] = {
+  def initializeDbResource[F[_]: Async : Applicative: ContextShift: ConcurrentEffect] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
       _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
@@ -70,21 +70,21 @@ object App extends IOApp {
       documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
       documentRepo = new DoobieDocumentInterpreter[F](xa)
       documentService = new DocumentService[F](documentRepo)
-    } yield (documentMetadataService, documentService)
+      documentXmlRepo = new DocumentHttpInterpreter[F](conf.http.entity)
+      documentXmlService = new DocumentXmlService(documentXmlRepo)
+      documentAggregator = new DocumentAggregator[F](documentMetadataService, documentService, documentXmlService)
+    } yield documentAggregator
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
 
     val db = initializeDbResource[IO].use {
-      case (documentMetadataService, documentService) =>
-        println("Connected")
+      case documentAggregator =>
+        // println("Connected")
         IO.unit
     }
 
-    db.unsafeRunSync()
-
-
-    IO(ExitCode.Success)
+    IO(db.unsafeRunSync()).as(ExitCode.Success)
 
 
 /*

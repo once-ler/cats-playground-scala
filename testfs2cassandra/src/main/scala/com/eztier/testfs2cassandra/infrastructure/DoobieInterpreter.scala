@@ -9,7 +9,7 @@ import doobie.implicits._
 import domain._
 import doobie.util.query.Query0
 import doobie.util.update.Update
-import fs2.Stream
+import fs2.{Chunk, Stream}
 
 private object DocumentMetadataSQL {
   def listSql: Query0[(String, String)] = sql"""
@@ -23,7 +23,7 @@ class DoobieDocumentMetataInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Tr
 }
 
 private object DocumentSQL {
-  def insertManySql(a: List[Document]): ConnectionIO[Int] = {
+  def insertManySql(a: Chunk[Document]): ConnectionIO[Int] = {
     val stmt =
       """
         insert into irb.document (doc_id, doc_other_id, doc_xml)
@@ -37,6 +37,6 @@ private object DocumentSQL {
 
 class DoobieDocumentInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F]) extends DocumentRepo[F] {
   import DocumentSQL._
-  override def insertMany(a: List[Document]): F[Int] = insertManySql(a).transact(xa)
+  override def insertMany(a: Chunk[Document]): F[Int] = insertManySql(a).transact(xa)
 }
 
