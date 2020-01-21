@@ -7,7 +7,7 @@ import cats.implicits._
 import fs2.Stream
 import cats.effect.{Async, ConcurrentEffect}
 import datasource.infrastructure.http.HttpSession
-import org.http4s.{Header, Headers}
+import org.http4s.{Header, Headers, Method}
 import testfs2cassandra.config._
 import testfs2cassandra.domain._
 
@@ -60,21 +60,21 @@ class DocumentHttpInterpreter[F[_]: Async : ConcurrentEffect](conf: HttpConfig)
 
   override def fetchDocumentXml(src: Stream[F, (String, String)]): Stream[F, Document] = {
     val body = ""
-
     val headers = Headers.empty
+    val method = Method.GET
 
-    testFetchDocumentXml(src)
+    // testFetchDocumentXml(src)
 
-    /*
     src
       .mapAsyncUnordered(4){ r =>
-        session.postWithBody(conf.url, body).value
+
+        val url = conf.url + r._2
+
+        session.postWithBody(url, body, headers, method).value
           .flatMap {
             case Right(a) => Document(r._1.some, r._2.some, a.some).pure[F]
-            case Left(e) => Document(r._1.some, r._2.some, (<error>${e}</error>).toString().some).pure[F]
+            case Left(e) => Document(r._1.some, r._2.some, (<error>{e.getMessage}</error>).toString().some).pure[F]
           }
       }
-
-     */
   }
 }

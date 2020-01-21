@@ -1,3 +1,4 @@
+/*
 insert into irb.document_metadata ("domain", root_type, root_id, doc_id, doc_other_id)
 values
 ('foo', 'bar', 'A', 'doc0', 'A000'),
@@ -14,3 +15,4 @@ on conflict on constraint irb_document_metadata_cluster_idx
 do update
 set doc_other_id = excluded.doc_other_id
 ;
+*/

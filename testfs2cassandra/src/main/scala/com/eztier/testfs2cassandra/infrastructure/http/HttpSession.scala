@@ -27,9 +27,9 @@ class HttpSession[F[_]: ConcurrentEffect] extends WithBlockingStream {
 
   private def strBody(body: String): EntityBody[F] = Stream(body).through(utf8Encode)
 
-  def postWithBody(uri: String, body: String, headers: Headers = Headers.empty): EitherT[F, Throwable, String] = {
+  def postWithBody(uri: String, body: String, headers: Headers = Headers.empty, method: Method = Method.GET): EitherT[F, Throwable, String] = {
     val req = Request[F](
-      method = Method.POST,
+      method = method,
       headers = headers,
       uri = Uri.unsafeFromString(uri),
       body = strBody(body)
