@@ -53,7 +53,7 @@ class DocumentHttpInterpreter[F[_]: Async : ConcurrentEffect](conf: HttpConfig)
         session.postWithBody(conf.url, testBody, testHeaders).value
           .flatMap {
             case Right(a) => Document(r._1.some, r._2.some, a.some).pure[F]
-            case Left(e) => Document(r._1.some, r._2.some, (<error>${e}</error>).toString().some).pure[F]
+            case Left(e) => Document(r._1.some, r._2.some, (<error>{e.getMessage}</error>).toString().some).pure[F]
           }
       }
   }

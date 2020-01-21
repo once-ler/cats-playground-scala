@@ -81,6 +81,12 @@ object App extends IOApp {
     val db = initializeDbResource[IO].use {
       case documentAggregator =>
         // println("Connected")
+
+        documentAggregator
+          .getDocumentXml
+          .showLinesStdOut
+          .compile.drain.unsafeRunSync()
+
         IO.unit
     }
 

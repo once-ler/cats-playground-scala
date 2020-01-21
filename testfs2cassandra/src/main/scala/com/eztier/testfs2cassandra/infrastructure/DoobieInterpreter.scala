@@ -27,7 +27,7 @@ private object DocumentSQL {
     val stmt =
       """
         insert into irb.document (doc_id, doc_other_id, doc_xml)
-        values (?, ?, ?)
+        values (?, ?, ?::xml)
       """
 
     Update[Document](stmt)

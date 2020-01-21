@@ -4,6 +4,7 @@ package infrastructure.http
 
 import java.util.concurrent.Executors
 
+import cats.Functor
 import cats.data.EitherT
 import fs2.Stream
 import fs2.text.{utf8DecodeC, utf8Encode}
@@ -26,7 +27,7 @@ class HttpSession[F[_]: ConcurrentEffect] extends WithBlockingStream {
 
   private def strBody(body: String): EntityBody[F] = Stream(body).through(utf8Encode)
 
-  def postWithBody(uri: String, body: String, headers: Headers = Headers.empty): EitherT[F, String, String] = {
+  def postWithBody(uri: String, body: String, headers: Headers = Headers.empty): EitherT[F, Throwable, String] = {
     val req = Request[F](
       method = Method.POST,
       headers = headers,
@@ -34,16 +35,13 @@ class HttpSession[F[_]: ConcurrentEffect] extends WithBlockingStream {
       body = strBody(body)
     )
 
-    Try {
-      client.resource.use(_.expectOr[String](req)(r => {
+    EitherT(
+      client.resource.use(_.expectOr[String](req){r =>
         // On failure, the status code is returned.  The underlying HTTP connection is closed at the completion of the decoding.
-        throw new Throwable(s"Request failed.  Status code: ${r.status.code.toString}")
-        // s"Request failed.  Status code: ${r.status.code.toString}".pure[F]
-      }))
-    } match {
-      case Success(a) => EitherT.right(a)
-      case Failure(f) => EitherT.leftT(f.getMessage)
-    }
+        new Throwable(s"Request failed.  Status code: ${r.status.code.toString}").pure[F]
+      }.attempt)
+    )
+
   }
 
   def getF = {

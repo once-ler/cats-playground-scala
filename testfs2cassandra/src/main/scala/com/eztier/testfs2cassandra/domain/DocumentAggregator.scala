@@ -1,6 +1,7 @@
-package com.eztier.testfs2cassandra
-package domain
+package com.eztier
+package testfs2cassandra.domain
 
+import common.Util._
 import fs2.{Chunk, Pipe, Stream}
 
 class DocumentAggregator[F[_]](documentMetadataService: DocumentMetadataService[F], documentService: DocumentService[F], documentXmlService: DocumentXmlService[F]) {
