@@ -68,7 +68,7 @@ object App extends IOApp {
 
         documentAggregator
           .getDocumentXml
-          .showLinesStdOut
+          // .showLinesStdOut
           .compile.drain.unsafeRunSync()
 
         IO.unit

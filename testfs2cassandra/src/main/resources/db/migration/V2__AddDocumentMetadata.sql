@@ -10,7 +10,17 @@ values
 ('foo', 'bar', 'D', 'doc6', 'A600'),
 ('foo', 'bar', 'E', 'doc7', 'A700'),
 ('foo', 'bar', 'E', 'doc8', 'A800'),
-('foo', 'bar', 'F', 'doc9', 'A900')
+('foo', 'bar', 'F', 'doc9', 'A900'),
+('foo', 'bar', 'A', 'doc10', 'A100'),
+('foo', 'bar', 'B', 'doc11', 'A110'),
+('foo', 'bar', 'C', 'doc12', 'A120'),
+('foo', 'bar', 'C', 'doc13', 'A130'),
+('foo', 'bar', 'D', 'doc14', 'A140'),
+('foo', 'bar', 'D', 'doc15', 'A150'),
+('foo', 'bar', 'D', 'doc16', 'A160'),
+('foo', 'bar', 'E', 'doc17', 'A170'),
+('foo', 'bar', 'E', 'doc18', 'A180'),
+('foo', 'bar', 'F', 'doc19', 'A190')
 on conflict on constraint irb_document_metadata_cluster_idx
 do update
 set doc_other_id = excluded.doc_other_id

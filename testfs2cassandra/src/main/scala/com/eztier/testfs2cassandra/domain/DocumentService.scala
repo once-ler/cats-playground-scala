@@ -23,9 +23,14 @@ class DocumentService[F[_]](repo: DocumentRepo[F]) {
 
 trait DocumentXmlRepo[F[_]] {
   def fetchDocumentXml(src: Stream[F, (String, String)]): Stream[F, Document]
+
+  def fetchChunkDocumentXml(src: Chunk[(String, String)]): Stream[F, Chunk[Document]]
 }
 
 class DocumentXmlService[F[_]](repo: DocumentXmlRepo[F]) {
   def fetchDocumentXml(src: Stream[F, (String, String)]): Stream[F, Document] =
     repo.fetchDocumentXml((src))
+
+  def fetchChunkDocumentXml(src: Chunk[(String, String)]): Stream[F, Chunk[Document]] =
+    repo.fetchChunkDocumentXml(src)
 }

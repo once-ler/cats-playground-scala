@@ -19,7 +19,10 @@ private object DocumentMetadataSQL {
 
 class DoobieDocumentMetataInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F])extends DocumentMetadataRepo[F] {
   import DocumentMetadataSQL._
-  override def list(): Stream[F, (String, String)] = listSql.stream.transact(xa)
+  override def list(): Stream[F, (String, String)] = listSql.stream.flatMap { a =>
+    println(a._1)
+    Stream.emit(a)
+  }.transact(xa)
 }
 
 private object DocumentSQL {
