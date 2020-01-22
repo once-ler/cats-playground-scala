@@ -374,19 +374,17 @@ val postgreSQLJdbc = "org.postgresql" % "postgresql" % PostgreSQLJdbcVersion
 val badConsoleFlags = Seq("-Xfatal-warnings", "-Ywarn-unused:imports")
 scalacOptions in (Compile, console) ~= (_.filterNot(badConsoleFlags.contains(_)))
 
-// Skip tests for assembly  
 lazy val assemblySettings = Seq(
   assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
-  
+
   assemblyMergeStrategy in assembly := {
-    case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
-    case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
-    case x if x.endsWith("io.netty.versions.properties") => MergeStrategy.first
-    case "application.conf"                            => MergeStrategy.concat
-    case "logback.xml"                            => MergeStrategy.first
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
+      val strategy = oldStrategy(x)
+      if (strategy == MergeStrategy.deduplicate)
+        MergeStrategy.first
+      else
+        strategy
   },
   test in assembly := {}
 )

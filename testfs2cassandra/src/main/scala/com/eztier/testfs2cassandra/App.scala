@@ -1,23 +1,25 @@
 package com.eztier
 package testfs2cassandra
 
-import java.io.FileInputStream
-import java.util.concurrent.Executors
-
-import cats.Applicative
-import io.circe.config.{parser => ConfigParser}
-import cats.effect.concurrent.Semaphore
 import cats.implicits._
-import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Sync}
-import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
-import com.datastax.driver.core.policies.ConstantReconnectionPolicy
-import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
+import cats.effect.{ExitCode, IO, IOApp}
 import fs2.Stream
+
+// import java.io.FileInputStream
+// import java.util.concurrent.Executors
+// import scala.concurrent.duration._
+// import cats.Applicative
+// import cats.effect.concurrent.Semaphore
+// import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
+// import com.datastax.driver.core.{BatchStatement, BoundStatement, Cluster, PreparedStatement}
+// import com.datastax.driver.core.policies.ConstantReconnectionPolicy
+// import doobie.util.ExecutionContexts
+// import io.circe.config.{parser => ConfigParser}
+
 import domain._
 import infrastructure._
 import config._
 import com.eztier.datasource.infrastructure.cassandra.{CassandraClient, CassandraSession}
-import doobie.util.ExecutionContexts
 
 object App extends IOApp {
 
@@ -58,24 +60,6 @@ object App extends IOApp {
       .build()
   */
 
-
-  def initializeDbResource[F[_]: Async : Applicative: ContextShift: ConcurrentEffect] = {
-    for {
-      conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
-      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
-      connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.eventstore.connections.poolSize)
-      txnEc <- ExecutionContexts.cachedThreadPool[F]
-      xa <- DatabaseConfig.dbTransactor[F](conf.db.eventstore, connEc, Blocker.liftExecutionContext(txnEc))
-      documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa)
-      documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
-      documentRepo = new DoobieDocumentInterpreter[F](xa)
-      documentService = new DocumentService[F](documentRepo)
-      documentXmlRepo = new DocumentHttpInterpreter[F](conf.http.entity)
-      documentXmlService = new DocumentXmlService(documentXmlRepo)
-      documentAggregator = new DocumentAggregator[F](documentMetadataService, documentService, documentXmlService)
-    } yield documentAggregator
-  }
-
   override def run(args: List[String]): IO[ExitCode] = {
 
     val db = initializeDbResource[IO].use {
@@ -90,8 +74,9 @@ object App extends IOApp {
         IO.unit
     }
 
-    IO(db.unsafeRunSync()).as(ExitCode.Success)
+    // val db = (Stream.awakeEvery[IO](0.25.second) zipRight Stream.emits(1 to 100)).showLinesStdOut.compile.drain
 
+    IO(db.unsafeRunSync()).as(ExitCode.Success)
 
 /*
     val r = (for {
