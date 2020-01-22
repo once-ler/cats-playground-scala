@@ -29,7 +29,7 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](documentMetadataServi
     */
 
     for {
-      queue <- Stream.eval(Queue.unbounded[F, (String, String)])
+      queue <- Stream.eval(Queue.bounded[F, (String, String)](1))
       s <- Stream(
         src.evalMap(t => queue.enqueue1(t)).drain,
         queue.dequeue.groupWithin(10, 10.seconds).flatMap {c =>
@@ -37,6 +37,7 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](documentMetadataServi
         }.drain
       ).parJoinUnbounded
     } yield s
+
 
   }
 
