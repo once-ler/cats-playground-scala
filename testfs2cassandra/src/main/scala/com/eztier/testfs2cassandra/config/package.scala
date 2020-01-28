@@ -11,6 +11,9 @@ package object config {
   implicit val dbDec: Decoder[DatabaseConfig] = deriveDecoder
   implicit val httpInstanceDec: Decoder[HttpInstanceConfig] = deriveDecoder
   implicit val httpDec: Decoder[HttpConfig] = deriveDecoder
+  implicit val cassandraConnectionDec: Decoder[CassandraConnectionConfig] = deriveDecoder
+  implicit val cassandraDec: Decoder[CassandraConfig] = deriveDecoder
+  implicit val textExtractorDec: Decoder[TextExtractorConfig] = deriveDecoder
 
   implicit val appEncoder: Encoder[AppConfig] = deriveEncoder
   implicit val dbconnEnc: Encoder[DatabaseConnectionsConfig] = deriveEncoder
@@ -18,4 +21,7 @@ package object config {
   implicit val dbEnc: Encoder[DatabaseConfig] = deriveEncoder
   implicit val httpInstanceEnc: Encoder[HttpInstanceConfig] = deriveEncoder
   implicit val httpEnc: Encoder[HttpConfig] = deriveEncoder
+  implicit val cassandraConnectionEnc: Encoder[CassandraConnectionConfig] = deriveEncoder
+  implicit val cassandraEnc: Encoder[CassandraConfig] = deriveEncoder
+  implicit val textExtractorEnc: Encoder[TextExtractorConfig] = deriveEncoder
 }

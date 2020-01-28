@@ -3,6 +3,7 @@ package testfs2cassandra
 
 import cats.implicits._
 import cats.effect.{ExitCode, IO, IOApp}
+import com.datastax.driver.core.Cluster
 import fs2.Stream
 
 // import java.io.FileInputStream
@@ -51,18 +52,15 @@ object App extends IOApp {
   val user = "cassandra"
   val pass = "cassandra"
 
-  /*
-  val c = Cluster.builder()
-      .addContactPoint(s"127.0.0.1")
-      .withPort(cqlPort)
-      .withCredentials(user, pass)
-      .withReconnectionPolicy(new ConstantReconnectionPolicy(5000))
-      .build()
-  */
-
   override def run(args: List[String]): IO[ExitCode] = {
 
-    val db = initializeDbResource[IO].use {
+    /*
+    // Get DocumentAggregator resource.
+    val db = for {
+      da <- initializeDbResource[IO]
+    } yield da
+
+    val program = db.use {
       case documentAggregator =>
         // println("Connected")
 
@@ -74,11 +72,29 @@ object App extends IOApp {
         IO.unit
     }
 
-    // val db = (Stream.awakeEvery[IO](0.25.second) zipRight Stream.emits(1 to 100)).showLinesStdOut.compile.drain
+    IO(program.unsafeRunSync()).as(ExitCode.Success)
+    */
 
-    IO(db.unsafeRunSync()).as(ExitCode.Success)
+    // Get TextExtractor & CassandraInterpreter resources.
+    val db1 = for {
+      ci <- initializeCassandraResource[IO]
+      tx <- initializeTextExtractorResource(ci)
+    } yield (ci, tx)
 
-/*
+    val program1 = db1.use {
+      case (ci, tx) =>
+
+        IO.unit
+    }
+
+    IO(program1.unsafeRunSync()).as(ExitCode.Success)
+
+
+  }
+
+  def previousRun = {
+
+    /*
     val r = (for {
       s <- Semaphore[IO](concurrency)
       cs = CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession
@@ -98,13 +114,14 @@ object App extends IOApp {
       }
       .compile.drain.as(ExitCode.Success)
 */
-      // r._1.runCreateTest.compile.drain.as(ExitCode.Success)
+    // r._1.runCreateTest.compile.drain.as(ExitCode.Success)
 
-/*
-      r._2
-        .initialize
-        .aggregate(src).compile.drain.as(ExitCode.Success)
+    /*
+          r._2
+            .initialize
+            .aggregate(src).compile.drain.as(ExitCode.Success)
 
-*/
+    */
   }
+
 }
