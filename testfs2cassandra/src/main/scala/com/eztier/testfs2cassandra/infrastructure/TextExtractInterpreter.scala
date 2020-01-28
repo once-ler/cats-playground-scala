@@ -12,9 +12,9 @@ import fs2.{Chunk, Pipe, Stream}
 
 import scala.concurrent.ExecutionContext
 
-import shapeless.LabelledGeneric
+// import shapeless.LabelledGeneric
 
-import domain.Extracted
+import domain._
 
 class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], cassandraInterpreter: CassandraInterpreter[F]) {
 
@@ -24,7 +24,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
   })
 
   // Subset of cassandra case class used for persistence.
-  private val genericExtractedSubset = LabelledGeneric[Extracted]
+  // private val genericExtractedSubset = LabelledGeneric[Extracted]
 
   private implicit val ec = ExecutionContext
     .fromExecutorService(
@@ -52,18 +52,18 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def processFile(filePath: String) = {
     for {
-      x <- s.available
-      _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
+      // x <- s.available
+      // _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
       _ <- s.acquire
-      y <- s.available
-      _ <- Sync[F].delay(println(s"$filePath >> Started | Availability: $y"))
-      _ <- Sync[F].delay(println(Thread.currentThread().getName()))
+      // y <- s.available
+      // _ <- Sync[F].delay(println(s"$filePath >> Started | Availability: $y"))
+      // _ <- Sync[F].delay(println(Thread.currentThread().getName()))
       textExtractor = workers.dequeue()
       r <- Sync[F].delay(textExtractor.extract(filePath))
       _ <- Sync[F].delay(workers.enqueue(textExtractor))
       _ <- s.release
-      z <- s.available
-      _ <- Sync[F].delay(println(s"$filePath >> Done | Availability: $z"))
+      // z <- s.available
+      // _ <- Sync[F].delay(println(s"$filePath >> Done | Availability: $z"))
     } yield r
 
   }
@@ -80,7 +80,17 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
         }
   }
 
-  private def extract = (in: Extracted) =>
+  private def extract2 = (in: Extracted) =>
+    Sync[F]
+      .suspend(processFile(in.doc_file_path.get))
+      .map { e =>
+        e match {
+          case Some(o) => Some(o.copy(doc_id = in.doc_id))
+          case _ => None
+        }
+      }
+
+  private def extract = (in: DocumentMetadata) =>
     Sync[F]
       .suspend(processFile(in.doc_file_path.get))
       .map { e =>
@@ -99,12 +109,22 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
   def aggregate(src: Stream[F, Extracted]) = {
 
     src
-      .mapAsyncUnordered(concurrency)(extract)
+      .mapAsyncUnordered(concurrency)(extract2)
       .chunkN(100)
       .parEvalMapUnordered(100)(persist)
       // .through(toExtractPipeS)
       .covary[F]
       .showLinesStdOut
+  }
+
+  //
+
+  def extractChunkDocument(c: Chunk[DocumentMetadata]) = {
+
+    val src = Stream.emits(c.toVector).covary[F]
+
+    src.mapAsyncUnordered(concurrency)(extract)
+
   }
 
 }
