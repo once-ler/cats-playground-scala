@@ -6,8 +6,9 @@ import cats.Functor
 import cats.effect.{Concurrent, ConcurrentEffect, Timer}
 import fs2.concurrent.Queue
 import fs2.{Chunk, Pipe, Stream}
-
 import scala.concurrent.duration._
+
+import common.Util._
 
 class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
   documentMetadataService: DocumentMetadataService[F],
@@ -21,10 +22,13 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
     documentService.insertMany(c)
   }
 
+  private def getSourceToGetMetadata = documentMetadataService.list()
+  private def getSourceToExtract = documentMetadataService.listAll()
+
   // def getDocumentXml: Stream[F, Int] = {
   def getDocumentXml = {
 
-    val src = documentMetadataService.list()
+    val src = getSourceToGetMetadata
 
     /*
     documentXmlService
@@ -44,7 +48,22 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
       ).parJoinUnbounded
     } yield s
 
+  }
 
+  def extractDocument = {
+    val src = getSourceToExtract
+
+    for {
+      queue <- Stream.eval(Queue.bounded[F, DocumentMetadata](20))
+      s <- Stream(
+        src.evalMap(t => queue.enqueue1(t)).drain,
+        queue.dequeue
+          .through(documentExtractService.extractDocument)
+          .through(filterSome)
+          .through(documentExtractPersistService.insertManyAsync(100) _)
+          .drain
+      ).parJoinUnbounded
+    } yield s
   }
 
 }

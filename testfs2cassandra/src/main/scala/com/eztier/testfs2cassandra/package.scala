@@ -14,7 +14,7 @@ package object testfs2cassandra {
 
   import datasource.infrastructure.cassandra._
 
-  def initializeDbResource[F[_]: Async : Applicative: ContextShift: ConcurrentEffect : Timer] = {
+  def initializeDocumentAggregatorResource[F[_]: Async : Applicative: ContextShift: ConcurrentEffect : Timer] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
       _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
@@ -27,7 +27,14 @@ package object testfs2cassandra {
       documentService = new DocumentService[F](documentRepo)
       documentXmlRepo = new DocumentHttpInterpreter[F](conf.http.entity)
       documentXmlService = new DocumentXmlService(documentXmlRepo)
-      documentAggregator = new DocumentAggregator[F](documentMetadataService, documentService, documentXmlService)
+      s <- Resource.liftF(Semaphore[F](conf.textExtractor.concurrency))
+      documentExtractRepo = new TextExtractInterpreter[F](conf.textExtractor.concurrency, s)
+      documentExtractService = new DocumentExtractService[F](documentExtractRepo)
+      cs = CassandraSession[F](conf.cassandra.connection.host, conf.cassandra.connection.port, conf.cassandra.connection.user, conf.cassandra.connection.password).getSession
+      cl = CassandraClient(cs)
+      documentExtractPersistRepo = CassandraInterpreter(cl)
+      documentExtractPersistService = new DocumentExtractPersistService[F](documentExtractPersistRepo)
+      documentAggregator = new DocumentAggregator[F](documentMetadataService, documentService, documentXmlService, documentExtractService, documentExtractPersistService)
     } yield documentAggregator
   }
 
@@ -40,11 +47,11 @@ package object testfs2cassandra {
     } yield ci
   }
 
-  def initializeTextExtractorResource[F[_]: Async : Applicative : ConcurrentEffect: ContextShift](ci: CassandraInterpreter[F]) = {
+  def initializeTextExtractorResource[F[_]: Async : Applicative : ConcurrentEffect: ContextShift] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
       s <- Resource.liftF(Semaphore[F](conf.textExtractor.concurrency))
-      tx = new TextExtractInterpreter[F](conf.textExtractor.concurrency, s, ci)
+      tx = new TextExtractInterpreter[F](conf.textExtractor.concurrency, s)
     } yield tx
   }
 }

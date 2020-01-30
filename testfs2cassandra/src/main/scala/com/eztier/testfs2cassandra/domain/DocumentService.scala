@@ -5,11 +5,15 @@ import fs2.{Chunk, Stream}
 
 trait DocumentMetadataRepo[F[_]] {
   def list(): Stream[F, (String, String)]
+  def listAll(): Stream[F, DocumentMetadata]
 }
 
 class DocumentMetadataService[F[_]](repo: DocumentMetadataRepo[F]) {
   def list(): Stream[F, (String, String)] =
     repo.list()
+
+  def listAll(): Stream[F, DocumentMetadata] =
+    repo.listAll()
 }
 
 trait DocumentRepo[F[_]] {
@@ -36,19 +40,19 @@ class DocumentXmlService[F[_]](repo: DocumentXmlRepo[F]) {
 }
 
 trait DocumentExtractRepo[F[_]] {
-  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[Extracted]]
+  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[DocumentExtracted]]
 }
 
 class DocumentExtractService[F[_]](repo: DocumentExtractRepo[F]) {
-  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[Extracted]] =
+  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[DocumentExtracted]] =
     repo.extractDocument(src)
 }
 
 trait DocumentExtractPersistRepo[F[_]] {
-  def insertManyAsync(src: Stream[F, Extracted], batchSize: Int): Stream[F, Unit]
+  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit] =
 }
 
 class DocumentExtractPersistService[F[_]](repo: DocumentExtractPersistRepo[F]) {
-  def insertManyAsync(src: Stream[F, Extracted], batchSize: Int = 100): Stream[F, Unit] =
-    repo.insertManyAsync(src, batchSize)
+  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit] =
+    repo.insertManyAsync(batchSize)(src)
 }

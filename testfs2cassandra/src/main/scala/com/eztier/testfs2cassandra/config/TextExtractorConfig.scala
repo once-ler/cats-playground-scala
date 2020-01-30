@@ -3,5 +3,6 @@ package config
 
 case class TextExtractorConfig
 (
-  concurrency: Int
+  concurrency: Int,
+  pathPrefix: String
 )

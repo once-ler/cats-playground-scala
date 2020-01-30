@@ -18,6 +18,11 @@ object Util {
     case Right(_) => Stream.empty
   }
 
+  def filterSome[F[_], A]: Pipe[F, Option[A], A] = _.flatMap {
+    case Some(e) => Stream.emit(e)
+    case None => Stream.empty
+  }
+
   private def classAccessors[T: TypeTag]: List[MethodSymbol] = typeOf[T].members.collect {
     case m: MethodSymbol if m.isCaseAccessor => m
   }.toList

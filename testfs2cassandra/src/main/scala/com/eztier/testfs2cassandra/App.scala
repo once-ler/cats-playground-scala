@@ -45,49 +45,32 @@ object App extends IOApp {
   val src = Stream.emits(filesK)
   val src2 = Stream.emits(1 to 10)
 
-  val concurrency = 5
-
-  val cqlEndpoints = "127.0.0.1"
-  val cqlPort: Int = 9042
-  val user = "cassandra"
-  val pass = "cassandra"
-
   override def run(args: List[String]): IO[ExitCode] = {
 
-    /*
     // Get DocumentAggregator resource.
     val db = for {
-      da <- initializeDbResource[IO]
+      da <- initializeDocumentAggregatorResource[IO]
     } yield da
 
     val program = db.use {
       case documentAggregator =>
         // println("Connected")
 
+        /*
+        // Generate metadata.
         documentAggregator
           .getDocumentXml
-          // .showLinesStdOut
           .compile.drain.unsafeRunSync()
+        */
+
+        // Extract from disk and persist to cassandra.
+        documentAggregator
+          .extractDocument
 
         IO.unit
     }
 
     IO(program.unsafeRunSync()).as(ExitCode.Success)
-    */
-
-    // Get TextExtractor & CassandraInterpreter resources.
-    val db1 = for {
-      ci <- initializeCassandraResource[IO]
-      tx <- initializeTextExtractorResource(ci)
-    } yield (ci, tx)
-
-    val program1 = db1.use {
-      case (ci, tx) =>
-
-        IO.unit
-    }
-
-    IO(program1.unsafeRunSync()).as(ExitCode.Success)
 
 
   }
@@ -95,6 +78,12 @@ object App extends IOApp {
   def previousRun = {
 
     /*
+    val concurrency = 5
+    val cqlEndpoints = "127.0.0.1"
+    val cqlPort: Int = 9042
+    val user = "cassandra"
+    val pass = "cassandra"
+
     val r = (for {
       s <- Semaphore[IO](concurrency)
       cs = CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession
@@ -122,6 +111,22 @@ object App extends IOApp {
             .aggregate(src).compile.drain.as(ExitCode.Success)
 
     */
+
+/*
+    // Get TextExtractor & CassandraInterpreter resources.
+    val db1 = for {
+      ci <- initializeCassandraResource[IO]
+      tx <- initializeTextExtractorResource[IO]
+    } yield (ci, tx)
+
+    val program1 = db1.use {
+      case (ci, tx) =>
+
+        IO.unit
+    }
+
+    IO(program1.unsafeRunSync()).as(ExitCode.Success)
+*/
   }
 
 }
