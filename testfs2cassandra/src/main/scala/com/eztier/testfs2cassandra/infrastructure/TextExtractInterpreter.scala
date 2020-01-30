@@ -16,7 +16,8 @@ import scala.concurrent.ExecutionContext
 
 import domain._
 
-class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], cassandraInterpreter: CassandraInterpreter[F]) {
+class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], cassandraInterpreter: CassandraInterpreter[F])
+  extends DocumentExtractRepo[F] {
 
   implicit val showPerson: Show[Option[Extracted]] = Show.show(d => d match {
     case Some(o) => s"${o.content}"
@@ -118,6 +119,9 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
   }
 
   //
+
+  override def extractDocument(src: Stream[F, DocumentMetadata]) =
+    src.mapAsyncUnordered(concurrency)(extract)
 
   def extractChunkDocument(c: Chunk[DocumentMetadata]) = {
 

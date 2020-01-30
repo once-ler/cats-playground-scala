@@ -9,7 +9,7 @@ import com.datastax.driver.core.{ResultSet, Row, SimpleStatement, Statement}
 import com.eztier.datasource.infrastructure.cassandra.CassandraClient
 import domain._
 
-class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) {
+class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) extends DocumentExtractPersistRepo[F] {
   def runCreateTest: Stream[F, ResultSet] =
     Stream.eval{
       client.createAsync[DocumentExtracted]("dwh", Some("ca_document_extracted"))("domain", "root_type", "root_id")("doc_id")(Some("doc_id"), Some(1))
@@ -36,6 +36,27 @@ class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) 
     Stream.eval(f)
 
   }
+
+  override def insertManyAsync(src: Stream[F, Extracted], batchSize: Int = 100): Stream[F, Unit] = {
+    src.chunkN(batchSize).flatMap {
+      c =>
+        val f = for {
+          _ <- client.insertManyAsync(c, "dwh", "ca_document_extracted")
+        } yield ()
+
+        Stream.eval(f)
+    }
+  }
+
+  def toInsertManyAsyncPipeS(batchSize: Int = 100): Pipe[F, Extracted, Unit] = _.chunkN(batchSize).flatMap {
+    c =>
+      val f = for {
+        _ <- client.insertManyAsync(c, "dwh", "ca_document_extracted")
+      } yield ()
+
+      Stream.eval(f)
+  }
+
 }
 
 object CassandraInterpreter {

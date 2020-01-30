@@ -34,3 +34,21 @@ class DocumentXmlService[F[_]](repo: DocumentXmlRepo[F]) {
   def fetchChunkDocumentXml(src: Chunk[(String, String)]): Stream[F, Chunk[Document]] =
     repo.fetchChunkDocumentXml(src)
 }
+
+trait DocumentExtractRepo[F[_]] {
+  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[Extracted]]
+}
+
+class DocumentExtractService[F[_]](repo: DocumentExtractRepo[F]) {
+  def extractDocument(src: Stream[F, DocumentMetadata]): Stream[F, Option[Extracted]] =
+    repo.extractDocument(src)
+}
+
+trait DocumentExtractPersistRepo[F[_]] {
+  def insertManyAsync(src: Stream[F, Extracted], batchSize: Int): Stream[F, Unit]
+}
+
+class DocumentExtractPersistService[F[_]](repo: DocumentExtractPersistRepo[F]) {
+  def insertManyAsync(src: Stream[F, Extracted], batchSize: Int = 100): Stream[F, Unit] =
+    repo.insertManyAsync(src, batchSize)
+}

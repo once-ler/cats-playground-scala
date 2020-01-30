@@ -9,7 +9,13 @@ import fs2.{Chunk, Pipe, Stream}
 
 import scala.concurrent.duration._
 
-class DocumentAggregator[F[_]: Functor :Timer :Concurrent](documentMetadataService: DocumentMetadataService[F], documentService: DocumentService[F], documentXmlService: DocumentXmlService[F]) {
+class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
+  documentMetadataService: DocumentMetadataService[F],
+  documentService: DocumentService[F],
+  documentXmlService: DocumentXmlService[F],
+  documentExtractService: DocumentExtractService[F],
+  documentExtractPersistService: DocumentExtractPersistService[F]
+) {
 
   private def toPersistDb: Pipe[F, Chunk[Document], Int] = _.evalMap { c =>
     documentService.insertMany(c)
