@@ -49,7 +49,7 @@ class DocumentExtractService[F[_]](repo: DocumentExtractRepo[F]) {
 }
 
 trait DocumentExtractPersistRepo[F[_]] {
-  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit] =
+  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit]
 }
 
 class DocumentExtractPersistService[F[_]](repo: DocumentExtractPersistRepo[F]) {

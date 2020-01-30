@@ -28,7 +28,7 @@ package object testfs2cassandra {
       documentXmlRepo = new DocumentHttpInterpreter[F](conf.http.entity)
       documentXmlService = new DocumentXmlService(documentXmlRepo)
       s <- Resource.liftF(Semaphore[F](conf.textExtractor.concurrency))
-      documentExtractRepo = new TextExtractInterpreter[F](conf.textExtractor.concurrency, s)
+      documentExtractRepo = new TextExtractInterpreter[F](conf.textExtractor.concurrency, s, Some(conf.textExtractor.pathPrefix)).initialize // Don't forget to initialize the worker pool.
       documentExtractService = new DocumentExtractService[F](documentExtractRepo)
       cs = CassandraSession[F](conf.cassandra.connection.host, conf.cassandra.connection.port, conf.cassandra.connection.user, conf.cassandra.connection.password).getSession
       cl = CassandraClient(cs)

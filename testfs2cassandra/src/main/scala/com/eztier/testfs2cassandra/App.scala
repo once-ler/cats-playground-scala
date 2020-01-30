@@ -66,6 +66,7 @@ object App extends IOApp {
         // Extract from disk and persist to cassandra.
         documentAggregator
           .extractDocument
+          .compile.drain.unsafeRunSync()
 
         IO.unit
     }

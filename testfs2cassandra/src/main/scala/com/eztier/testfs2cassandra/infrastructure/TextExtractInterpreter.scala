@@ -1,5 +1,5 @@
-package com.eztier.testfs2cassandra
-package infrastructure
+package com.eztier
+package testfs2cassandra.infrastructure
 
 import java.util.concurrent.{Executors, ThreadFactory}
 import java.util.concurrent.atomic.AtomicLong
@@ -9,14 +9,16 @@ import cats.Show
 import cats.effect.concurrent.Semaphore
 import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync}
 import fs2.{Chunk, Pipe, Stream}
+import io.chrisdavenport.log4cats.Logger
 
 import scala.concurrent.ExecutionContext
 
 // import shapeless.LabelledGeneric
+import common.CatsLogger._
+import common.Util._
+import testfs2cassandra.domain._
 
-import domain._
-
-class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F])
+class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], pathPrefix: Option[String] = None)
   extends DocumentExtractRepo[F] {
 
   implicit val showPerson: Show[Option[Extracted]] = Show.show(d => d match {
@@ -61,6 +63,14 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
       // _ <- Sync[F].delay(println(Thread.currentThread().getName()))
       textExtractor = workers.dequeue()
       r <- Sync[F].delay(textExtractor.extract(filePath))
+        .handleErrorWith {
+          e =>
+            val ex = WrapThrowable(e).printStackTraceAsString
+            Logger[F].error(ex)
+
+            val noop: Option[Extracted] = None
+            noop.pure[F]
+        }
       _ <- Sync[F].delay(workers.enqueue(textExtractor))
       _ <- s.release
       // z <- s.available
@@ -83,7 +93,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract2 = (in: Extracted) =>
     Sync[F]
-      .suspend(processFile(in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
       .map { e =>
         e match {
           case Some(o) => Some(o.copy(doc_id = in.doc_id))
@@ -114,6 +124,14 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
             Some(de)
           case _ => None
         }
+      }
+      .handleErrorWith {
+        e =>
+          val ex = WrapThrowable(e).printStackTraceAsString
+          Logger[F].error(s"${in.id.getOrElse("")}: ${ex}")
+
+          val noop: Option[DocumentExtracted] = None
+          noop.pure[F]
       }
 
 

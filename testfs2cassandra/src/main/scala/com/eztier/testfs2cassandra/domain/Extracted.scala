@@ -37,7 +37,7 @@ case class DocumentMetadata
   doc_category: Option[String] = None,
   doc_name: Option[String] = None,
   doc_date_created: Option[String] = None,
-  doc_year_created: Option[Int]
+  doc_year_created: Option[Int] = None
 )
 
 case class DocumentExtracted

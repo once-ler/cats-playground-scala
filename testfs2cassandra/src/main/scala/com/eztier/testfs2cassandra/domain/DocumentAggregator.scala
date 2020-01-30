@@ -54,10 +54,12 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
     val src = getSourceToExtract
 
     for {
-      queue <- Stream.eval(Queue.bounded[F, DocumentMetadata](20))
+      queue <- Stream.eval(Queue.bounded[F, DocumentMetadata](1))
       s <- Stream(
         src.evalMap(t => queue.enqueue1(t)).drain,
         queue.dequeue
+          .groupWithin(10, 10.seconds)
+          .flatMap(a => Stream.emits(a.toVector))
           .through(documentExtractService.extractDocument)
           .through(filterSome)
           .through(documentExtractPersistService.insertManyAsync(100) _)
