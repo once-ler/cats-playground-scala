@@ -44,7 +44,8 @@ lazy val common = project
       fs2Io,
       specs2,
       logback,
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      scalaOrganization.value %  "scala-reflect" % scalaVersion.value, // required for shapeless macros
+      shapeless,
       monocleCore,
       monocleMacro,
       monocleLaw,
