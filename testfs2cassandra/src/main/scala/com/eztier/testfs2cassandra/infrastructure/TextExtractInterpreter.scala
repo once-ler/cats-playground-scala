@@ -124,7 +124,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
             val merged: DocumentExtracted = de merge in
             merged.copy(content = e.content, metadata = e.metadata)
 
-            Some(de)
+            Some(merged)
           case _ => None
         }
       }

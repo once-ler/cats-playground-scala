@@ -58,11 +58,11 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
       s <- Stream(
         src.evalMap(t => queue.enqueue1(t)).drain,
         queue.dequeue
-          .groupWithin(10, 10.seconds)
+          .groupWithin(5, 10.seconds)
           .flatMap(a => Stream.emits(a.toVector))
           .through(documentExtractService.extractDocument)
           .through(filterSome)
-          .through(documentExtractPersistService.insertManyAsync(100) _)
+          .through(documentExtractPersistService.insertManyAsync(20) _)
           .drain
       ).parJoinUnbounded
     } yield s

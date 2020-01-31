@@ -44,7 +44,6 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
           (cb: Either[Throwable, ResultSet] => Unit) =>
 
             val batchStatement = buildInsertBatchStatement(records, keySpace, tableName)
-
             val f:Future[ResultSet] = s.executeAsync(batchStatement)
 
             f.onComplete {
