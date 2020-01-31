@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
 // import shapeless.LabelledGeneric
 import common.CatsLogger._
 import common.Util._
+import common.mergeSyntax._
 import testfs2cassandra.domain._
 
 class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concurrency: Int, s: Semaphore[F], pathPrefix: Option[String] = None)
@@ -66,10 +67,11 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
         .handleErrorWith {
           e =>
             val ex = WrapThrowable(e).printStackTraceAsString
-            Logger[F].error(ex)
-
             val noop: Option[Extracted] = None
-            noop.pure[F]
+
+            for {
+              _ <- Logger[F].error(ex)
+            } yield noop
         }
       _ <- Sync[F].delay(workers.enqueue(textExtractor))
       _ <- s.release
@@ -103,7 +105,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract3 = (in: DocumentMetadata) =>
     Sync[F]
-      .suspend(processFile(in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
       .map { e =>
         e match {
           case Some(o) => Some(o.copy(doc_id = in.doc_id))
@@ -113,13 +115,14 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract: DocumentMetadata => F[Option[DocumentExtracted]] = (in: DocumentMetadata) =>
     Sync[F]
-      .suspend(processFile(in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
       .map { e =>
         e match {
           case Some(e) =>
             // Merge DocumentMetadata to DocumentExtracted
             val de = DocumentExtracted()
-            de.copy(content = e.content, metadata = e.metadata)
+            val merged: DocumentExtracted = de merge in
+            merged.copy(content = e.content, metadata = e.metadata)
 
             Some(de)
           case _ => None
@@ -128,10 +131,11 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
       .handleErrorWith {
         e =>
           val ex = WrapThrowable(e).printStackTraceAsString
-          Logger[F].error(s"${in.id.getOrElse("")}: ${ex}")
-
           val noop: Option[DocumentExtracted] = None
-          noop.pure[F]
+
+          for {
+            _ <- Logger[F].error(s"${in.id.getOrElse("")}: ${ex}")
+          } yield noop
       }
 
 
