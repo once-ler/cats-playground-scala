@@ -3,7 +3,7 @@ package testfs2cassandra.domain
 
 import cats.implicits._
 import cats.Functor
-import cats.effect.{Concurrent, ConcurrentEffect, Timer}
+import cats.effect.{Concurrent, Timer}
 import fs2.concurrent.Queue
 import fs2.{Chunk, Pipe, Stream}
 import scala.concurrent.duration._
@@ -22,21 +22,12 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
     documentService.insertMany(c)
   }
 
-  private def getSourceToGetMetadata = documentMetadataService.list()
-  private def getSourceToExtract = documentMetadataService.listAll()
+  private def getSourceToGetMetadata: Stream[F, (String, String)] = documentMetadataService.list()
+  private def getSourceToExtract: Stream[F, DocumentMetadata] = documentMetadataService.listAll()
 
-  // def getDocumentXml: Stream[F, Int] = {
   def getDocumentXml = {
 
     val src = getSourceToGetMetadata
-
-    /*
-    documentXmlService
-      .fetchDocumentXml(src)
-      .groupWithin(10, 60.seconds)
-      // .chunkN(10)
-      .through(toPersistDb)
-    */
 
     for {
       queue <- Stream.eval(Queue.bounded[F, (String, String)](1))

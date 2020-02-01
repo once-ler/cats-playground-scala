@@ -2,7 +2,7 @@ package com.eztier.datasource
 package infrastructure.cassandra
 
 import com.datastax.driver.core.BatchStatement
-import com.datastax.driver.core.querybuilder.QueryBuilder
+import com.datastax.driver.core.querybuilder.{Insert, QueryBuilder}
 import fs2.Chunk
 
 import scala.collection.JavaConverters._
@@ -35,16 +35,17 @@ trait WithInsertStatementBuilder {
         (k, v)
     }
 
-  def buildInsertBatchStatement[A <: AnyRef](records: Chunk[A], keySpace: String, tableName: String): BatchStatement = {
-    val batch = records.map {
+  def buildInsertStatements[A <: AnyRef](records: Chunk[A], keySpace: String, tableName: String): Vector[Insert] =
+    records.map {
       c =>
         val (keys, values) = zipKV(c)
 
         QueryBuilder.insertInto(keySpace, tableName).values(keys, values)
     }.toVector
 
+  def combineInsertAsBatch(batch: Vector[Insert]): BatchStatement =
     new BatchStatement(BatchStatement.Type.UNLOGGED)
       .addAll(batch.asJava)
-  }
+
 
 }

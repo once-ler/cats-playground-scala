@@ -1,15 +1,15 @@
 package com.eztier.datasource
 package infrastructure.cassandra
 
-import cats.effect.{Async, Resource, Sync}
+import cats.effect.{Async, Concurrent, Resource, Sync}
 import fs2.Chunk
-import com.datastax.driver.core.{ResultSet, Session, SimpleStatement, Statement}
+import com.datastax.driver.core.{ResultSet, Session, Statement}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import scala.reflect.runtime.universe._
 
-class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
+class CassandraClient[F[_] : Async : Sync: Concurrent](session: Resource[F, Session])
   extends WithBlockingThreadPool
   with WithInsertStatementBuilder
   with WithCreateStatementBuilder {
@@ -34,7 +34,36 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
         }
     }
 
-  def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = ""): F[ResultSet] =
+  def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = ""): F[List[ResultSet]] = {
+    session.use { s =>
+
+      blockingThreadPool.use { ec: ExecutionContext =>
+        implicit val cs = ec
+
+        Async[F].async {
+          (cb: Either[Throwable, List[ResultSet]] => Unit) =>
+
+            val statements = buildInsertStatements(records, keySpace, tableName)
+
+            val l = statements.map { stmt =>
+              val f: Future[ResultSet] = s.executeAsync(stmt)
+              f
+            }
+
+            val f = Future.sequence(l)
+
+            f.onComplete {
+              case Success(s) => cb(Right(s))
+              case Failure(e) => cb(Left(e))
+            }
+        }
+
+      }
+    }
+
+  }
+
+  def batchInsertAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = ""): F[ResultSet] =
     session.use { s =>
 
       blockingThreadPool.use { ec: ExecutionContext =>
@@ -43,8 +72,10 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
         Async[F].async {
           (cb: Either[Throwable, ResultSet] => Unit) =>
 
-            val batchStatement = buildInsertBatchStatement(records, keySpace, tableName)
-            val f:Future[ResultSet] = s.executeAsync(batchStatement)
+            val statements = buildInsertStatements(records, keySpace, tableName)
+
+            val batchStatement = combineInsertAsBatch(statements)
+            val f: Future[ResultSet] = s.executeAsync(batchStatement)
 
             f.onComplete {
               case Success(s) => cb(Right(s))
@@ -78,5 +109,5 @@ class CassandraClient[F[_] : Async : Sync](session: Resource[F, Session])
 }
 
 object CassandraClient {
-  def apply[F[_] : Async](session: Resource[F, Session]): CassandraClient[F] = new CassandraClient[F](session)
+  def apply[F[_] : Async : Concurrent](session: Resource[F, Session]): CassandraClient[F] = new CassandraClient[F](session)
 }
