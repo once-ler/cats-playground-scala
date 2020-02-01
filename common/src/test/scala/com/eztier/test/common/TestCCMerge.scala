@@ -37,7 +37,7 @@ class TestCaseClassMerge extends Specification {
       val update = Foo(Some("Next"), Some(""))
 
       val merged = base merge update
-
+      
       merged mustEqual Foo(Some("Next"), Some(""))
     }
 

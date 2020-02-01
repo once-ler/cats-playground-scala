@@ -72,9 +72,9 @@ class CassandraClient[F[_] : Async : Sync: Concurrent](session: Resource[F, Sess
         Async[F].async {
           (cb: Either[Throwable, ResultSet] => Unit) =>
 
-            val statements = buildInsertStatements(records, keySpace, tableName)
+            val batchStatement = buildInsertStatements(records, keySpace, tableName)
+              .asBatchStatement
 
-            val batchStatement = combineInsertAsBatch(statements)
             val f: Future[ResultSet] = s.executeAsync(batchStatement)
 
             f.onComplete {

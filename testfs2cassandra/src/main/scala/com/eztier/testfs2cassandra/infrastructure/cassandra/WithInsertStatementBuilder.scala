@@ -47,5 +47,9 @@ trait WithInsertStatementBuilder {
     new BatchStatement(BatchStatement.Type.UNLOGGED)
       .addAll(batch.asJava)
 
+  implicit class CombineAsBatchStatement(batch: Vector[Insert]) {
+    def asBatchStatement: BatchStatement = new BatchStatement(BatchStatement.Type.UNLOGGED)
+      .addAll(batch.asJava)
+  }
 
 }
