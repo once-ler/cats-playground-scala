@@ -30,8 +30,7 @@ class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) 
     val f = for {
       // a <- client.execAsync(new SimpleStatement("select count(*) from dwh.ca_document_extracted"))
       b <- client.insertManyAsync(Chunk.vector(Vector(a)), "dwh", "ca_document_extracted")
-      s = b.one()
-    } yield s
+    } yield ()
 
     Stream.eval(f)
 
