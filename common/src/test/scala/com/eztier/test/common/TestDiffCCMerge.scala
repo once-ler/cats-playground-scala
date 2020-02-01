@@ -5,12 +5,10 @@ import org.specs2.mutable._
 import common._
 
 class TestDiffCCMerge extends Specification {
+  import mergeSyntax._
 
   "Arbitrary case classes" should {
-
     "Two case classes of the different type merge" in {
-      import mergeSyntax._
-
       case class Foo(i: Int, s: String, b: Boolean)
       case class Bar(b: Boolean, s: String)
 
@@ -23,8 +21,6 @@ class TestDiffCCMerge extends Specification {
     }
 
     "Two case classes with Option fields can merge" in {
-      import mergeSyntax._
-
       case class Foo(i: Option[Int], s: String, b: Option[Boolean])
       case class Bar(i: Option[Int], b: Option[Boolean], s: String)
 
@@ -42,17 +38,9 @@ class TestDiffCCMerge extends Specification {
       val base = Foo(None, Nil, Some(0), None)
       val update = Foo(Some(3), List(4), None, None)
 
-      val mergedA = {
-        import CCMergeSyntax._
-        base merge update
-      }
+      val merged = base merge update
 
-      val mergedB = {
-        import mergeSyntax._
-        base merge update
-      }
-
-      mergedA mustEqual mergedB
+      merged mustEqual Foo(Some(3), List(4), Some(0), None)
     }
 
   }
