@@ -7,13 +7,12 @@ import java.util.concurrent.atomic.AtomicLong
 import cats.implicits._
 import cats.Show
 import cats.effect.concurrent.Semaphore
-import cats.effect.{Async, Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync}
+import cats.effect.{Async, Blocker, ConcurrentEffect, ContextShift, Sync}
 import fs2.{Chunk, Pipe, Stream}
 import io.chrisdavenport.log4cats.Logger
-
 import scala.concurrent.ExecutionContext
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 
-// import shapeless.LabelledGeneric
 import common.CatsLogger._
 import common.Util._
 import common.mergeSyntax._
@@ -26,9 +25,6 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
     case Some(o) => s"${o.content}"
     case None => "Nothing"
   })
-
-  // Subset of cassandra case class used for persistence.
-  // private val genericExtractedSubset = LabelledGeneric[Extracted]
 
   private implicit val ec = ExecutionContext
     .fromExecutorService(
@@ -46,23 +42,31 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private implicit val blocker = Blocker.liftExecutionContext(ec)
 
-  private val workers = scala.collection.mutable.Queue.empty[TextExtractor]
+  // Commons Pool
+  private var pool: TextExtractorPool = null
 
   def initialize = {
-    // workers ++= ArrayBuffer(TextExtractor(), TextExtractor(), TextExtractor())
-    (1 to concurrency).foreach(l => workers += TextExtractor())
+    val factory = new TextExtractorFactory()
+    val config = new GenericObjectPoolConfig[TextExtractor]()
+    config.setMaxIdle(concurrency)
+    config.setMaxTotal(concurrency)
+    config.setTestOnBorrow(true)
+    config.setTestOnReturn(true)
+
+    pool = new TextExtractorPool(factory, config)
+
     this
   }
 
   private def processFile(filePath: String) = {
     for {
-      // x <- s.available
-      // _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
+      x <- s.available
+      _ <- Sync[F].delay(println(s"$filePath >> Availability: $x"))
       _ <- s.acquire
-      // y <- s.available
-      // _ <- Sync[F].delay(println(s"$filePath >> Started | Availability: $y"))
-      // _ <- Sync[F].delay(println(Thread.currentThread().getName()))
-      textExtractor = workers.dequeue()
+      y <- s.available
+      _ <- Sync[F].delay(println(s"$filePath >> Started | Availability: $y"))
+      _ <- Sync[F].delay(println(Thread.currentThread().getName()))
+      textExtractor = pool.borrowObject()
       r <- Sync[F].delay(textExtractor.extract(filePath))
         .handleErrorWith {
           e =>
@@ -73,10 +77,10 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
               _ <- Logger[F].error(ex)
             } yield noop
         }
-      _ <- Sync[F].delay(workers.enqueue(textExtractor))
+      _ <- Sync[F].delay(pool.returnObject(textExtractor))
       _ <- s.release
-      // z <- s.available
-      // _ <- Sync[F].delay(println(s"$filePath >> Done | Availability: $z"))
+      z <- s.available
+      _ <- Sync[F].delay(println(s"$filePath >> Done | Availability: $z"))
     } yield r
 
   }

@@ -247,7 +247,9 @@ lazy val testfs2cassandra = project.
       cassandraCore,
 
       http4sBlazeClient,
-      http4sCirce
+      http4sCirce,
+
+      commonsPool2
     ),
     dependencyOverrides ++= Seq(
       guava
@@ -291,6 +293,7 @@ val CassandraCoreVersion = "3.8.0"
 val GuavaVersion = "19.0"
 val ShapelessVersion = "2.3.3"
 val PostgreSQLJdbcVersion = "42.2.9"
+val CommonsPool2 = "2.8.0"
 
 val cats = "org.typelevel" %% "cats-core" % CatsVersion
 val catsMtl = "org.typelevel" %% "cats-mtl-core" % CatsMtlVersion
@@ -369,6 +372,8 @@ val guava = "com.google.guava" % "guava" % GuavaVersion
 val shapeless = "com.chuusai" %% "shapeless" % ShapelessVersion
 
 val postgreSQLJdbc = "org.postgresql" % "postgresql" % PostgreSQLJdbcVersion
+
+val commonsPool2 = "org.apache.commons" % "commons-pool2" % CommonsPool2
 
 
 // Filter out compiler flags to make the repl experience functional...
