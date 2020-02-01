@@ -34,14 +34,14 @@ class CassandraClient[F[_] : Async : Sync: Concurrent](session: Resource[F, Sess
         }
     }
 
-  def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = ""): F[List[ResultSet]] = {
+  def insertManyAsync[A <: AnyRef](records: Chunk[A], keySpace: String = "", tableName: String = ""): F[Vector[ResultSet]] = {
     session.use { s =>
 
       blockingThreadPool.use { ec: ExecutionContext =>
         implicit val cs = ec
 
         Async[F].async {
-          (cb: Either[Throwable, List[ResultSet]] => Unit) =>
+          (cb: Either[Throwable, Vector[ResultSet]] => Unit) =>
 
             val statements = buildInsertStatements(records, keySpace, tableName)
 

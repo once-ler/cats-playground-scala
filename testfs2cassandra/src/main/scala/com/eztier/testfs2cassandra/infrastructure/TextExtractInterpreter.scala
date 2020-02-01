@@ -95,7 +95,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract2 = (in: Extracted) =>
     Sync[F]
-      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.getOrElse("")))
       .map { e =>
         e match {
           case Some(o) => Some(o.copy(doc_id = in.doc_id))
@@ -105,7 +105,7 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract3 = (in: DocumentMetadata) =>
     Sync[F]
-      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.getOrElse("")))
       .map { e =>
         e match {
           case Some(o) => Some(o.copy(doc_id = in.doc_id))
@@ -115,16 +115,16 @@ class TextExtractInterpreter[F[_]: Async :ContextShift :ConcurrentEffect](concur
 
   private def extract: DocumentMetadata => F[Option[DocumentExtracted]] = (in: DocumentMetadata) =>
     Sync[F]
-      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.get))
+      .suspend(processFile(pathPrefix.getOrElse("") + in.doc_file_path.getOrElse("")))
       .map { e =>
         e match {
           case Some(e) =>
             // Merge DocumentMetadata to DocumentExtracted
             val de = DocumentExtracted()
             val merged: DocumentExtracted = de merge in
-            merged.copy(content = e.content, metadata = e.metadata)
+            val mergedWithContent = merged.copy(content = e.content, metadata = e.metadata)
 
-            Some(merged)
+            Some(mergedWithContent)
           case _ => None
         }
       }

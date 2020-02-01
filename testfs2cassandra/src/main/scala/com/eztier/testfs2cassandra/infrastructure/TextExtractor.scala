@@ -136,15 +136,15 @@ class TextExtractor {
         case Some(parser) =>
           // val tessearactConfig = new TesseractOCRConfig()
           // parserContext.set(classOf[TesseractOCRConfig], tessearactConfig)
-
           parser.getParser.parse(istream, handler, metadata, parserContext)
 
           val aggMeta = aggregateMetadata(metadata)
+          val content = handler.toString()
 
           Some(
             Extracted(
               doc_file_path = Some(filePath),
-              content = Some(handler.toString()),
+              content = Some(content),
               metadata = Some(aggMeta)
             )
           )

@@ -15,7 +15,7 @@ class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) 
       client.createAsync[DocumentExtracted]("dwh", Some("ca_document_extracted"))("domain", "root_type", "root_id")("doc_id")(Some("doc_id"), Some(1))
     }
 
-  def runInsertTest: Stream[F, Row] = {
+  def runInsertTest: Stream[F, Unit] = {
 
     val a = Extracted(
       domain = "test".some,
