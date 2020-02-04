@@ -3,11 +3,11 @@ package infrastructure
 
 import java.util.Date
 import java.text.SimpleDateFormat
-import java.io.{ByteArrayOutputStream, File, FileInputStream}
+import java.io.{ByteArrayOutputStream, File, FileInputStream, IOException}
 
-import org.apache.commons.io.{FilenameUtils}
+import org.apache.commons.io.FilenameUtils
 import org.apache.tika.exception.TikaException
-import org.apache.tika.metadata.{Metadata}
+import org.apache.tika.metadata.Metadata
 import org.apache.tika.parser.{AutoDetectParser, ParseContext, Parser}
 import org.apache.tika.parser.audio.AudioParser
 import org.apache.tika.parser.html.HtmlParser
@@ -18,7 +18,7 @@ import org.apache.tika.parser.pdf.PDFParser
 import org.apache.tika.parser.rtf.RTFParser
 import org.apache.tika.parser.txt.TXTParser
 import org.apache.tika.parser.xml.XMLParser
-import org.apache.tika.sax.{BodyContentHandler}
+import org.apache.tika.sax.BodyContentHandler
 // import org.xml.sax.helpers.DefaultHandler
 
 import collection.JavaConverters._
@@ -123,9 +123,22 @@ class TextExtractor {
     }
 
   def extract(filePath: String, userAutoParser: Boolean = true): Option[Extracted] = {
+    var istream: FileInputStream = null
+
+    val closeQuietly: () => Unit = () => {
+      try {
+        if (istream != null) {
+          istream.close()
+        }
+      } catch {
+        case e: IOException =>
+          println(e.getMessage())
+      }
+    }
+
     try {
       val file = new File(filePath)
-      val istream = new FileInputStream(file)
+      istream = new FileInputStream(file)
       // val handler = new WriteOutContentHandler(-1)
       val handler = new BodyContentHandler(-1)
       // val handler = new DefaultHandler()
@@ -141,6 +154,8 @@ class TextExtractor {
           val aggMeta = aggregateMetadata(metadata)
           val content = handler.toString()
 
+          closeQuietly()
+
           Some(
             Extracted(
               doc_file_path = Some(filePath),
@@ -151,8 +166,11 @@ class TextExtractor {
         case _ => None
       }
     } catch {
-      case e: TikaException =>
+      case e: Exception =>
         println(e.getMessage())
+
+        closeQuietly()
+
         None
     }
   }
