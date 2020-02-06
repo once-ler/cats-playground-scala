@@ -24,6 +24,8 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
 
   private def getSourceToGetMetadata: Stream[F, (String, String)] = documentMetadataService.list()
   private def getSourceToExtract: Stream[F, DocumentMetadata] = documentMetadataService.listAll()
+  // Add later because doc_name, doc_date_created, and doc_year_created were missed.
+  private def getSourceToPartialUpdate: Stream[F, DocumentPartial] = documentMetadataService.listPartial()
 
   def getDocumentXml = {
 
@@ -53,6 +55,22 @@ class DocumentAggregator[F[_]: Functor :Timer :Concurrent](
           .flatMap(a => Stream.emits(a.toVector))
           .through(documentExtractService.extractDocument)
           .through(filterSome)
+          .through(documentExtractPersistService.insertManyAsync(20) _)
+          .drain
+      ).parJoinUnbounded
+    } yield s
+  }
+
+  def partialUpdate = {
+    val src = getSourceToPartialUpdate
+
+    for {
+      queue <- Stream.eval(Queue.bounded[F, DocumentPartial](1))
+      s <- Stream(
+        src.evalMap(t => queue.enqueue1(t)).drain,
+        queue.dequeue
+          .groupWithin(20, 10.seconds)
+          .flatMap(a => Stream.emits(a.toVector))
           .through(documentExtractPersistService.insertManyAsync(20) _)
           .drain
       ).parJoinUnbounded

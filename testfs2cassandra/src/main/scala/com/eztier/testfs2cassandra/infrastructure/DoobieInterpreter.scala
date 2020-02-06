@@ -24,6 +24,10 @@ private object DocumentMetadataSQL {
     root_display_long,doc_id,doc_other_id,doc_file_path,doc_object_path,doc_category,doc_name,
     doc_date_created,doc_year_created from irb.document_metadata
   """.query[DocumentMetadata]
+
+  def listPartialSql: Query0[DocumentPartial] = sql"""
+    select domain, root_type, root_id, doc_id, doc_name, doc_date_created,doc_year_created from irb.document_metadata
+  """.query
 }
 
 class DoobieDocumentMetataInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F]) extends DocumentMetadataRepo[F] {
@@ -35,6 +39,11 @@ class DoobieDocumentMetataInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Tr
 
   override def listAll(): Stream[F, DocumentMetadata] = listAllSql.stream.flatMap { a =>
     println(a.id)
+    Stream.emit(a)
+  }.transact(xa)
+
+  override def listPartial(): Stream[F, DocumentPartial] = listPartialSql.stream.flatMap { a =>
+    println(a.doc_id)
     Stream.emit(a)
   }.transact(xa)
 }

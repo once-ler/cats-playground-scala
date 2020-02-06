@@ -36,7 +36,7 @@ class CassandraInterpreter[F[_]: Async: Concurrent](client: CassandraClient[F]) 
 
   }
 
-  override def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit] = {
+  override def insertManyAsync[A <: AnyRef](batchSize: Int = 100)(src: Stream[F, A]): Stream[F, Unit] = {
     src.chunkN(batchSize).flatMap {
       c =>
         val f = for {

@@ -6,6 +6,7 @@ import fs2.{Chunk, Stream}
 trait DocumentMetadataRepo[F[_]] {
   def list(): Stream[F, (String, String)]
   def listAll(): Stream[F, DocumentMetadata]
+  def listPartial(): Stream[F, DocumentPartial]
 }
 
 class DocumentMetadataService[F[_]](repo: DocumentMetadataRepo[F]) {
@@ -14,6 +15,9 @@ class DocumentMetadataService[F[_]](repo: DocumentMetadataRepo[F]) {
 
   def listAll(): Stream[F, DocumentMetadata] =
     repo.listAll()
+
+  def listPartial(): Stream[F, DocumentPartial] =
+    repo.listPartial()
 }
 
 trait DocumentRepo[F[_]] {
@@ -49,10 +53,10 @@ class DocumentExtractService[F[_]](repo: DocumentExtractRepo[F]) {
 }
 
 trait DocumentExtractPersistRepo[F[_]] {
-  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit]
+  def insertManyAsync[A <: AnyRef](batchSize: Int = 100)(src: Stream[F, A]): Stream[F, Unit]
 }
 
 class DocumentExtractPersistService[F[_]](repo: DocumentExtractPersistRepo[F]) {
-  def insertManyAsync(batchSize: Int = 100)(src: Stream[F, DocumentExtracted]): Stream[F, Unit] =
+  def insertManyAsync[A <: AnyRef](batchSize: Int = 100)(src: Stream[F, A]): Stream[F, Unit] =
     repo.insertManyAsync(batchSize)(src)
 }

@@ -70,3 +70,14 @@ case class Document
   doc_other_id: Option[String] = None,
   doc_xml: Option[String] = None
 )
+
+case class DocumentPartial
+(
+  domain: Option[String] = None,
+  root_type: Option[String] = None,
+  root_id: Option[String] = None,
+  doc_id: Option[String] = None,
+  doc_name: Option[String] = None,
+  doc_date_created: Option[String] = None,
+  doc_year_created: Option[Int] = None
+)
