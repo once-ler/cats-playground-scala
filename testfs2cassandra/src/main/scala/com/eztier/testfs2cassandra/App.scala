@@ -2,8 +2,9 @@ package com.eztier
 package testfs2cassandra
 
 import cats.implicits._
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp, Sync}
 import com.datastax.driver.core.Cluster
+import com.eztier.datasource.infrastructure.cassandra.CassandraClient
 import fs2.Stream
 
 // import java.io.FileInputStream
@@ -45,7 +46,7 @@ object App extends IOApp {
   val src = Stream.emits(filesK)
   val src2 = Stream.emits(1 to 10)
 
-  override def run(args: List[String]): IO[ExitCode] = {
+  def run2(args: List[String]): IO[ExitCode] = {
 
     // Get DocumentAggregator resource.
     val db = for {
@@ -80,8 +81,38 @@ object App extends IOApp {
     }
 
     IO(program.unsafeRunSync()).as(ExitCode.Success)
+  }
 
+  override def run(args: List[String]): IO[ExitCode] = {
+    import datasource.infrastructure.cassandra.CassandraClient
 
+    val cqlEndpoints = "127.0.0.1"
+    val cqlPort: Int = 9042
+    val user = "cassandra"
+    val pass = "cassandra"
+
+    val db = (for {
+      cs <- Sync[IO].delay(CassandraSession[IO](cqlEndpoints, cqlPort, user.some, pass.some).getSession)
+      cl = CassandraClient(cs)
+      ci = CassandraInterpreter(cl)
+    } yield ci).unsafeRunSync()
+
+    val content = (0 to 39999).map(_ => "A").mkString("")
+
+    val src = Stream.emit(new DocumentExtracted(
+      id = Some("1:1:1:1"),
+      domain = Some("1"),
+      root_type = Some("1"),
+      root_id = Some("1"),
+      doc_id = Some("1"),
+      content = Some(content),
+      doc_date_created = Some("2020-02-08 09:46:23"),
+      doc_year_created = Some(2020)
+    )).covary[IO]
+
+    val program = db.insertManyAsync(1)(src).compile.drain
+
+    IO(program.unsafeRunSync()).as(ExitCode.Success)
   }
 
   def previousRun = {
