@@ -4,6 +4,7 @@
 package com.eztier
 package common
 
+import shapeless.Lazy
 import java.time.Instant
 
 object CaseClassFromMap {
@@ -28,7 +29,10 @@ object CaseClassFromMap {
     case map: Map[_, _] => mapToJson(map.asInstanceOf[Map[String, Any]])
   }
 
-  def mapToCaseClass[T : Decoder](map: Map[String, Any]): Either[io.circe.Error, T] =
+  def mapToCaseClass[T](map: Map[String, Any])(implicit decoder: Lazy[Decoder[T]]): Either[io.circe.Error, T] = {
+    implicit val d: Decoder[T] = decoder.value
     mapToJson(map).as[T]
+  }
+
 
 }

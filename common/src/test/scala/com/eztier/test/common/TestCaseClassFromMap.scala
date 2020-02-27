@@ -123,6 +123,22 @@ class TestCaseClassFromMap extends Specification {
     )
   }
 
+  import shapeless.Lazy
+  import io.circe.Decoder
+  import io.circe.generic.auto._
+  implicit def xmlToOptionT[A](x0: Either[String, NodeSeq])(implicit decoder: Lazy[Decoder[A]]): Option[A] =
+    x0 match {
+      case Right(xml) =>
+        val m = parseEntity(xml)
+
+        implicit val d: Decoder[A] = decoder.value
+        CaseClassFromMap.mapToCaseClass[A](m) match {
+          case Right(a) => Some(a)
+          case _ => None
+        }
+      case _ => None
+    }
+
   "" should {
     "" in {
 
@@ -177,6 +193,11 @@ class TestCaseClassFromMap extends Specification {
       }
 
       maybePerson should beRight
+
+      val ei: Either[String, NodeSeq] = Right(xml)
+      val p2 = xmlToOptionT[CkPerson](ei)
+
+      p2 should beSome
     }
   }
 
