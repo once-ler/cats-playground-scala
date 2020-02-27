@@ -2,9 +2,11 @@ package com.eztier
 package test.common
 
 import cats.syntax.option._
-import shapeless._
-import record._
-import syntax.singleton._
+
+// import shapeless._
+// import record._
+// import syntax.singleton._
+
 import java.time.Instant
 
 import org.specs2.mutable._
@@ -14,6 +16,7 @@ import scala.xml.NodeSeq
 import common._
 
 case class EntityReference[A <: Any](Poref: Option[String] = None, Type: Option[String] = None)
+case class PersistentReference(Poref: Option[String] = None)
 
 trait CkBase {
   val oid: Option[String]
@@ -96,11 +99,13 @@ class TestCaseClassFromMap extends Specification {
     val r = entity \ "attr"
     val m = (Map[String, Any]() /: r) {
       (a, n) =>
-        val h = n.child.head
+
+        val h = n.child.filter(_.label != "#PCDATA").head
 
         val e = h.label match {
-          case "entityreference" | "persistentReference" => Map("poref" -> h.attribute("poref").getOrElse("").toString, "type" -> h.attribute("type").getOrElse("").toString)
-          case "date" => Instant.ofEpochMilli(h.attribute("value").getOrElse("0").toString.toLong) // new Date(h.attribute("value").getOrElse("0").toString.toLong)
+          case "entityreference" => Map("Poref" -> h.attribute("poref").getOrElse("").toString.some, "Type" -> h.attribute("type").getOrElse("").toString.some)
+          case "persistentReference" =>  Map("Poref" -> h.attribute("poref").getOrElse("").toString.some)
+          case "date" => Instant.ofEpochMilli(h.attribute("value").getOrElse("0").toString.toLong)
           case _ => h.attribute("value").getOrElse("").toString
         }
 
@@ -121,13 +126,57 @@ class TestCaseClassFromMap extends Specification {
   "" should {
     "" in {
 
-      val xml = <mainspan><entity poref="class:1234" type="Person"><attr name="firstName"><string value="Foo"></string></attr></entity></mainspan>
+      val xml = <mainspan><entity poref="class:1234" type="Person">
+          <attr name="firstName"><string value="Mickey" /></attr>
+        <attr name="lastName" shared="False" key="True">
+          <string value="Mouse"/>
+          <renderedValue>Teresa Laury</renderedValue>
+        </attr>
+        <attr name="modifiers" shared="False" key="True" weaksetelements="Either">
+            <persistentReference poref="EntitySet:4122CE2401D74D48B6B48DAAC8514ADF"/>
+            <renderedValue>set of Modifier</renderedValue>
+          </attr>
+          <attr name="owner" shared="False" key="True">
+            <entityreference poref="Person:5F2899A431027C4F8426CAB5A6A278B7" type="Person"/>
+            <renderedValue>
+              ABC123
+            </renderedValue>
+          </attr>
+        <attr name="customAttributes" shared="False" key="True">
+          <entityreference poref="Entity:0101" type="Person_CustomAttributesManager"/>
+          <renderedValue>
+            ABC123
+          </renderedValue>
+        </attr>
+          <attr name="employer" shared="False" key="True">
+            <entityreference poref="Party:5F2899A431027C4F8426CAB5A6A278B7" type="Company"/>
+            <renderedValue>
+              Disney
+            </renderedValue>
+          </attr>
+          <attr name="targetURL" shared="False" key="True">
+            <documentProxy poref="DocumentProxy:4668CF5B769C8E44B16B3200B5EDC582"/>
+            <renderedValue>/tmp/some.txt
+            </renderedValue>
+          </attr>
+          <attr name="dateOfBirth" shared="False" key="True">
+            <date value="1386944623418"/>
+            <renderedValue>12/13/2013 09:23</renderedValue>
+          </attr>
+        </entity></mainspan>
 
       val m = parseEntity(xml)
 
-      val c = CaseClassFromMap[CkPerson](m)
+      //
+      import io.circe.generic.auto._
+      val maybePerson = CaseClassFromMap.mapToCaseClass[CkPerson](m)
 
-      1 mustEqual 1
+      val p = maybePerson match {
+        case Right(a) => a
+        case Left(e) => CkPerson()
+      }
+
+      maybePerson should beRight
     }
   }
 

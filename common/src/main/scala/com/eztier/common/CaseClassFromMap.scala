@@ -1,63 +1,34 @@
+/*
+// https://stackoverflow.com/questions/55049985/how-to-convert-generic-potentially-nested-map-mapstring-any-to-case-class-usi/55355685#55355685
+*/
 package com.eztier
 package common
 
-import shapeless._, labelled.{FieldType, field}
-
-/*
-https://stackoverflow.com/questions/54988267/how-to-use-shapeless-to-convert-generic-mapstring-any-to-case-class-inside-ge
-*/
-
-trait FromMap[L <: HList] {
-  def apply(m: Map[String, Any]): Option[L]
-}
-
-trait LowPriorityFromMap {
-  implicit def hconsFromMap1[K <: Symbol, V, T <: HList](implicit
-    witness: Witness.Aux[K],
-    typeable: Typeable[V],
-    fromMapT: Lazy[FromMap[T]]
-  ): FromMap[FieldType[K, V] :: T] = new FromMap[FieldType[K, V] :: T] {
-    def apply(m: Map[String, Any]): Option[FieldType[K, V] :: T] = for {
-      v <- m.get(witness.value.name)
-      h <- typeable.cast(v)
-      t <- fromMapT.value(m)
-    } yield field[K](h) :: t
-  }
-}
-
-object FromMap extends LowPriorityFromMap {
-  implicit val hnilFromMap: FromMap[HNil] = new FromMap[HNil] {
-    def apply(m: Map[String, Any]): Option[HNil] = Some(HNil)
-  }
-
-  implicit def hconsFromMap0[K <: Symbol, V, R <: HList, T <: HList](implicit
-    witness: Witness.Aux[K],
-    gen: LabelledGeneric.Aux[V, R],
-    fromMapH: FromMap[R],
-    fromMapT: FromMap[T]
-  ): FromMap[FieldType[K, V] :: T] =
-    new FromMap[FieldType[K, V] :: T] {
-      def apply(m: Map[String, Any]): Option[FieldType[K, V] :: T] = for {
-        v <- m.get(witness.value.name)
-        r <- Typeable[Map[String, Any]].cast(v)
-        h <- fromMapH(r)
-        t <- fromMapT(m)
-      } yield field[K](gen.from(h)) :: t
-    }
-}
-
-trait CaseClassFromMap[P <: Product] {
-  def apply(m: Map[String, Any]): Option[P]
-}
+import java.time.Instant
 
 object CaseClassFromMap {
-  implicit def mk[P <: Product, R <: HList](implicit
-    gen: LabelledGeneric.Aux[P, R],
-    fromMap: FromMap[R]): CaseClassFromMap[P] = new CaseClassFromMap[P] {
+  import io.circe._
+  import io.circe.syntax._
 
-    def apply(m: Map[String, Any]): Option[P] = fromMap(m).map(gen.from)
+  def mapToJson(map: Map[String, Any]): Json =
+    map.mapValues(anyToJson).asJson
+
+  def anyToJson(any: Any): Json = any match {
+    case n: Int => n.asJson
+    case n: Long => n.asJson
+    case n: Double => n.asJson
+    case s: String => s.asJson
+    case i: Instant => i.asJson
+    case true => true.asJson
+    case false => false.asJson
+    case null | None => None.asJson
+    case list: List[_] => list.map(anyToJson).asJson
+    case list: Vector[_] => list.map(anyToJson).asJson
+    case Some(any) => anyToJson(any)
+    case map: Map[_, _] => mapToJson(map.asInstanceOf[Map[String, Any]])
   }
 
-  // def apply[P <: Product](map: Map[String, Any])(implicit fromMap: CaseClassFromMap[P]): P = fromMap(map).get
-  def apply[P <: Product](map: Map[String, Any])(implicit fromMap: Lazy[CaseClassFromMap[P]]): P = fromMap.value(map).get
+  def mapToCaseClass[T : Decoder](map: Map[String, Any]): Either[io.circe.Error, T] =
+    mapToJson(map).as[T]
+
 }
