@@ -4,6 +4,7 @@ name := "cats-playground-scala"
 // scalaVersion in ThisBuild := "2.12.8"
 
 lazy val compilerOptions = Seq(
+  "-Ypartial-unification",
   "-Xfatal-warnings",
   "-deprecation",
   "-feature",
@@ -20,8 +21,7 @@ lazy val commonSettings = Seq(
   resolvers ++= Seq(
     Resolver.sonatypeRepo("public"),
     Resolver.sonatypeRepo("releases"),
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.bintrayRepo("ovotech", "maven")
+    Resolver.sonatypeRepo("snapshots")
   )
 )
 
@@ -50,8 +50,7 @@ lazy val common = project
       monocleMacro,
       monocleLaw,
       log4catsCore,
-      log4catsSlf4j,
-      algae
+      log4catsSlf4j
     )
   )
   
@@ -282,7 +281,6 @@ val ScalaParserVersion = "1.0.6"
 val ScalaTestVersion = "3.2.0-M1"
 val MonocleVersion = "2.0.0"
 val Log4CatsVersion = "1.0.1"
-val AlgaeVersion = "0.2.5"
 val SolrJVersion = "8.4.0"
 val SolrsVersion = "2.4.0"
 val TikaVersion = "1.23"
@@ -354,8 +352,6 @@ val monocleLaw = "com.github.julien-truffaut" %%  "monocle-law"   % MonocleVersi
 
 val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % Log4CatsVersion
 val log4catsSlf4j = "io.chrisdavenport" %% "log4cats-slf4j" % Log4CatsVersion
-
-val algae = "com.ovoenergy" %% "algae" % AlgaeVersion
 
 val solrJ = "org.apache.solr" % "solr-solrj" % SolrJVersion
 val solrs = "io.ino" %% "solrs" % SolrsVersion

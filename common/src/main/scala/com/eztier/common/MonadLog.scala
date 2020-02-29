@@ -6,7 +6,7 @@ package common
 
 import cats.implicits._
 import cats.data.Chain
-import cats.{Monad, Monoid}
+import cats.{Applicative, Functor, Monad, Monoid}
 import cats.effect.Sync
 import cats.effect.concurrent.Ref
 import cats.mtl.{DefaultMonadState, MonadState}
@@ -51,17 +51,3 @@ object MonadLog {
     } yield s
   }
 }
-/*
-val program: IO[Unit] =
-  for {
-    ref <- Ref.of[IO, Int](0)
-    w1  = new Worker[IO](1, ref)
-    w2  = new Worker[IO](2, ref)
-    w3  = new Worker[IO](3, ref)
-    _   <- List(
-             w1.start,
-             w2.start,
-             w3.start
-           ).parSequence.void
-  } yield ()
-*/

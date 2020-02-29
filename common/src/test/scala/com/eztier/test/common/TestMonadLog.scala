@@ -29,13 +29,18 @@ class TestMonadLog extends Specification {
       } yield ()
   }
 
-  class AggregateDoSomething[F[_]: Monad : Applicative : Sync](a: SafelyDoSomethingService[F], b: SafelyDoSomethingService[F]) {
-    def combineLogs =
+  class AggregateDoSomething[F[_]: Monad : Applicative : Sync: MonadLog[?[_], Chain[String]]](a: SafelyDoSomethingService[F], b: SafelyDoSomethingService[F]) {
+    def combineLogs = {
+
+      import com.eztier.common.CatsLogger._
+
       for {
-        _ <- b.logs.flush { c =>
-          a.logs.log(c)
-        }
-      } yield a.logs
+        _ <- a.logs.log(Chain.one("First"))
+        _ <- b.logs.log(Chain.one("Second"))
+        l3 <- a.logs combineK b.logs
+      } yield l3
+
+    }
   }
 
   "" should {
@@ -54,17 +59,9 @@ class TestMonadLog extends Specification {
         case (doSome, doSome2, combo) =>
           doSome.doIt.unsafeRunSync()
           doSome2.doIt.unsafeRunSync()
+          val logsCombined = combo.combineLogs.unsafeRunSync()
 
-          Sync[IO].delay {
-            val logsCombined = combo.combineLogs.unsafeRunSync()
-
-            for {
-              _ <- logsCombined.flush{ c =>
-                println(c)
-                IO.unit
-              }
-            } yield ()
-          }.unsafeRunSync()
+          println(logsCombined)
 
           IO.unit
       }
