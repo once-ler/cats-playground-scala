@@ -6,7 +6,7 @@ package common
 
 import cats.implicits._
 import cats.data.Chain
-import cats.{Applicative, Functor, Monad, Monoid}
+import cats.{Monad, Monoid}
 import cats.effect.Sync
 import cats.effect.concurrent.Ref
 import cats.mtl.{DefaultMonadState, MonadState}
