@@ -91,7 +91,6 @@ case class CkPerson(
   gender: Option[String] = Some("Male")
 ) extends CkBase
 
-
 class TestCaseClassFromMap extends Specification {
 
   private def parseEntity(root: NodeSeq): Map[String, Any] = {
