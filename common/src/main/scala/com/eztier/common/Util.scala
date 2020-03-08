@@ -1,10 +1,14 @@
 package com.eztier
 package common
 
+import shapeless._
+import shapeless.ops.record._
+import shapeless.ops.hlist.ToTraversable
+
 import java.io.{PrintWriter, StringWriter}
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
-import scala.reflect.runtime.universe._
+
 import fs2.{Pipe, Stream}
 
 object Util {
@@ -23,17 +27,28 @@ object Util {
     case None => Stream.empty
   }
 
-  private def classAccessors[T: TypeTag]: List[MethodSymbol] = typeOf[T].members.collect {
-    case m: MethodSymbol if m.isCaseAccessor => m
-  }.toList
-
-  def getCCFieldNames[A: TypeTag]: List[String] = {
-    val members = classAccessors[A]
-
-    members.map(_.name.toString)
+  // Author: https://svejcar.dev/posts/2019/10/22/extracting-case-class-field-names-with-shapeless/
+  // Also: https://gist.github.com/lunaryorn/4b7becbea955ae909af7426d2e2e166c
+  trait Attributes[T] {
+    def fieldNames: List[String]
   }
 
-  def delimitedStringToMap[A: TypeTag](str: Option[String], delim: Char = '^'): Map[String, String] = {
+  object Attributes {
+    implicit def toAttributes[T, Repr <: HList, KeysRepr <: HList](
+      implicit gen: LabelledGeneric.Aux[T, Repr],
+      keys: Keys.Aux[Repr, KeysRepr],
+      traversable: ToTraversable.Aux[KeysRepr, List, Symbol]
+    ): Attributes[T] = new Attributes[T] {
+      override def fieldNames: List[String] = keys().toList.map(_.name)
+    }
+
+    def apply[T](implicit attributes: Lazy[Attributes[T]]): Attributes[T] = attributes.value
+  }
+
+  def getCCFieldNames[A](implicit attributes: Lazy[Attributes[A]]): List[String] =
+    attributes.value.fieldNames
+
+  def delimitedStringToMap[A](str: Option[String], delim: Char = '^')(implicit attributes: Lazy[Attributes[A]]): Map[String, String] = {
     val h = getCCFieldNames[A]
 
     val e = str.fold(List[String]())(_.split(delim).toList)
@@ -52,7 +67,7 @@ object Util {
       .fold(e => List[A](), s => s)
       .headOption.fold(default)(a => a)
   }
-  
+
   private val defaultDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
   def stringToInstant(dateTimeString: String, dateTimePattern: Option[String] = None) = {
