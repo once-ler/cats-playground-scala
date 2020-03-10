@@ -54,6 +54,8 @@ private object DocumentSQL {
       """
         insert into irb.document (doc_id, doc_other_id, doc_xml)
         values (?, ?, ?::xml)
+        on conflict (doc_id) do update
+        set doc_other_id = excluded.doc_other_id, doc_xml = excluded.doc_xml
       """
 
     Update[Document](stmt)

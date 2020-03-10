@@ -46,7 +46,7 @@ object App extends IOApp {
   val src = Stream.emits(filesK)
   val src2 = Stream.emits(1 to 10)
 
-  def run2(args: List[String]): IO[ExitCode] = {
+  def run(args: List[String]): IO[ExitCode] = {
 
     // Get DocumentAggregator resource.
     val db = for {
@@ -57,13 +57,11 @@ object App extends IOApp {
       case documentAggregator =>
         // println("Connected")
 
-        /*
         // Generate metadata.
         documentAggregator
           .getDocumentXml
           .compile.drain.unsafeRunSync()
-        */
-
+        
         /*
         // Extract from disk and persist to cassandra.
         documentAggregator
@@ -73,9 +71,11 @@ object App extends IOApp {
 
         // Add later because doc_name, doc_date_created, and doc_year_created were missed.
         // Partial update of some fields b/c missed from previous import.
+        /*
         documentAggregator
           .partialUpdate
           .compile.drain.unsafeRunSync()
+        */
 
         IO.unit
     }
@@ -83,7 +83,7 @@ object App extends IOApp {
     IO(program.unsafeRunSync()).as(ExitCode.Success)
   }
 
-  override def run(args: List[String]): IO[ExitCode] = {
+  def run2(args: List[String]): IO[ExitCode] = {
     import datasource.infrastructure.cassandra.CassandraClient
 
     val cqlEndpoints = "127.0.0.1"
