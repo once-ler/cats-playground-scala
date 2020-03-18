@@ -24,7 +24,6 @@ trait CCMerge0 {
     }
 }
 
-@deprecated("CCMergeSyntax is deprecated.  Use CaseClassMerge instead.", "com.eztier.common")
 object CCMergeSyntax extends CCMerge0 {
   def apply[A](implicit CCMerge: Lazy[CCMerge[A]]): CCMerge[A] = CCMerge.value
 

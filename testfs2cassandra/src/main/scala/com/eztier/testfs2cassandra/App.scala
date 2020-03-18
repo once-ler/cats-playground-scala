@@ -57,17 +57,17 @@ object App extends IOApp {
       case documentAggregator =>
         // println("Connected")
 
+        /*
         // Generate metadata.
         documentAggregator
           .getDocumentXml
           .compile.drain.unsafeRunSync()
-        
-        /*
+        */
+
         // Extract from disk and persist to cassandra.
         documentAggregator
           .extractDocument
           .compile.drain.unsafeRunSync()
-        */
 
         // Add later because doc_name, doc_date_created, and doc_year_created were missed.
         // Partial update of some fields b/c missed from previous import.
