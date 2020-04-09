@@ -1,15 +1,14 @@
 package com.eztier
 package common
 
-import shapeless._
-import shapeless.ops.record._
-import shapeless.ops.hlist.ToTraversable
-
+import fs2.{Pipe, Stream}
 import java.io.{PrintWriter, StringWriter}
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
-
-import fs2.{Pipe, Stream}
+import javax.xml.datatype.{DatatypeFactory, XMLGregorianCalendar}
+import shapeless._
+import shapeless.ops.record._
+import shapeless.ops.hlist.ToTraversable
 
 object Util {
   def filterLeft[F[_], A, B]: Pipe[F, Either[A, B], B] = _.flatMap {
@@ -79,10 +78,15 @@ object Util {
     maybeLocalDateTime.toInstant(zoneOffset)
   }
 
-  def instantToString(instant: Instant, dateTimePattern: Option[String] = None) = {
+  def instantToString(instant: Instant, dateTimePattern: Option[String] = None): String = {
     val dateTimeFormatter = dateTimePattern.fold(defaultDateTimeFormatter)(a => DateTimeFormatter.ofPattern(a))
 
     LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).format(dateTimeFormatter)
+  }
+
+  def instantToXMLGregorianCalendar(instant: Instant): XMLGregorianCalendar = {
+    val instantToLocalDate = instant.atZone(ZoneId.systemDefault()).toLocalDate
+    DatatypeFactory.newInstance().newXMLGregorianCalendar(instantToLocalDate.toString)
   }
 
   // Stack trace to string.
