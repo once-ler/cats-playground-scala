@@ -257,6 +257,18 @@ lazy val testfs2cassandra = project.
   common
 )
 
+lazy val testmonocle = project.
+  settings(
+    name := "test-monocle",
+    settings,
+    assemblySettings,
+    libraryDependencies ++= Seq(
+      
+    )
+  ).dependsOn(
+    common
+  )
+
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
