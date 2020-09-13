@@ -100,4 +100,9 @@ object Util {
       }
     }
   }
+  
+  def getCCParams(cc: Product) = {
+    val values = cc.productIterator
+    cc.getClass.getDeclaredFields.map( _.getName -> values.next ).toMap
+  }
 }
