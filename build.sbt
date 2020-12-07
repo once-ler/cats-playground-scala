@@ -39,6 +39,7 @@ lazy val common = project
       circeGenericExtras,
       circeLiteral,
       circeParser,
+      circeOptics,
       circeConfig,
       fs2,
       fs2Io,
@@ -272,6 +273,7 @@ lazy val testmonocle = project.
 val Http4sVersion = "0.21.0-M5"
 val CirceVersion = "0.12.1"
 val CirceGenericExVersion = "0.12.2"
+val CirceOpticsVersion = "0.12.0"
 val CirceConfigVersion = "0.7.0"
 val Specs2Version = "4.7.0"
 val LogbackVersion = "1.2.3"
@@ -313,6 +315,7 @@ val circeGeneric = "io.circe" %% "circe-generic" % CirceVersion
 val circeGenericExtras = "io.circe" %% "circe-generic-extras" % CirceGenericExVersion
 val circeLiteral = "io.circe" %% "circe-literal" % CirceVersion
 val circeParser = "io.circe" %% "circe-parser" % CirceVersion
+val circeOptics = "io.circe" %% "circe-optics" % CirceOpticsVersion
 val circeConfig = "io.circe" %% "circe-config" % CirceConfigVersion
 
 val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % Http4sVersion

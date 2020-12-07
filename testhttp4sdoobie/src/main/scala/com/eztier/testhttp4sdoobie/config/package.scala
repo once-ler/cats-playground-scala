@@ -8,4 +8,6 @@ package object config {
   implicit val dbconnDec: Decoder[DatabaseConnectionsConfig] = deriveDecoder
   implicit val dbDec: Decoder[DatabaseConfig] = deriveDecoder
   implicit val psDec: Decoder[TestHttp4sDoobieConfig] = deriveDecoder
+  implicit val httpInstanceDec: Decoder[HttpInstanceConfig] = deriveDecoder
+  implicit val httpDec: Decoder[HttpConfig] = deriveDecoder
 }
