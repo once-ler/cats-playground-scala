@@ -2,13 +2,14 @@ package com.eztier.common
 
 import cats.implicits._
 import cats.effect.{Blocker, ContextShift, Sync}
-import fs2.{Stream, Pipe}
+import fs2.{Pipe, Stream}
 import fs2.text.{lines, utf8Decode, utf8Encode}
-import java.nio.file.Paths
+import java.nio.file.{Paths, StandardOpenOption}
 
 import Util.WrapThrowable
 
-object File {
+object
+File {
 
   def readAllFromFile[F[_]: Sync : ContextShift](blocker: Blocker)(path: String, bufferSize: Int = 8192): F[String] =
     for {
@@ -34,9 +35,9 @@ object File {
         }
     } yield str
 
-  def writeWithLinesToFile[F[_]: Sync : ContextShift](blocker: Blocker)(path: String): Pipe[F, String, Unit] =
+  def writeWithLinesToFile[F[_]: Sync : ContextShift](blocker: Blocker)(path: String, flags: Seq[StandardOpenOption] = List(StandardOpenOption.CREATE)): Pipe[F, String, Unit] =
     _.intersperse("\n")
       .through(utf8Encode)
-      .through(fs2.io.file.writeAll(Paths.get(path), blocker))
+      .through(fs2.io.file.writeAll(Paths.get(path), blocker, flags))
 
 }
