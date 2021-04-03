@@ -51,7 +51,9 @@ lazy val common = project
       monocleMacro,
       monocleLaw,
       log4catsCore,
-      log4catsSlf4j
+      log4catsSlf4j,
+      scalaParser,
+      dispatchHttp
     )
   )
   
@@ -282,7 +284,7 @@ val CatsMtlVersion = "0.7.0"
 val DoobieVersion = "0.8.4"
 val H2Version = "1.4.199"
 val KindProjectorVersion = "0.10.3"
-val FlywayVersion = "6.0.4"
+val FlywayVersion = "6.5.7"
 val FS2Version = "2.0.0"
 val KantanXPathVersion = "0.5.0"
 val XStreamVersion = "1.4.11.1"

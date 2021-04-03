@@ -19,6 +19,7 @@ case class DatabaseConfig(
   driver: String,
   user: String,
   password: String,
+  schema: Option[String] = None,
   locations: Option[String] = None,
   connections: DatabaseConnectionsConfig
 )

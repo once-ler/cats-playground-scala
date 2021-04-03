@@ -21,9 +21,9 @@ package object testfs2cassandra {
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.eventstore.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf.db.eventstore, connEc, Blocker.liftExecutionContext(txnEc))
-      documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa)
+      documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa, conf.db.eventstore)
       documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
-      documentRepo = new DoobieDocumentInterpreter[F](xa)
+      documentRepo = new DoobieDocumentInterpreter[F](xa, conf.db.eventstore)
       documentService = new DocumentService[F](documentRepo)
       documentXmlRepo = new DocumentHttpInterpreter[F](conf.http.entity)
       documentXmlService = new DocumentXmlService(documentXmlRepo)

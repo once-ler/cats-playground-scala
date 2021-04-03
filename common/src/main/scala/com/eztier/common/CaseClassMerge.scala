@@ -42,7 +42,7 @@ object CaseClassMerge {
 }
 
 // Implementation in terms of LabelledGeneric ...
-@deprecated("mergeSyntax is deprecated.  Use CCMergeSyntax instead.", "com.eztier.common")
+// @deprecated("mergeSyntax is deprecated.  Use CCMergeSyntax instead.", "com.eztier.common")
 object mergeSyntax {
   implicit class MergeSyntax[T](t: T) {
     def merge[U](u: U)(implicit merge: Lazy[CaseClassMerge[T, U]]): T = merge.value(t, u)
