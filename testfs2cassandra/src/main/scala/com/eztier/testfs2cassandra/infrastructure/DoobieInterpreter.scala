@@ -16,19 +16,20 @@ import domain._
 private object DocumentMetadataSQL {
   // implicit val optionListStringMeta: Meta[Option[List[String]]] =
 
-  def listSql(schema: String): Query0[(String, String)] = sql"""
-    select doc_id, doc_other_id from $schema.document_metadata
-  """.query
+  def listSql(schema: String): Query0[(String, String)] = (fr"""
+    select doc_id, doc_other_id from """ ++ Fragment.const(schema) ++ fr""".document_metadata
+  """).query
 
-  def listAllSql(schema: String): Query0[DocumentMetadata] = sql"""
+  def listAllSql(schema: String): Query0[DocumentMetadata] = (fr"""
     select id,domain,root_type,root_id,root_owner,root_associates,root_company,root_status,root_display,
     root_display_long,doc_id,doc_other_id,doc_file_path,doc_object_path,doc_category,doc_name,
-    doc_date_created,doc_year_created from $schema.document_metadata
-  """.query[DocumentMetadata]
+    doc_date_created,doc_year_created from """ ++ Fragment.const(schema) ++ fr""".document_metadata
+  """).query[DocumentMetadata]
 
-  def listPartialSql(schema: String): Query0[DocumentPartial] = sql"""
-    select domain, root_type, root_id, doc_id, doc_name, doc_date_created,doc_year_created from $schema.document_metadata
-  """.query
+  def listPartialSql(schema: String): Query0[DocumentPartial] = (fr"""
+    select domain, root_type, root_id, doc_id, doc_name, doc_date_created,doc_year_created from """ ++ 
+    Fragment.const(schema) ++ fr""".document_metadata
+  """).query
 }
 
 class DoobieDocumentMetataInterpreter[F[_]: Bracket[?[_], Throwable]](val xa: Transactor[F], val conf: DatabaseConfig) extends DocumentMetadataRepo[F] {
