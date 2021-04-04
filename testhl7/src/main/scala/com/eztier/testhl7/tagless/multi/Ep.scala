@@ -14,8 +14,10 @@ import cats.{Applicative, Functor, Monad, SemigroupK}
 import cats.effect.{Async, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
 import fs2.{Pipe, Stream}
 import fs2.text.{utf8DecodeC, utf8Encode}
-import algae.createMonadLog
-import algae.mtl.MonadLog
+// import algae.createMonadLog
+// import algae.mtl.MonadLog
+import com.eztier.common.MonadLog
+
 import io.chrisdavenport.log4cats.Logger
 import kantan.xpath._
 import kantan.xpath.implicits._
@@ -31,7 +33,8 @@ object Package {
 
   def createEpPatientAggregatorResource[F[_]: Async :ContextShift :ConcurrentEffect: Timer] =
     for {
-      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      // implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(MonadLog.createMonadLog[F, String])
       patientRepo = HttpPatientRepositoryInterpreter[F]
       patientService = EpPatientService(patientRepo)
       epPatientAggregator = new EpPatientAggregator[F](patientService)

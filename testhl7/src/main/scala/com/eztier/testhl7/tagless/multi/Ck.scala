@@ -11,8 +11,10 @@ import cats.implicits._
 import cats.data.{Chain, EitherT}
 import cats.{Applicative, Monad}
 import cats.effect.{Async, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
-import algae._
-import algae.mtl.MonadLog
+// import algae._
+// import algae.mtl.MonadLog
+import com.eztier.common.MonadLog
+
 import io.chrisdavenport.log4cats.Logger
 import common.CatsLogger._
 
@@ -30,7 +32,8 @@ object Package {
 
   def createCkAggregatorResource[F[_]: Async :ContextShift :ConcurrentEffect: Timer] = {
     for {
-      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      // implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(MonadLog.createMonadLog[F, String])
       ms = new CkMockService
       entityRepo = new CkEntityInterpreter[F](ms)
       entityService = new CkEntityService(entityRepo)

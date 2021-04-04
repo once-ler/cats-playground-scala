@@ -16,8 +16,9 @@ import cats.implicits._
 import cats.data.{Chain, EitherT}
 import cats.{Applicative, Monad}
 import cats.effect.{Async, Concurrent, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
-import algae._
-import algae.mtl.MonadLog
+// import algae._
+// import algae.mtl.MonadLog
+import com.eztier.common.MonadLog
 import com.eztier.testhl7.tagless.multi.Solr.Config.DatabaseConfig
 import com.eztier.testhl7.tagless.multi.Solr.Domain.SolrAlgebra
 import io.chrisdavenport.log4cats.Logger
@@ -49,7 +50,8 @@ object Package {
 
   def createSolrResource[F[_]: Async :ContextShift :ConcurrentEffect: Timer] = {
     for {
-      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      // implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(createMonadLog[F, Chain[String]])
+      implicit0(logs: MonadLog[F, Chain[String]]) <- Resource.liftF(MonadLog.createMonadLog[F, String])
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testhl7")) // Lifts an applicative into a resource.
       entityRepo = new SolrInterpreter[F](conf.solr)
       entityService = new SolrService(entityRepo)
@@ -172,7 +174,7 @@ object Infrastructure {
     override def insert(oid: Option[String]) =
       blockingThreadPool.use { ec: ExecutionContext =>
         Async[F].async {
-          (cb: Either[Throwable, Unit] => Unit) =>
+          (cb: Either[Throwable, Either[String, Unit]] => Unit) =>
             implicit val cs = ec
 
             val doc1 = new SolrInputDocument()
@@ -184,8 +186,11 @@ object Infrastructure {
               _ <- solr.commit()
             } yield ()
 
+            val dummyRight: Either[String, Unit] = Right(())
+            val success: Either[Throwable, Either[String, Unit]] = Right(dummyRight)
+              
             f.onComplete {
-              case _ => cb()
+              case _ => cb(success)
             }
         }
       }

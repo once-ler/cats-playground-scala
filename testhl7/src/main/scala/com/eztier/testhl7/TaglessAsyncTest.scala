@@ -11,8 +11,9 @@ import cats.data.{Chain, EitherT}
 import cats.{Applicative, Monad}
 import cats.effect.{Async, Concurrent, Resource, Sync}
 
-import algae._
-import algae.mtl.MonadLog
+// import algae._
+// import algae.mtl.MonadLog
+import com.eztier.common.MonadLog
 
 import io.chrisdavenport.log4cats.Logger
 

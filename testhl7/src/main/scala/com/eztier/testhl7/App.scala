@@ -14,7 +14,9 @@ object Tests {
     implicit val timer = IO.timer(ec)
     implicit val cs = IO.contextShift(ec)  // Need cats.effect.ContextShift[cats.effect.IO] because NOT inside of IOApp
 
-    import algae._
+    // import algae._
+    import com.eztier.common.MonadLog
+
     import tagless.Domain._
     import tagless.Infrastructure._
 
@@ -24,7 +26,8 @@ object Tests {
     val ckAggregator = new CkEntityAggregator[IO](ckService)
 
     val epPatientAggregator = for {
-      x <- createMonadLog[IO, Chain[String]]
+      // x <- createMonadLog[IO, Chain[String]]
+      x <- MonadLog.createMonadLog[IO, String]
       y = new EpPatientAggregator[IO](x)
     } yield y
 

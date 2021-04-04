@@ -20,8 +20,10 @@ object App extends IOApp {
   val maybeObject5 = GenLens[Object3](_.object4)
   val maybeString = GenLens[Object5](_.v4)
   
+  /*
   (Object1.lens(_.object3) composePrism some composeLens Object3._v3 composePrism some).set("test")(object1)
   (_maybeBar composePrism some composeLens _maybeStr composePrism some).set("Modified String")(myFooInstance)
+  */
   
   val lens1 = (maybeObject3 composePrism some composeLens maybeObject5 composePrism some composeLens maybeString composePrism some)
   lens1.getOption(object1)
