@@ -17,11 +17,11 @@ package object testfs2cassandra {
   def initializeDocumentAggregatorResource[F[_]: Async : Applicative: ContextShift: ConcurrentEffect : Timer] = {
     for {
       conf <- Resource.liftF(ConfigParser.decodePathF[F, AppConfig]("testfs2cassandra"))
-      _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
+      // _ <- Resource.liftF(DatabaseConfig.initializeDb[F](conf.db.eventstore))
       connEc <- ExecutionContexts.fixedThreadPool[F](conf.db.eventstore.connections.poolSize)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       xa <- DatabaseConfig.dbTransactor[F](conf.db.eventstore, connEc, Blocker.liftExecutionContext(txnEc))
-      documentMetadataRepo = new DoobieDocumentMetataInterpreter[F](xa, conf.db.eventstore)
+      documentMetadataRepo = new DoobieDocumentMetadataInterpreter[F](xa, conf.db.eventstore)
       documentMetadataService = new DocumentMetadataService[F](documentMetadataRepo)
       documentRepo = new DoobieDocumentInterpreter[F](xa, conf.db.eventstore)
       documentService = new DocumentService[F](documentRepo)
